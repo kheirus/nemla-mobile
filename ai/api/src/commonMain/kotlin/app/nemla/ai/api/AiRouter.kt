@@ -2,12 +2,9 @@ package app.nemla.ai.api
 
 import kotlin.coroutines.cancellation.CancellationException
 
-/** Facts about "now" that decide whether data may leave the device. Supplied by the app. */
 data class AiRoutingContext(
     val online: Boolean,
-    /** Credits left this month, or null when unknown (the backend stays the authority). */
     val remainingCredits: Int?,
-    /** Sensitivity levels the user agreed to send to remote engines. */
     val remoteConsent: Set<DataSensitivity>,
 )
 
@@ -15,7 +12,6 @@ fun interface AiContextSource {
     suspend fun current(): AiRoutingContext
 }
 
-/** Orders the engines that passed the hard rules. Swap it to change strategy (cost, quality, A/B). */
 fun interface AiRoutingPolicy {
     fun order(
         capability: AiCapability<*, *>,
@@ -24,7 +20,6 @@ fun interface AiRoutingPolicy {
     ): List<EngineDescriptor>
 }
 
-/** Default strategy: on the device whenever possible, then the cheapest remote engine. */
 object LocalFirstPolicy : AiRoutingPolicy {
     override fun order(
         capability: AiCapability<*, *>,
@@ -42,7 +37,6 @@ sealed interface AttemptOutcome {
 
 data class AiAttempt(val engine: EngineDescriptor, val outcome: AttemptOutcome)
 
-/** What happened for one request: which engines were considered and why. Contains no user data. */
 data class AiTrace(val capability: String, val attempts: List<AiAttempt>) {
     val servedBy: EngineDescriptor?
         get() = attempts.firstOrNull { it.outcome == AttemptOutcome.Succeeded }?.engine
@@ -55,21 +49,10 @@ sealed interface AiResult<out T> {
     data class Failure(val error: AiError, override val trace: AiTrace) : AiResult<Nothing>
 }
 
-/** Receives traces for diagnostics. Implementations must not log payloads. */
 fun interface AiTraceListener {
     fun onTrace(trace: AiTrace)
 }
 
-/**
- * Single entry point of the app into AI.
- *
- * Callers ask for a capability; the router picks engines, enforces the privacy rules and falls
- * back from one engine to the next. Rules that are not negotiable live here, not in the policy:
- *
- * 1. A capability whose input is [DataSensitivity.RAW_FINANCIAL] only ever runs on the device.
- * 2. A remote engine runs only if the user consented to sending that sensitivity level.
- * 3. A remote engine is skipped when offline or when its cost exceeds the known credits.
- */
 class AiRouter(
     engines: List<AiEngine<*, *>>,
     private val contextSource: AiContextSource,
@@ -90,12 +73,10 @@ class AiRouter(
         require(ids.size == ids.toSet().size) { "Engine ids must be unique: $ids" }
     }
 
-    /** Engines registered for a capability, in registration order. */
     fun enginesFor(capability: AiCapability<*, *>): List<EngineDescriptor> =
         engines.filter { it.capability == capability }.map { it.descriptor }
 
     suspend fun <I : Any, O : Any> run(capability: AiCapability<I, O>, input: I): AiResult<O> {
-        // Sound: an engine's capability object fixes its input and output types.
         @Suppress("UNCHECKED_CAST")
         val registered = engines.filter { it.capability == capability } as List<AiEngine<I, O>>
         val attempts = mutableListOf<AiAttempt>()
@@ -134,7 +115,6 @@ class AiRouter(
             } catch (e: AiException) {
                 e.error
             } catch (e: Exception) {
-                // Message deliberately dropped: provider errors may echo user content.
                 AiError.EngineFailure(e::class.simpleName ?: "error")
             }
             attempts += AiAttempt(engine.descriptor, AttemptOutcome.Failed(error))
@@ -160,7 +140,6 @@ class AiRouter(
         }
     }
 
-    /** When nothing ran to completion, report the cause the user can act on first. */
     private fun mostMeaningfulError(attempts: List<AiAttempt>): AiError {
         val errors = attempts.mapNotNull {
             when (val outcome = it.outcome) {

@@ -2,17 +2,8 @@ package app.nemla.ai.api
 
 import kotlinx.datetime.LocalDate
 
-/*
- * Provider-neutral models exchanged with AI engines.
- * They belong to the AI boundary: the domain layer has its own entities and maps to and from these.
- * Amounts are integers in minor units (cents) to stay exact.
- */
-
-// region Speech
-
 enum class AudioEncoding { WAV_PCM16 }
 
-/** A short recording held in memory. It is never written to shared storage. */
 class AudioClip(
     val bytes: ByteArray,
     val encoding: AudioEncoding,
@@ -24,17 +15,11 @@ class AudioClip(
 
 data class SpeechRequest(
     val audio: AudioClip,
-    /** BCP 47 language tag of the user ("fr", "en"). */
     val languageTag: String,
 )
 
 data class Transcript(val text: String, val languageTag: String?)
 
-// endregion
-
-// region Expenses
-
-/** A category the engine may assign. Only the id and label are shared, never user data. */
 data class CategoryHint(val id: String, val label: String)
 
 data class ExpenseExtractionRequest(
@@ -44,9 +29,7 @@ data class ExpenseExtractionRequest(
     val categories: List<CategoryHint>,
 )
 
-/** An expense proposed by an engine, to be reviewed by the user before it counts. */
 data class ExpenseDraft(
-    /** Set when the engine already stored the draft server-side (current nemla backend does). */
     val remoteId: String?,
     val amountCents: Long,
     val label: String,
@@ -58,20 +41,13 @@ data class ExpenseDraft(
 data class ExtractedExpenses(val drafts: List<ExpenseDraft>)
 
 data class VoiceCapture(
-    /** Server-side id of the voice entry, when the engine keeps one. */
     val entryId: String?,
     val transcript: Transcript,
     val drafts: List<ExpenseDraft>,
 )
 
-// endregion
-
-// region Bank statements
-
-/** Text extracted on the device from a statement file (PDF, CSV, spreadsheet). */
 class RawStatement(
     val text: String,
-    /** Names the anonymiser must remove wherever they appear (account holder, if known). */
     val knownNames: List<String> = emptyList(),
 ) {
     override fun toString(): String = "RawStatement(length=${text.length})"
@@ -84,10 +60,6 @@ data class StatementParsingRequest(
 )
 
 data class ParsedStatement(val drafts: List<ExpenseDraft>)
-
-// endregion
-
-// region Recurring charges
 
 data class RecurringParsingRequest(val text: String, val languageTag: String)
 
@@ -102,10 +74,6 @@ data class RecurringChargeDraft(
 )
 
 data class ParsedRecurringCharges(val charges: List<RecurringChargeDraft>)
-
-// endregion
-
-// region Insights
 
 data object BudgetSuggestionRequest
 
@@ -124,15 +92,12 @@ data class BudgetEstimate(
 
 enum class ReviewPeriodKind { MONTH, YEAR }
 
-/** [period] is "YYYY-MM" for a month, "YYYY" for a year. */
 data class PeriodReportRequest(val period: String, val kind: ReviewPeriodKind)
 
 data class CategoryReview(
     val name: String,
     val amountCents: Long,
-    /** Share of the period total, 0..1. */
     val share: Double,
-    /** Change against the previous period, as a ratio (0.12 = +12 %). */
     val variation: Double,
 )
 
@@ -148,5 +113,3 @@ data class PeriodReview(
     val highlights: List<String>,
     val advice: List<String>,
 )
-
-// endregion
