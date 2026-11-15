@@ -5,9 +5,11 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.core.common)
-            implementation(libs.androidx.datastore.preferences.core)
+            api(projects.core.common)
             implementation(libs.koin.core)
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.datastore.preferences.core)
         }
     }
 }
