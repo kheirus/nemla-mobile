@@ -27,7 +27,8 @@ Kotlin Multiplatform, interface 100 % partagée en Compose Multiplatform.
   et signalé au propriétaire.
 - Chaque lot se termine par : `./gradlew spotlessApply`, tests du lot, `./gradlew :androidApp:assembleDebug`,
   et compilation du framework iOS (`./gradlew :shared:linkDebugFrameworkIosSimulatorArm64`).
-- Commits atomiques par lot, messages en français.
+- Commits atomiques (un par module ou par préoccupation, jamais un lot entier en un seul commit), messages en anglais.
+- Pas de commentaires dans le code (ni KDoc ni commentaires de ligne) : le code se lit seul, le reste va dans `docs/`.
 
 ## État
 Rien n'a encore été compilé : ce dépôt a été amorcé dans un environnement sans accès à Maven ni au SDK Android.
