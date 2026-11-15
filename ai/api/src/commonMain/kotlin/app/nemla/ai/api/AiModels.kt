@@ -18,9 +18,15 @@ data class SpeechRequest(
     val languageTag: String,
 )
 
-data class Transcript(val text: String, val languageTag: String?)
+data class Transcript(
+    val text: String,
+    val languageTag: String?,
+)
 
-data class CategoryHint(val id: String, val label: String)
+data class CategoryHint(
+    val id: String,
+    val label: String,
+)
 
 data class ExpenseExtractionRequest(
     val text: String,
@@ -38,7 +44,9 @@ data class ExpenseDraft(
     val merchant: String? = null,
 )
 
-data class ExtractedExpenses(val drafts: List<ExpenseDraft>)
+data class ExtractedExpenses(
+    val drafts: List<ExpenseDraft>,
+)
 
 data class VoiceCapture(
     val entryId: String?,
@@ -59,9 +67,14 @@ data class StatementParsingRequest(
     val categories: List<CategoryHint>,
 )
 
-data class ParsedStatement(val drafts: List<ExpenseDraft>)
+data class ParsedStatement(
+    val drafts: List<ExpenseDraft>,
+)
 
-data class RecurringParsingRequest(val text: String, val languageTag: String)
+data class RecurringParsingRequest(
+    val text: String,
+    val languageTag: String,
+)
 
 enum class ChargeFrequency { MONTHLY, YEARLY }
 
@@ -73,13 +86,22 @@ data class RecurringChargeDraft(
     val categoryId: String?,
 )
 
-data class ParsedRecurringCharges(val charges: List<RecurringChargeDraft>)
+data class ParsedRecurringCharges(
+    val charges: List<RecurringChargeDraft>,
+)
 
 data object BudgetSuggestionRequest
 
-data class MonthTotal(val month: String, val totalCents: Long)
+data class MonthTotal(
+    val month: String,
+    val totalCents: Long,
+)
 
-data class CategoryEstimate(val categoryId: String, val monthlyCents: Long, val monthsObserved: Int)
+data class CategoryEstimate(
+    val categoryId: String,
+    val monthlyCents: Long,
+    val monthsObserved: Int,
+)
 
 data class BudgetEstimate(
     val monthlyCents: Long,
@@ -92,7 +114,10 @@ data class BudgetEstimate(
 
 enum class ReviewPeriodKind { MONTH, YEAR }
 
-data class PeriodReportRequest(val period: String, val kind: ReviewPeriodKind)
+data class PeriodReportRequest(
+    val period: String,
+    val kind: ReviewPeriodKind,
+)
 
 data class CategoryReview(
     val name: String,

@@ -31,7 +31,9 @@ enum class PiiKind {
     OTHER,
 }
 
-data class RedactionReport(val counts: Map<PiiKind, Int>) {
+data class RedactionReport(
+    val counts: Map<PiiKind, Int>,
+) {
     val total: Int get() = counts.values.sum()
 
     companion object {
@@ -39,9 +41,11 @@ data class RedactionReport(val counts: Map<PiiKind, Int>) {
     }
 }
 
-class AnonymizedText @PrivacyBoundary constructor(
-    val value: String,
-    val report: RedactionReport,
-) {
-    override fun toString(): String = "AnonymizedText(length=${value.length}, redactions=${report.total})"
-}
+class AnonymizedText
+    @PrivacyBoundary
+    constructor(
+        val value: String,
+        val report: RedactionReport,
+    ) {
+        override fun toString(): String = "AnonymizedText(length=${value.length}, redactions=${report.total})"
+    }

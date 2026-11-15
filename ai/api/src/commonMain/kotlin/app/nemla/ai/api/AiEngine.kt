@@ -14,7 +14,9 @@ data class EngineDescriptor(
 sealed interface EngineAvailability {
     data object Ready : EngineAvailability
 
-    data class Unavailable(val reason: String) : EngineAvailability
+    data class Unavailable(
+        val reason: String,
+    ) : EngineAvailability
 }
 
 interface AiEngine<I : Any, O : Any> {
@@ -38,19 +40,28 @@ sealed interface AiError {
 
     data object Unauthorized : AiError
 
-    data class Rejected(val userMessage: String?) : AiError
+    data class Rejected(
+        val userMessage: String?,
+    ) : AiError
 
-    data class EngineFailure(val reason: String) : AiError
+    data class EngineFailure(
+        val reason: String,
+    ) : AiError
 
     data object PrivacyViolation : AiError
 }
 
-class AiException(val error: AiError, cause: Throwable? = null) : Exception(error.toString(), cause)
+class AiException(
+    val error: AiError,
+    cause: Throwable? = null,
+) : Exception(error.toString(), cause)
 
 internal val AiError.allowsFallback: Boolean
-    get() = when (this) {
-        is AiError.EngineFailure, AiError.Offline, AiError.QuotaExceeded -> true
-        AiError.NoEngine, AiError.ConsentRequired, AiError.Unauthorized,
-        is AiError.Rejected, AiError.PrivacyViolation,
-        -> false
-    }
+    get() =
+        when (this) {
+            is AiError.EngineFailure, AiError.Offline, AiError.QuotaExceeded -> true
+
+            AiError.NoEngine, AiError.ConsentRequired, AiError.Unauthorized,
+            is AiError.Rejected, AiError.PrivacyViolation,
+            -> false
+        }
