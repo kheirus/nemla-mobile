@@ -3,7 +3,7 @@
 > Date de référence : **15 novembre 2026**. Règle : uniquement des versions **stables** (aucune alpha / beta / RC / dev / EAP).
 > Chaque version a été vue sur une source web. Si ce n'est pas le cas, la ligne est marquée « non » avec une estimation.
 > Limite de la méthode : Maven Central / Google Maven n'ont pas été interrogés directement (pas d'accès shell). Les dates « il y a N jours/mois » viennent de pages miroir (newreleases.io, klibs.io, central.sonatype.com) et ont été converties de façon approximative.
-> À faire avant le premier commit : lancer `./gradlew dependencies` et `./gradlew :shared:linkDebugFrameworkIosSimulatorArm64` pour confirmer la résolution.
+> Résolution confirmée le 16/11/2026 (lot 0) : toutes les versions du catalogue se résolvent sur Google Maven, Maven Central et le portail Gradle ; `:androidApp:assembleDebug` et `:shared:linkDebugFrameworkIosSimulatorArm64` réussissent. Aucune version n'a dû être changée.
 
 ---
 
@@ -49,7 +49,7 @@ Pourquoi minSdk 28 : Keystore matériel fiable, BiometricPrompt (API 28), TLS 1.
 | SavedState CMP | 1.4.0 | 2026 | page CMP 1.12 | oui |
 | Compose resources (`org.jetbrains.compose.components:components-resources`) | **1.12.2** (suit CMP) | 15 oct. 2026 | page CMP 1.12 (versions de la famille compose) | partiel (coordonnée suivant la version CMP, non listée explicitement) |
 
-**Navigation 3 en multiplateforme, novembre 2026** : côté Android, Jetpack Navigation 3 est stable (**1.2.1**, 4 nov. 2026, https://developer.android.com/jetpack/androidx/releases/navigation3?hl=en). Mais l'artefact androidx `navigation3-ui` n'a **pas** de cibles KMP : seul `navigation3-runtime` en a. Le `NavDisplay` multiplateforme vient de JetBrains (`org.jetbrains.androidx.navigation3:navigation3-ui`), supporté depuis CMP 1.10 sur Android, iOS, desktop et web. La dernière version sans suffixe est 1.1.2. Sur iOS, il faut obligatoirement une `SavedStateConfiguration` avec sérialisation polymorphe des `NavKey`. **Recommandation : Navigation 3 (JetBrains 1.1.2)**, car Navigation 2 n'est plus que maintenue.
+**Navigation 3 en multiplateforme, novembre 2026** : côté Android, Jetpack Navigation 3 est stable (**1.2.1**, 4 nov. 2026, https://developer.android.com/jetpack/androidx/releases/navigation3?hl=en). Mais l'artefact androidx `navigation3-ui` n'a **pas** de cibles KMP : seul `navigation3-runtime` en a. Le `NavDisplay` multiplateforme vient de JetBrains (`org.jetbrains.androidx.navigation3:navigation3-ui`), supporté depuis CMP 1.10 sur Android, iOS, desktop et web. La dernière version sans suffixe est 1.1.2. Sur iOS, il faut obligatoirement une `SavedStateConfiguration` avec sérialisation polymorphe des `NavKey`. Recommandation initiale : Navigation 3 (JetBrains 1.1.2). **Décision retenue (ARCHITECTURE §1) : Navigation 2 multiplateforme 2.9.2**, Navigation 3 multiplateforme n'étant pas déclarée stable. Au 16/11/2026, `org.jetbrains.androidx.navigation:navigation-compose` **2.10.0** stable est publiée (23 oct. 2026), alignée sur CMP 1.12 : montée de version à arbitrer.
 
 ### 1.4 Jetpack côté Android (module `androidApp`)
 
@@ -132,55 +132,36 @@ Pourquoi minSdk 28 : Keystore matériel fiable, BiometricPrompt (API 28), TLS 1.
 
 ## 3. `gradle/libs.versions.toml`
 
+Catalogue nettoyé au lot 0 : retrait de Navigation 3, du SDK Supabase, de SQLDelight, de Room 3 / SQLite, de KSP et de toutes
+les entrées non utilisées par les modules (BOM, Material 3 Adaptive, `ui-test`, splashscreen, `datastore-preferences` Android,
+kotlinx-io, Kermit, Coil, Kotest, `koin-test`, `koin-compose-navigation3`). Elles se réintroduisent au besoin, avec la version du §1.
+
 ```toml
-# nemla-mobile — versions stables vérifiées au 15/11/2026 (voir specs/00-versions.md)
+# nemla-mobile — versions stables vérifiées au 15/11/2026 (voir docs/specs/00-versions.md)
 [versions]
-# --- Toolchain ---
 kotlin = "2.4.21"
-ksp = "2.3.14"
 agp = "9.3.3"                     # max validé par KGP 2.4.21 = 9.3.1 (patch au-dessus) ; Gradle wrapper = 9.7.1
-# --- Android SDK ---
 android-compileSdk = "37"
 android-targetSdk = "37"
 android-minSdk = "28"
 jvmTarget = "17"
-# --- Compose Multiplatform ---
 compose-multiplatform = "1.12.2"
 compose-material3 = "1.9.0"       # dernière Material3 CMP stable (CMP 1.12.2 livre 1.12.0-alpha03)
-compose-material3-adaptive = "1.3.0"
 androidx-lifecycle-cmp = "2.11.0"
-androidx-navigation3-cmp = "1.1.2"
-androidx-navigation-cmp = "2.9.2" # alternative Navigation 2 (non utilisée par défaut)
-# --- Jetpack Android ---
+androidx-navigation-cmp = "2.9.2" # Navigation 2 multiplateforme, retenue (ARCHITECTURE §1)
 androidx-activity = "1.13.0"
 androidx-core = "1.19.1"
-androidx-core-splashscreen = "1.2.0"
 androidx-datastore = "1.3.0"
-androidx-room3 = "3.0.3"
-androidx-sqlite = "2.7.1"
-# --- KotlinX ---
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.13.0"
 kotlinx-datetime = "0.8.0"
-kotlinx-io = "0.9.1"
-# --- Réseau / backend ---
 ktor = "3.6.1"
-supabase = "3.9.0"
-# --- DI / logs / images ---
 koin = "4.2.2"
-kermit = "2.2.0"
-coil = "3.6.3"
-# --- Base alternative ---
-sqldelight = "2.4.1"
-# --- Tests ---
 turbine = "1.2.1"
-kotest = "6.2.6"
-# --- Qualité ---
 spotless = "8.10.4"
 ktlint = "1.8.0"
 
 [libraries]
-# Compose Multiplatform (coordonnées explicites, pas d'accesseurs compose.*)
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
@@ -188,44 +169,21 @@ compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-pre
 compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "compose-multiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
-compose-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "compose-material3-adaptive" }
-compose-material3-adaptive-navigation3 = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation3", version.ref = "compose-material3-adaptive" }
-compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
 
-# Lifecycle / Navigation (JetBrains multiplateforme)
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle-cmp" }
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle-cmp" }
-androidx-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle-cmp" }
-androidx-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3-cmp" }
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation-cmp" }
 
-# Jetpack Android (module androidApp)
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
-androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "androidx-core-splashscreen" }
-
-# Persistance KMP
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "androidx-datastore" }
-androidx-room3-runtime = { module = "androidx.room3:room3-runtime", version.ref = "androidx-room3" }
-androidx-room3-compiler = { module = "androidx.room3:room3-compiler", version.ref = "androidx-room3" }
-androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
-sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
-sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
-sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
 
-# KotlinX
-kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 
-# Ktor client 3.x
-ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -235,30 +193,13 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
-# Supabase (auth + postgrest)
-supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
-supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
-supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
-supabase-functions = { module = "io.github.jan-tennert.supabase:functions-kt", version.ref = "supabase" }
-
-# Koin
-koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
-koin-compose-navigation3 = { module = "io.insert-koin:koin-compose-navigation3", version.ref = "koin" }
-koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 
-# Logs / images
-kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
-
-# Tests
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -267,12 +208,9 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-androidx-room3 = { id = "androidx.room3", version.ref = "androidx-room3" }
-sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-# NB : pas de org.jetbrains.kotlin.android — Kotlin est intégré à AGP 9 pour androidApp.
-# NB : detekt volontairement absent (pas de version stable compatible Kotlin 2.4).
+# Pas de org.jetbrains.kotlin.android : Kotlin est intégré à AGP 9 pour androidApp.
+# detekt volontairement absent (pas de version stable compatible Kotlin 2.4).
 ```
 
 `gradle/wrapper/gradle-wrapper.properties` :
