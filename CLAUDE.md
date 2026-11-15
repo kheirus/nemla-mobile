@@ -31,5 +31,7 @@ Kotlin Multiplatform, interface 100 % partagée en Compose Multiplatform.
 - Pas de commentaires dans le code (ni KDoc ni commentaires de ligne) : le code se lit seul, le reste va dans `docs/`.
 
 ## État
-Rien n'a encore été compilé : ce dépôt a été amorcé dans un environnement sans accès à Maven ni au SDK Android.
-`:ai:api` (5 fichiers) est donc à compiler en premier, dès que le lot 0 a posé le build.
+Lot 0 (socle de build) terminé le 16/11/2026 : wrapper Gradle 9.7.1, `build-logic` (plugins `nemla.kmp.library`, `nemla.compose`,
+`nemla.feature`, `nemla.android.application`, `nemla.spotless`), tous les modules d'ARCHITECTURE §2 configurés, `androidApp`,
+`iosApp`, Spotless + ktlint, CI GitHub Actions. `:ai:api` compile sur Android et iOS ; les autres modules sont vides.
+JDK 17 requis : `gradle/gradle-daemon-jvm.properties` l'impose au daemon. Prochaine étape : lot 1.

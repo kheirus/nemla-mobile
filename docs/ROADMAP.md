@@ -2,12 +2,14 @@
 
 État : ☐ à faire · ◐ en cours · ☑ fait
 
-## Lot 0 — Socle de build ☐
+## Lot 0 — Socle de build ☑
 - Wrapper Gradle 9.7.1, `settings.gradle.kts`, `build-logic/convention` (plugins : bibliothèque KMP, Compose, feature, application Android).
 - `build.gradle.kts` de tous les modules d'ARCHITECTURE §2, selon les règles de dépendance.
 - `androidApp` (manifeste sécurisé : pas de sauvegarde, pas de trafic en clair, écran protégé en release), `iosApp` (projet Xcode, `PrivacyInfo.xcprivacy`).
 - Spotless + ktlint, GitHub Actions (Linux : contrôle, tests, assemblage Android ; macOS : framework iOS).
 - Critère : `:ai:api` compile sur Android et iOS.
+- Fait le 16/11/2026 : `spotlessApply`, `:ai:api:allTests` (aucun test encore), `:androidApp:assembleDebug` et `assembleRelease` (R8),
+  `:shared:linkDebugFrameworkIosSimulatorArm64` et la compilation de `iosApp` pour le simulateur réussissent (Xcode 15.4 local).
 
 ## Lot 1 — Fondations ☐
 - `core:common`, `core:domain` (session, profil, catégories, quotas, consentements IA, ports IA métier), `core:network`, `core:security`, `core:data` (GoTrue, PostgREST, API nemla, passerelle IA).

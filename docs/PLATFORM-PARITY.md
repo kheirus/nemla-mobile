@@ -13,6 +13,9 @@ L'interface et la logique sont partagées. Écarts connus ou prévisibles, à va
 | IA embarquée | ML Kit GenAI (Gemini Nano) possible | Apple Foundation Models possible | Éviter : préférer whisper.cpp et LiteRT-LM, communs aux deux |
 | Icône | Adaptative, transparence admise | Fond opaque obligatoire | Oui : fond à choisir |
 
+État au lot 0 : `FLAG_SECURE` est posé par `MainActivity` en release ; le voile iOS n'existe pas encore (prévu avec `core:security`, lot 1).
+Points d'entrée : `MainActivity` (Android) et `mainViewController()` de `shared/iosMain` (iOS) affichent tous deux un écran Compose vide.
+
 Écarts entre le web et le mobile à trancher (voir `specs/03` et `specs/04`) : graisse 600 absente de DM Sans (rendue en 700 sur le web),
 ambre au survol sans équivalent tactile, toasts en haut sur le web, fenêtres modales pleine largeur à coins carrés sur mobile web,
 logo absent du dépôt web (hébergé sur le CDN Lovable).
