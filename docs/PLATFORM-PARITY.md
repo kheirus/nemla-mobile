@@ -14,6 +14,13 @@ L'interface et la logique sont partagées. Écarts connus ou prévisibles, à va
 | Icône | Adaptative, transparence admise | Fond opaque obligatoire | Oui : fond à choisir |
 
 État au lot 0 : `FLAG_SECURE` est posé par `MainActivity` en release ; le voile iOS n'existe pas encore (prévu avec `core:security`, lot 1).
+
+État au lot 1 (`core:security`) : `AndroidScreenProtection` (`FLAG_SECURE` sur toutes les activités) et `IosScreenProtection`
+(vue opaque `systemBackgroundColor` posée sur chaque fenêtre à `willResignActive`, retirée à `didBecomeActive`) existent, actives hors debug
+sur les deux plateformes ; elles ne sont pas encore branchées dans `androidApp` / `iosApp`. Écart visible : sur iOS, la capture d'écran
+reste possible au premier plan, et l'aperçu du sélecteur d'applications montre un écran uni au lieu de l'écran vide d'Android.
+Tests : le Keychain n'est pas disponible dans l'exécutable de test Kotlin/Native (`errSecNotAvailable`), donc `KeychainSecureStore`
+n'a pas de test automatisé ; le magasin Android est testé sur hôte avec un chiffrement logiciel à la place du Keystore.
 Points d'entrée : `MainActivity` (Android) et `mainViewController()` de `shared/iosMain` (iOS) affichent tous deux un écran Compose vide.
 
 Écarts entre le web et le mobile à trancher (voir `specs/03` et `specs/04`) : graisse 600 absente de DM Sans (rendue en 700 sur le web),

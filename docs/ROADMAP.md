@@ -11,8 +11,24 @@
 - Fait le 16/11/2026 : `spotlessApply`, `:ai:api:allTests` (aucun test encore), `:androidApp:assembleDebug` et `assembleRelease` (R8),
   `:shared:linkDebugFrameworkIosSimulatorArm64` et la compilation de `iosApp` pour le simulateur réussissent (Xcode 15.4 local).
 
-## Lot 1 — Fondations ☐
+## Lot 1 — Fondations ◐
 - `core:common`, `core:domain` (session, profil, catégories, quotas, consentements IA, ports IA métier), `core:network`, `core:security`, `core:data` (GoTrue, PostgREST, API nemla, passerelle IA).
+  - ☑ `core:common` (16/11/2026) : `AppResult` et ses opérateurs, `runCatchingApp` (relance `CancellationException`), `AppError` + `ValidationCode`,
+    `AppDispatchers`, `AppBuildInfo`, `AppLogger` typé (événements = constantes d'enum, attributs numériques / booléens / enum uniquement),
+    Logcat / NSLog en debug, `NoOpLogger` en release, `coreCommonModule`.
+  - ☑ `core:domain` (16/11/2026) : entités (session, identifiants, email / mot de passe validés, profil, devise, catégories, quota mensuel,
+    consentements IA `ANONYMIZED` / `PERSONAL`, brouillons de dépense / charge fixe, relevé, estimation de budget, bilan, export),
+    ports (`AuthRepository`, `ProfileRepository`, `CategoryRepository`, `QuotaRepository`, `AiConsentRepository`, `AccountRepository`,
+    `VoiceExpenseCapturer`, `StatementImporter`, `RecurringChargeParser`, `BudgetAdvisor`, `PeriodReviewer`), cas d'usage d'authentification
+    et de consentement, 26 tests.
+  - ☑ `core:security` (16/11/2026) : `SecureStore` (Android : AES-256-GCM Android Keystore + DataStore dans `noBackupFilesDir` ;
+    iOS : Keychain `AfterFirstUnlockThisDeviceOnly`, non synchronisé), `InMemorySecureStore`, `ScreenProtection`
+    (`AndroidScreenProtection.install(application)`, `IosScreenProtection.install()`), `coreSecurityModule`. Branchement dans les coquilles : à faire.
+  - ☑ `core:network` (16/11/2026) : `BackendConfig`, `createHttpClient` (OkHttp / Darwin, JSON, délais, HTTPS uniquement, sans redirection),
+    plugin d'authentification (`apikey` Supabase, `Bearer`, un rejeu après 401 de session, jamais après un 401 de la passerelle IA),
+    `TokenProvider` (rafraîchissement anticipé et sérialisé) au-dessus de `SessionTokenStore`, `safeRequest` (GoTrue, PostgREST, `/api/public`, HTML),
+    `coreNetworkModule`, 25 tests.
+  - ☐ `core:data`.
 - `ai:local` : `RuleBasedStatementAnonymizer`, porté des règles de `specs/01` §6.2, avec tests de parité.
 - `ai:remote-nemla` : moteurs du tableau d'ARCHITECTURE §4. Tests de `AiRouter`.
 - `core:designsystem` d'après `specs/03`. Polices Outfit et DM Sans embarquées.
