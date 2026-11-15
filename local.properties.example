@@ -1,0 +1,5 @@
+# Copier en local.properties (non versionné). Valeurs vides acceptées.
+sdk.dir=/chemin/vers/Android/sdk
+SUPABASE_URL=https://<projet>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=
+API_BASE_URL=https://nemla.app
