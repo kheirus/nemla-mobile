@@ -1,0 +1,5 @@
+// Copier en iosApp/Config.xcconfig (non versionné). Dans un xcconfig, "//" ouvre un commentaire : écrire https:/$()/...
+SUPABASE_URL = https:/$()/<projet>.supabase.co
+SUPABASE_PUBLISHABLE_KEY =
+API_BASE_URL = https:/$()/nemla.app
+DEVELOPMENT_TEAM =
