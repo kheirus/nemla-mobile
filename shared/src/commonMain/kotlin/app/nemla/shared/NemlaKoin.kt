@@ -11,7 +11,7 @@ import app.nemla.core.network.BackendConfig
 import app.nemla.core.network.coreNetworkModule
 import app.nemla.core.security.coreSecurityModule
 import app.nemla.feature.auth.featureAuthModule
-import app.nemla.feature.home.featureHomeModule
+import app.nemla.feature.dashboard.featureDashboardModule
 import app.nemla.feature.voice.featureVoiceModule
 import org.koin.core.Koin
 import org.koin.core.context.startKoin
@@ -46,7 +46,7 @@ internal fun nemlaModules(
         aiRemoteNemlaModule,
         coreDataModule,
         featureAuthModule,
-        featureHomeModule,
+        featureDashboardModule,
         featureVoiceModule,
         appModule,
     )

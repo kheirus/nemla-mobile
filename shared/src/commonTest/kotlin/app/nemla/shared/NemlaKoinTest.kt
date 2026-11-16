@@ -19,22 +19,35 @@ import app.nemla.core.domain.model.UserId
 import app.nemla.core.domain.port.AccountRepository
 import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
+import app.nemla.core.domain.port.DeferredDebitRepository
+import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
+import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.domain.port.ProfileRepository
+import app.nemla.core.domain.port.RecurringChargeMaterializer
+import app.nemla.core.domain.port.RecurringChargeRepository
 import app.nemla.core.domain.port.VoiceExpenseCapturer
+import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
 import app.nemla.core.domain.usecase.CaptureVoiceExpenses
 import app.nemla.core.domain.usecase.ConfirmReviewedExpenses
+import app.nemla.core.domain.usecase.DeleteExpense
 import app.nemla.core.domain.usecase.DeletePendingExpense
 import app.nemla.core.domain.usecase.FindLearnedExpenses
+import app.nemla.core.domain.usecase.GetDeferredDebit
 import app.nemla.core.domain.usecase.GetMonthlyQuota
 import app.nemla.core.domain.usecase.GrantAiConsent
 import app.nemla.core.domain.usecase.ListCategories
+import app.nemla.core.domain.usecase.ListExpenses
+import app.nemla.core.domain.usecase.ListRecurringCharges
+import app.nemla.core.domain.usecase.MaterializeRecurringCharges
 import app.nemla.core.domain.usecase.ObserveAiConsents
 import app.nemla.core.domain.usecase.ObserveAuthState
 import app.nemla.core.domain.usecase.RequestPasswordReset
+import app.nemla.core.domain.usecase.SearchExpensesByDate
 import app.nemla.core.domain.usecase.SignIn
 import app.nemla.core.domain.usecase.SignOut
 import app.nemla.core.domain.usecase.SignUp
+import app.nemla.core.domain.usecase.UpdateExpense
 import app.nemla.core.network.BackendConfig
 import app.nemla.core.security.InMemorySecureStore
 import app.nemla.core.security.ScreenProtection
@@ -122,6 +135,19 @@ class NemlaKoinTest {
             koin.get<SignOut>()
             koin.get<RequestPasswordReset>()
             koin.get<AppViewModel>()
+            koin.get<ExpenseRepository>()
+            koin.get<RecurringChargeRepository>()
+            koin.get<RecurringChargeMaterializer>()
+            koin.get<DeferredDebitRepository>()
+            koin.get<PendingReviewOpener>()
+            koin.get<BootstrapAndLoadProfile>()
+            koin.get<ListExpenses>()
+            koin.get<SearchExpensesByDate>()
+            koin.get<ListRecurringCharges>()
+            koin.get<MaterializeRecurringCharges>()
+            koin.get<GetDeferredDebit>()
+            koin.get<UpdateExpense>()
+            koin.get<DeleteExpense>()
             assertTrue(koin.get<ScreenProtection>().isEnabled)
             val router = koin.get<AiRouter>()
             assertEquals(1, router.enginesFor(AiCapability.StatementAnonymization).size)

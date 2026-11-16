@@ -27,14 +27,15 @@ import app.nemla.core.designsystem.component.NemlaLoadingIndicator
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaScreenAlignment
 import app.nemla.core.designsystem.theme.NemlaTheme
+import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.network.BackendConfig
 import app.nemla.feature.auth.navigation.AuthEntry
 import app.nemla.feature.auth.navigation.authGraph
 import app.nemla.feature.auth.navigation.isInAuthGraph
 import app.nemla.feature.auth.navigation.navigateToAuth
-import app.nemla.feature.home.homeScreen
-import app.nemla.feature.home.isHome
-import app.nemla.feature.home.navigateToHome
+import app.nemla.feature.dashboard.dashboardScreen
+import app.nemla.feature.dashboard.isDashboard
+import app.nemla.feature.dashboard.navigateToDashboard
 import app.nemla.feature.voice.capture.VoiceCaptureButton
 import app.nemla.feature.voice.navigation.closeVoiceReview
 import app.nemla.feature.voice.navigation.navigateToVoiceReview
@@ -67,6 +68,7 @@ fun App() {
 @Composable
 private fun NemlaNavHost(viewModel: AppViewModel = koinViewModel()) {
     val navController = rememberNavController()
+    val reviewOpener = koinInject<PendingReviewOpener>()
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     var hadSession by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(authState) {
@@ -88,8 +90,12 @@ private fun NemlaNavHost(viewModel: AppViewModel = koinViewModel()) {
     NavHost(navController = navController, startDestination = SplashDestination) {
         composable<SplashDestination> { SplashScreen() }
         authGraph(navController = navController, onAuthenticated = { navController.showHome() })
-        homeScreen(
+        dashboardScreen(
             onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
+            onReviewPending = { review ->
+                reviewOpener.open(review)
+                navController.navigateToVoiceReview()
+            },
             floatingAction = { VoiceCaptureButton(onOpenReview = { navController.navigateToVoiceReview() }) },
         )
         voiceGraph(onClose = { navController.closeVoiceReview() })
@@ -97,8 +103,8 @@ private fun NemlaNavHost(viewModel: AppViewModel = koinViewModel()) {
 }
 
 private fun NavHostController.showHome() {
-    if (currentDestination?.isHome() == true) return
-    navigateToHome()
+    if (currentDestination?.isDashboard() == true) return
+    navigateToDashboard()
 }
 
 private fun NavHostController.showAuth(target: RootTarget.Auth) {

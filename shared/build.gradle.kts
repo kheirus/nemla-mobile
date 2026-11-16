@@ -25,7 +25,7 @@ kotlin {
             implementation(projects.ai.local)
             implementation(projects.ai.remoteNemla)
             implementation(projects.feature.auth)
-            implementation(projects.feature.home)
+            implementation(projects.feature.dashboard)
             implementation(projects.feature.voice)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtime.compose)
