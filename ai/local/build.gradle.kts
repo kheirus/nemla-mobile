@@ -5,7 +5,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.ai.api)
+            api(projects.ai.api)
             implementation(libs.koin.core)
         }
     }
