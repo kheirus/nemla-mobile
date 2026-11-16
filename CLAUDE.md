@@ -33,5 +33,10 @@ Kotlin Multiplatform, interface 100 % partagée en Compose Multiplatform.
 ## État
 Lot 0 (socle de build) terminé le 16/11/2026 : wrapper Gradle 9.7.1, `build-logic` (plugins `nemla.kmp.library`, `nemla.compose`,
 `nemla.feature`, `nemla.android.application`, `nemla.spotless`), tous les modules d'ARCHITECTURE §2 configurés, `androidApp`,
-`iosApp`, Spotless + ktlint, CI GitHub Actions. `:ai:api` compile sur Android et iOS ; les autres modules sont vides.
-JDK 17 requis : `gradle/gradle-daemon-jvm.properties` l'impose au daemon. Prochaine étape : lot 1.
+`iosApp`, Spotless + ktlint, CI GitHub Actions. JDK 17 requis : `gradle/gradle-daemon-jvm.properties` l'impose au daemon.
+
+Lot 1 (fondations) terminé le 16/11/2026 : `core:*`, `ai:*`, `core:designsystem` (thème clair/sombre, jetons, composants),
+`feature:auth` (connexion, inscription, mot de passe oublié), `feature:home` (coquille), `shared` (App, navigation pilotée par la
+session, assemblage Koin), coquilles Android (`NemlaApplication`, R8 vérifié) et iOS (`startNemla` + `mainViewController`).
+Restes et écarts : `docs/ROADMAP.md` (lot 1) et `docs/PLATFORM-PARITY.md`. Polices Outfit / DM Sans et logo à fournir
+(fichier unique `NemlaFonts.kt`, monogramme provisoire dans `brand/NemlaLogo.kt`). Prochaine étape : lot 2.

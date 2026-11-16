@@ -11,7 +11,7 @@
 - Fait le 16/11/2026 : `spotlessApply`, `:ai:api:allTests` (aucun test encore), `:androidApp:assembleDebug` et `assembleRelease` (R8),
   `:shared:linkDebugFrameworkIosSimulatorArm64` et la compilation de `iosApp` pour le simulateur réussissent (Xcode 15.4 local).
 
-## Lot 1 — Fondations ◐
+## Lot 1 — Fondations ☑
 - `core:common`, `core:domain` (session, profil, catégories, quotas, consentements IA, ports IA métier), `core:network`, `core:security`, `core:data` (GoTrue, PostgREST, API nemla, passerelle IA).
   - ☑ `core:common` (16/11/2026) : `AppResult` et ses opérateurs, `runCatchingApp` (relance `CancellationException`), `AppError` + `ValidationCode`,
     `AppDispatchers`, `AppBuildInfo`, `AppLogger` typé (événements = constantes d'enum, attributs numériques / booléens / enum uniquement),
@@ -43,8 +43,31 @@
 - ☑ `ai:remote-nemla` (16/11/2026) : les cinq moteurs du tableau d'ARCHITECTURE §4, montants JSON → centimes sans flottant,
   `/transcribe` lu en objet ou en chaîne, erreurs traduites en `AiError` sans contenu serveur, `aiRemoteNemlaModule`. 31 tests.
 - ☑ Tests de `AiRouter` (16/11/2026) : 33 tests.
-- `core:designsystem` d'après `specs/03`. Polices Outfit et DM Sans embarquées.
-- `feature:auth` d'après `specs/04`, `feature:home` (coquille), `shared` (navigation, Koin).
+- ☑ `core:designsystem` (16/11/2026) : `NemlaTheme` (clair / sombre selon le système) sur Material 3, couleurs de `specs/03` §2 et §13,
+  jetons hors Material par `CompositionLocal` (`NemlaTheme.colors`, `.typography`, `.spacing`, `.radius`, `.sizes`), formes, échelle
+  typographique ; boutons (primaire, secondaire, contour, fantôme, destructif, texte ; état de chargement), champ de texte (libellé,
+  erreur, mot de passe avec bascule, actions clavier, indices d'autoremplissage), liste de choix, carte `card-soft`, bannière,
+  état vide, échafaudage d'écran (insets, défilement, clavier), icônes Lucide redessinées en `ImageVector`, aperçus `@Preview`.
+  Polices : `NemlaFonts.kt` renvoie `FontFamily.Default` (aucun fichier téléchargé) ; logo : monogramme provisoire.
+- ☑ `feature:auth` (16/11/2026) : connexion, inscription (email, mot de passe, pseudo, âge, sexe, situation familiale, encart
+  confidentialité), mot de passe oublié ; `Route` / `Screen` / `UiState` / `Action` / `Effect` / ViewModel ; erreurs traduites
+  (jamais de texte serveur) ; graphe `authGraph` à routes typées, `featureAuthModule` ; 29 tests (×2 cibles).
+- ☑ `feature:home` (16/11/2026) : coquille (salutation par pseudo après `bootstrap_user`, état vide sans données simulées,
+  déconnexion), `featureHomeModule`, 8 tests (×2 cibles).
+- ☑ `shared` (16/11/2026) : `App()` (démarrage neutre tant que la session est `Unknown`, graphe auth ou accueil ensuite, bascule
+  automatique à l'invalidation), écran « configuration manquante » si `BackendConfig` est incomplet, `initKoin`, 5 tests.
+- ☑ Coquilles (16/11/2026) : Android `NemlaApplication` (Koin, `AndroidScreenProtection.install`), `MainActivity` edge-to-edge,
+  fond de fenêtre clair / sombre ; R8 vérifié (APK release signé en local avec la clé de debug, parcours inscription → connexion →
+  mot de passe oublié sans plantage, `FLAG_SECURE` actif) : aucune règle supplémentaire nécessaire. iOS : lecture de
+  `Info.plist`, `startNemla` (Koin, voile `IosScreenProtection`), `mainViewController()` plein écran ; `xcodebuild` simulateur arm64 OK.
+- Navigation multiplateforme montée en 2.10.0 (stable).
+- Reste à faire (reporté) :
+  - fichiers `.ttf` Outfit 400/500/600/700 et DM Sans 400/500/700 dans `core/designsystem/src/commonMain/composeResources/font`,
+    puis `NemlaFonts.kt` ; logo `nemla-logo.png` (ou SVG) à la place du monogramme ;
+  - écran « Nouveau mot de passe » (`/reset-password`) : nécessite App Links / Universal Links ;
+  - pseudos disponibles (puces) et remplacement d'un pseudo déjà pris après inscription (`suggest_pseudo`) ;
+  - onboarding après inscription (lot 4) ; aujourd'hui l'inscription avec session ouvre l'accueil ;
+  - lancement sur simulateur iOS non fait (aucun simulateur démarré) ; affichage vérifié sur émulateur Android uniquement.
 
 ## Lot 2 — Dictée ☐
 `core:audio` (WAV mono 16 kHz 16 bits, 30 s, arrêt après 3 s de silence), `feature:voice` (bouton, enregistrement, fiche de revue), consentement IA.
