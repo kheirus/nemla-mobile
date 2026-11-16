@@ -117,7 +117,13 @@ internal class NemlaStatementParsingEngine(
     override val descriptor: EngineDescriptor = remoteDescriptor("nemla-statement-parsing", creditCost = 0)
 
     override suspend fun availability(): EngineAvailability =
-        if (api.isImportTextAvailable()) EngineAvailability.Ready else EngineAvailability.Unavailable(REASON_NOT_SUPPORTED)
+        when (val probe = api.probeImportText()) {
+            ImportTextProbe.Available -> EngineAvailability.Ready
+            ImportTextProbe.Missing -> EngineAvailability.Unavailable(REASON_NOT_SUPPORTED)
+            ImportTextProbe.Offline -> EngineAvailability.Unavailable(REASON_OFFLINE)
+            ImportTextProbe.Timeout -> EngineAvailability.Unavailable(REASON_TIMEOUT)
+            is ImportTextProbe.Failed -> EngineAvailability.Unavailable(probe.status?.let { "server_$it" } ?: "server")
+        }
 
     override suspend fun execute(input: StatementParsingRequest): ParsedStatement {
         val text = input.statement.value

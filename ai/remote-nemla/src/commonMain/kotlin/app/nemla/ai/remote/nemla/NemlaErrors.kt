@@ -9,6 +9,7 @@ internal const val REASON_TIMEOUT = "timeout"
 internal const val REASON_RATE_LIMITED = "rate_limited"
 internal const val REASON_INVALID_RESPONSE = "invalid_response"
 internal const val REASON_NOT_SUPPORTED = "not_supported"
+internal const val REASON_OFFLINE = "offline"
 
 internal fun AppError.toAiError(): AiError =
     when (this) {

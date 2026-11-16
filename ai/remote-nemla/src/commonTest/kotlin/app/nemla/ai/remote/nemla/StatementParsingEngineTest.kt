@@ -1,15 +1,21 @@
 package app.nemla.ai.remote.nemla
 
 import app.nemla.ai.api.AiCapability
+import app.nemla.ai.api.AiContextSource
 import app.nemla.ai.api.AiError
+import app.nemla.ai.api.AiResult
+import app.nemla.ai.api.AiRouter
+import app.nemla.ai.api.AiRoutingContext
 import app.nemla.ai.api.AnonymizedText
 import app.nemla.ai.api.CategoryHint
+import app.nemla.ai.api.DataSensitivity
 import app.nemla.ai.api.EngineAvailability
 import app.nemla.ai.api.ExecutionLocation
 import app.nemla.ai.api.ExpenseDraft
 import app.nemla.ai.api.RawStatement
 import app.nemla.ai.api.StatementParsingRequest
 import app.nemla.ai.local.RuleBasedStatementAnonymizer
+import io.ktor.client.engine.mock.toByteArray
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -25,6 +31,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -112,7 +119,71 @@ class StatementParsingEngineTest {
             assertEquals(EngineAvailability.Ready, engine(present).availability())
 
             val offline = RemoteHarness { throw IOException("down") }
-            assertEquals(EngineAvailability.Ready, engine(offline).availability())
+            assertEquals(EngineAvailability.Unavailable(REASON_OFFLINE), engine(offline).availability())
+
+            val failing = RemoteHarness { json("""{"error":"Erreur interne"}""", HttpStatusCode.InternalServerError) }
+            assertEquals(EngineAvailability.Unavailable("server_500"), engine(failing).availability())
+
+            val htmlBadRequest = RemoteHarness { html(HttpStatusCode.BadRequest) }
+            assertEquals(EngineAvailability.Unavailable(REASON_NOT_SUPPORTED), engine(htmlBadRequest).availability())
+        }
+
+    private fun router(engine: NemlaStatementParsingEngine): AiRouter =
+        AiRouter(
+            listOf(RuleBasedStatementAnonymizer(), engine),
+            AiContextSource { AiRoutingContext(online = true, remainingCredits = 10, remoteConsent = setOf(DataSensitivity.ANONYMIZED)) },
+        )
+
+    private suspend fun routedFailure(harness: RemoteHarness): AiError {
+        val result = router(engine(harness)).run(AiCapability.StatementParsing, request())
+        return assertIs<AiResult.Failure>(result).error
+    }
+
+    private fun RemoteHarness.assertOnlyTheEmptyProbeWasSent() {
+        assertEquals(1, requests.size)
+        assertEquals(JsonObject(emptyMap()), Json.parseToJsonElement(single.body))
+        assertTrue(requests.none { it.body.contains("BOULANGERIE") || it.body.contains("text") })
+    }
+
+    @Test
+    fun htmlNotFoundOnTheProbeKeepsTheStatementOnTheDevice() =
+        runTest {
+            val harness = RemoteHarness { html(HttpStatusCode.NotFound) }
+            assertEquals(AiError.EngineFailure(REASON_NOT_SUPPORTED), routedFailure(harness))
+            harness.assertOnlyTheEmptyProbeWasSent()
+        }
+
+    @Test
+    fun webHostRouteErrorForJsonClientsIsAMissingEndpoint() =
+        runTest {
+            val harness =
+                RemoteHarness { json("""{"error":"Only HTML requests are supported here"}""", HttpStatusCode.InternalServerError) }
+            assertEquals(AiError.EngineFailure(REASON_NOT_SUPPORTED), routedFailure(harness))
+            harness.assertOnlyTheEmptyProbeWasSent()
+        }
+
+    @Test
+    fun probeFailuresNeverLetTheStatementOut() =
+        runTest {
+            val failing = RemoteHarness { json("""{"error":"Erreur interne"}""", HttpStatusCode.InternalServerError) }
+            assertEquals(AiError.EngineFailure("server_500"), routedFailure(failing))
+            failing.assertOnlyTheEmptyProbeWasSent()
+
+            val offline = RemoteHarness { throw IOException("down") }
+            assertEquals(AiError.EngineFailure(REASON_OFFLINE), routedFailure(offline))
+            assertTrue(offline.requests.none { it.body.contains("BOULANGERIE") })
+        }
+
+    @Test
+    fun htmlNotFoundOnTheRealCallIsNotSupported() =
+        runTest {
+            val harness =
+                RemoteHarness { request ->
+                    val body = request.body.toByteArray().decodeToString()
+                    if (body == "{}") json("""{"error":"Texte manquant"}""", HttpStatusCode.BadRequest) else html(HttpStatusCode.NotFound)
+                }
+            assertEquals(AiError.EngineFailure(REASON_NOT_SUPPORTED), routedFailure(harness))
+            assertEquals(2, harness.requests.size)
         }
 
     @Test

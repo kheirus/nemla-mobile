@@ -13,6 +13,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
@@ -77,7 +78,7 @@ internal class NemlaApi(
         }
     }
 
-    suspend fun isImportTextAvailable(): Boolean {
+    suspend fun probeImportText(): ImportTextProbe {
         val response =
             sendSafely {
                 client.post(endpoint(IMPORT_TEXT_PATH)) {
@@ -85,7 +86,24 @@ internal class NemlaApi(
                     setBody(JsonObject(emptyMap()))
                 }
             }
-        return response !is AppResult.Success || !response.value.isMissingEndpoint()
+        return when (response) {
+            is AppResult.Failure -> {
+                when (response.error) {
+                    AppError.Network.Offline -> ImportTextProbe.Offline
+                    AppError.Network.Timeout -> ImportTextProbe.Timeout
+                    else -> ImportTextProbe.Failed(null)
+                }
+            }
+
+            is AppResult.Success -> {
+                val probe = response.value
+                when {
+                    probe.isMissingEndpoint() -> ImportTextProbe.Missing
+                    probe.status.value in PROBE_ACCEPTED_STATUSES -> ImportTextProbe.Available
+                    else -> ImportTextProbe.Failed(probe.status.value)
+                }
+            }
+        }
     }
 
     private suspend fun sendSafely(request: suspend () -> HttpResponse): AppResult<HttpResponse> =
@@ -97,7 +115,20 @@ internal class NemlaApi(
             AppResult.Failure(e.toAppError())
         }
 
-    private fun HttpResponse.isMissingEndpoint(): Boolean = status.value in MISSING_ENDPOINT_STATUSES
+    private suspend fun HttpResponse.isMissingEndpoint(): Boolean {
+        if (status.value in MISSING_ENDPOINT_STATUSES) return true
+        if (contentType()?.match(ContentType.Application.Json) != true) return true
+        if (status.value != HTML_ONLY_ROUTE_STATUS) return false
+        val text =
+            try {
+                bodyAsText()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                return true
+            }
+        return text.length <= MAX_ROUTE_ERROR_CHARS && text.contains(HTML_ONLY_ROUTE_MESSAGE)
+    }
 
     private fun endpoint(path: String): String = config.apiBaseUrl.trim().trimEnd('/') + "/api/public/" + path
 
@@ -123,7 +154,25 @@ internal class NemlaApi(
         const val WAV_MIME_TYPE = "audio/wav"
         const val IMPORT_TEXT_PATH = "import/text"
         val MISSING_ENDPOINT_STATUSES = setOf(404, 405)
+        val PROBE_ACCEPTED_STATUSES = setOf(400, 401, 413, 422, 429)
+        const val HTML_ONLY_ROUTE_STATUS = 500
+        const val HTML_ONLY_ROUTE_MESSAGE = "Only HTML requests are supported here"
+        const val MAX_ROUTE_ERROR_CHARS = 1_024
     }
+}
+
+internal sealed interface ImportTextProbe {
+    data object Available : ImportTextProbe
+
+    data object Missing : ImportTextProbe
+
+    data object Offline : ImportTextProbe
+
+    data object Timeout : ImportTextProbe
+
+    data class Failed(
+        val status: Int?,
+    ) : ImportTextProbe
 }
 
 internal fun backendLanguage(languageTag: String): String = if (languageTag.trim().lowercase().startsWith("en")) "en" else "fr"
