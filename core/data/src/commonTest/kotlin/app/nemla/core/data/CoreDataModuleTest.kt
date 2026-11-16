@@ -13,6 +13,7 @@ import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.BudgetAdvisor
 import app.nemla.core.domain.port.CategoryRepository
+import app.nemla.core.domain.port.ExpenseReviewRepository
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
@@ -49,6 +50,7 @@ class CoreDataModuleTest {
             koin.get<ProfileRepository>()
             koin.get<CategoryRepository>()
             koin.get<QuotaRepository>()
+            koin.get<ExpenseReviewRepository>()
             koin.get<AiConsentRepository>()
             koin.get<AccountRepository>()
             koin.get<VoiceExpenseCapturer>()

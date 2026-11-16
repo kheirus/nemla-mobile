@@ -20,6 +20,7 @@ import app.nemla.core.data.ai.RoutedVoiceExpenseCapturer
 import app.nemla.core.data.ai.StatementTextExtractor
 import app.nemla.core.data.consent.SecureStoreAiConsentRepository
 import app.nemla.core.data.remote.KtorCategoryRepository
+import app.nemla.core.data.remote.KtorExpenseReviewRepository
 import app.nemla.core.data.remote.KtorProfileRepository
 import app.nemla.core.data.remote.KtorQuotaRepository
 import app.nemla.core.data.remote.Postgrest
@@ -32,6 +33,7 @@ import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.BudgetAdvisor
 import app.nemla.core.domain.port.CategoryRepository
+import app.nemla.core.domain.port.ExpenseReviewRepository
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
@@ -73,6 +75,7 @@ val coreDataModule: Module =
         single<ProfileRepository> { KtorProfileRepository(postgrest = get(), goTrue = get(), logger = get()) }
         single<CategoryRepository> { KtorCategoryRepository(postgrest = get()) }
         single<QuotaRepository> { KtorQuotaRepository(postgrest = get()) }
+        single<ExpenseReviewRepository> { KtorExpenseReviewRepository(postgrest = get()) }
         single<AccountRepository> { UnsupportedAccountRepository }
 
         single<ConnectivityMonitor> { AssumeOnlineConnectivityMonitor }

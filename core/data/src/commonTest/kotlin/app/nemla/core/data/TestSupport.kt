@@ -9,6 +9,7 @@ import app.nemla.core.common.LogLevel
 import app.nemla.core.common.NoOpLogger
 import app.nemla.core.data.consent.SecureStoreAiConsentRepository
 import app.nemla.core.data.remote.KtorCategoryRepository
+import app.nemla.core.data.remote.KtorExpenseReviewRepository
 import app.nemla.core.data.remote.KtorProfileRepository
 import app.nemla.core.data.remote.KtorQuotaRepository
 import app.nemla.core.data.remote.Postgrest
@@ -104,6 +105,7 @@ internal class DataHarness(
     val profiles = KtorProfileRepository(postgrest, goTrue, NoOpLogger)
     val categories = KtorCategoryRepository(postgrest)
     val quotas = KtorQuotaRepository(postgrest)
+    val reviews = KtorExpenseReviewRepository(postgrest)
 
     fun on(
         method: String,
