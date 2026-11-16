@@ -113,7 +113,7 @@ internal class AndroidMicrophone(
             try {
                 if (record.recordingState == AudioRecord.RECORDSTATE_RECORDING) record.stop()
             } catch (e: IllegalStateException) {
-                Unit
+                return
             }
         }
 

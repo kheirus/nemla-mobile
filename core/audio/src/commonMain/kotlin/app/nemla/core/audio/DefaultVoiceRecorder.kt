@@ -79,18 +79,10 @@ internal class DefaultVoiceRecorder(
             input.close()
             val result = withContext(encoding) { encodeRecording(buffer.samples, buffer.size, input.sampleRateHz) }
             mutableState.value = result
-            when (result) {
-                is RecorderState.Finished -> {
-                    logger.info(AudioLog.RECORDING_FINISHED, LogAttribute.number(LogField.DURATION_MS, result.durationMillis))
-                }
-
-                is RecorderState.Failed -> {
-                    logger.warn(AudioLog.RECORDING_FAILED, LogAttribute.choice(LogField.REASON, result.error))
-                }
-
-                else -> {
-                    Unit
-                }
+            if (result is RecorderState.Finished) {
+                logger.info(AudioLog.RECORDING_FINISHED, LogAttribute.number(LogField.DURATION_MS, result.durationMillis))
+            } else if (result is RecorderState.Failed) {
+                logger.warn(AudioLog.RECORDING_FAILED, LogAttribute.choice(LogField.REASON, result.error))
             }
         } finally {
             input.close()
