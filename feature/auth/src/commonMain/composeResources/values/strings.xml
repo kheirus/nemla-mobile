@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="auth_signup_title">Créer mon compte</string>
+  <string name="auth_signup_subtitle">Quelques secondes, et vous dictez votre première dépense.</string>
+  <string name="auth_signin_title">Bon retour</string>
+  <string name="auth_signin_subtitle">Accédez à votre budget.</string>
+  <string name="auth_forgot_title">Mot de passe oublié</string>
+  <string name="auth_forgot_subtitle">Indiquez votre email : nous vous envoyons un lien de réinitialisation.</string>
+  <string name="auth_email">Email</string>
+  <string name="auth_password">Mot de passe</string>
+  <string name="auth_forgot_link">Mot de passe oublié ?</string>
+  <string name="auth_pseudo">Pseudo</string>
+  <string name="auth_age">Âge</string>
+  <string name="auth_gender">Sexe</string>
+  <string name="auth_choose">Choisir</string>
+  <string name="auth_gender_female">Femme</string>
+  <string name="auth_gender_male">Homme</string>
+  <string name="auth_household">Situation familiale</string>
+  <string name="auth_household_single">Célibataire</string>
+  <string name="auth_household_couple">En couple</string>
+  <string name="auth_household_family">Famille avec enfants</string>
+  <string name="auth_household_flatshare">Colocation</string>
+  <string name="auth_privacy">Vos données sont protégées, visibles de vous seul, modifiables à tout moment dans votre espace et jamais revendues.</string>
+  <string name="auth_submitting">Un instant…</string>
+  <string name="auth_create_account">Créer mon compte</string>
+  <string name="auth_send_link">Envoyer le lien</string>
+  <string name="auth_sign_in">Se connecter</string>
+  <string name="auth_switch_to_sign_in">J'ai déjà un compte : me connecter</string>
+  <string name="auth_switch_to_sign_up">Pas encore de compte ? Créer un compte</string>
+  <string name="auth_reset_link_sent">Email envoyé : suivez le lien pour choisir un nouveau mot de passe.</string>
+  <string name="auth_confirmation_required">Vérifiez votre boîte mail pour confirmer votre adresse.</string>
+  <string name="auth_error_generic">Connexion impossible</string>
+  <string name="auth_error_invalid_credentials">Email ou mot de passe incorrect.</string>
+  <string name="auth_error_email_not_confirmed">Confirmez d'abord votre adresse avec le lien reçu par email, puis reconnectez-vous.</string>
+  <string name="auth_error_email_taken">Un compte existe déjà avec cet email. Connectez-vous ou utilisez « Mot de passe oublié ? ».</string>
+  <string name="auth_error_offline">Pas de connexion internet. Vérifiez votre réseau, puis réessayez.</string>
+  <string name="auth_error_timeout">Le service met trop de temps à répondre. Réessayez dans un instant.</string>
+  <string name="auth_error_rate_limited">Trop de tentatives. Patientez quelques minutes avant de réessayer.</string>
+  <string name="auth_error_configuration">L'application n'est pas correctement configurée.</string>
+  <string name="auth_field_email_required">Indiquez votre email.</string>
+  <string name="auth_field_email_invalid">Cette adresse email n'est pas valide.</string>
+  <string name="auth_field_password_required">Indiquez votre mot de passe.</string>
+  <string name="auth_field_password_too_short">Au moins %1$d caractères.</string>
+  <string name="auth_field_password_too_long">Ce mot de passe est trop long (%1$d octets maximum).</string>
+  <string name="auth_field_password_too_weak">Ce mot de passe est trop faible : choisissez-en un plus long ou plus varié.</string>
+  <string name="auth_field_age_out_of_range">Indiquez un âge entre %1$d et %2$d ans.</string>
+</resources>

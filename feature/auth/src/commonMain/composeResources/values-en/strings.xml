@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="auth_signup_title">Create my account</string>
+  <string name="auth_signup_subtitle">A few seconds, and you are dictating your first expense.</string>
+  <string name="auth_signin_title">Welcome back</string>
+  <string name="auth_signin_subtitle">Access your budget.</string>
+  <string name="auth_forgot_title">Forgot password</string>
+  <string name="auth_forgot_subtitle">Enter your email: we will send you a reset link.</string>
+  <string name="auth_email">Email</string>
+  <string name="auth_password">Password</string>
+  <string name="auth_forgot_link">Forgot password?</string>
+  <string name="auth_pseudo">Username</string>
+  <string name="auth_age">Age</string>
+  <string name="auth_gender">Sex</string>
+  <string name="auth_choose">Choose</string>
+  <string name="auth_gender_female">Woman</string>
+  <string name="auth_gender_male">Man</string>
+  <string name="auth_household">Household</string>
+  <string name="auth_household_single">Single</string>
+  <string name="auth_household_couple">In a relationship</string>
+  <string name="auth_household_family">Family with children</string>
+  <string name="auth_household_flatshare">Shared housing</string>
+  <string name="auth_privacy">Your data is protected, visible only to you, editable at any time in your space and never sold.</string>
+  <string name="auth_submitting">One moment…</string>
+  <string name="auth_create_account">Create my account</string>
+  <string name="auth_send_link">Send the link</string>
+  <string name="auth_sign_in">Sign in</string>
+  <string name="auth_switch_to_sign_in">I already have an account: sign in</string>
+  <string name="auth_switch_to_sign_up">No account yet? Create one</string>
+  <string name="auth_reset_link_sent">Email sent: follow the link to choose a new password.</string>
+  <string name="auth_confirmation_required">Check your inbox to confirm your address.</string>
+  <string name="auth_error_generic">Unable to sign in</string>
+  <string name="auth_error_invalid_credentials">Incorrect email or password.</string>
+  <string name="auth_error_email_not_confirmed">First confirm your address with the link sent by email, then sign in again.</string>
+  <string name="auth_error_email_taken">An account already exists with this email. Sign in or use “Forgot password?”.</string>
+  <string name="auth_error_offline">No internet connection. Check your network, then try again.</string>
+  <string name="auth_error_timeout">The service is taking too long to respond. Try again in a moment.</string>
+  <string name="auth_error_rate_limited">Too many attempts. Wait a few minutes before trying again.</string>
+  <string name="auth_error_configuration">The app is not configured correctly.</string>
+  <string name="auth_field_email_required">Enter your email.</string>
+  <string name="auth_field_email_invalid">This email address is not valid.</string>
+  <string name="auth_field_password_required">Enter your password.</string>
+  <string name="auth_field_password_too_short">At least %1$d characters.</string>
+  <string name="auth_field_password_too_long">This password is too long (%1$d bytes maximum).</string>
+  <string name="auth_field_password_too_weak">This password is too weak: choose a longer or more varied one.</string>
+  <string name="auth_field_age_out_of_range">Enter an age between %1$d and %2$d.</string>
+</resources>
