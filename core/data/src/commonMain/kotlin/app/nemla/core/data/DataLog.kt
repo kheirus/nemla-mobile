@@ -1,0 +1,17 @@
+package app.nemla.core.data
+
+import app.nemla.core.common.LogEvent
+
+internal enum class DataLog : LogEvent {
+    SESSION_RESTORED,
+    SESSION_READ_FAILED,
+    SESSION_WRITE_FAILED,
+    SESSION_DISCARDED,
+    SESSION_ESTABLISHED,
+    SESSION_ENDED,
+    REMOTE_SIGN_OUT_FAILED,
+    PROFILE_SYNC_FAILED,
+    CONSENT_READ_FAILED,
+    AI_REQUEST_SERVED,
+    AI_REQUEST_FAILED,
+}
