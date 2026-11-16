@@ -29,11 +29,13 @@ import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaIconButton
+import app.nemla.core.designsystem.component.NemlaLinkTone
 import app.nemla.core.designsystem.component.NemlaMenuItem
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaSelectField
 import app.nemla.core.designsystem.component.NemlaTextArea
+import app.nemla.core.designsystem.component.NemlaTextButton
 import app.nemla.core.designsystem.component.NemlaTextField
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -62,6 +64,7 @@ import app.nemla.feature.onboarding.resources.onboarding_review_title
 import app.nemla.feature.onboarding.resources.onboarding_save
 import app.nemla.feature.onboarding.resources.onboarding_save_failed
 import app.nemla.feature.onboarding.resources.onboarding_sign_out
+import app.nemla.feature.onboarding.resources.onboarding_skip
 import app.nemla.feature.onboarding.resources.onboarding_title
 import app.nemla.feature.onboarding.resources.onboarding_yearly
 import kotlinx.coroutines.delay
@@ -290,6 +293,13 @@ private fun BudgetCard(
                 loading = state.isSaving,
                 enabled = !state.isAnalyzing && !state.isDictating,
                 modifier = Modifier.fillMaxWidth(),
+            )
+            NemlaTextButton(
+                text = stringResource(Res.string.onboarding_skip),
+                onClick = { onAction(OnboardingAction.SkipClicked) },
+                tone = NemlaLinkTone.Muted,
+                enabled = !state.isSaving,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
     }

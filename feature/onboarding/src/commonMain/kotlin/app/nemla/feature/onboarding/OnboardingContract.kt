@@ -127,6 +127,8 @@ internal sealed interface OnboardingAction {
 
     data object SaveClicked : OnboardingAction
 
+    data object SkipClicked : OnboardingAction
+
     data object NoticeDismissed : OnboardingAction
 
     data object SignOutClicked : OnboardingAction

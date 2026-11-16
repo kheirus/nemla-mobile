@@ -213,6 +213,21 @@ class OnboardingViewModelTest {
         }
 
     @Test
+    fun skippingOpensTheDashboardWithoutWritingAnything() =
+        runTest {
+            val vm = viewModel()
+            vm.onAction(OnboardingAction.TextChanged("Netflix 15"))
+            vm.onAction(OnboardingAction.AnalyzeClicked)
+            vm.onAction(OnboardingAction.BudgetChanged("1800"))
+            vm.effects.test {
+                vm.onAction(OnboardingAction.SkipClicked)
+                assertEquals(OnboardingEffect.Finished, awaitItem())
+            }
+            assertTrue(charges.added.isEmpty())
+            assertTrue(profiles.onboardingBudgets.isEmpty())
+        }
+
+    @Test
     fun signOutEmitsSignedOut() =
         runTest {
             val vm = viewModel()

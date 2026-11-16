@@ -126,6 +126,10 @@ internal class OnboardingViewModel(
                 save()
             }
 
+            OnboardingAction.SkipClicked -> {
+                skip()
+            }
+
             OnboardingAction.NoticeDismissed -> {
                 mutableState.update { it.copy(notice = null) }
             }
@@ -221,6 +225,11 @@ internal class OnboardingViewModel(
                 }
             }
         }
+    }
+
+    private fun skip() {
+        if (mutableState.value.isSaving) return
+        viewModelScope.launch { effectChannel.send(OnboardingEffect.Finished) }
     }
 
     private fun signOutOnce() {
