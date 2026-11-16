@@ -30,6 +30,12 @@ Kotlin Multiplatform, interface 100 % partagée en Compose Multiplatform.
 - Commits atomiques (un par module ou par préoccupation, jamais un lot entier en un seul commit), messages en anglais.
 - Pas de commentaires dans le code (ni KDoc ni commentaires de ligne) : le code se lit seul, le reste va dans `docs/`.
 
+## Branches, tests et fusion (règle du propriétaire)
+- Dès qu'un travail se fait sur une autre branche que `main` (worktree compris), le dire au propriétaire en nommant la branche,
+  et rappeler qu'un build lancé depuis le dépôt principal ne contient pas ce travail.
+- À la fin d'un travail sur une branche, demander au propriétaire de tester (appareil Android, simulateur iOS) en indiquant quoi essayer.
+- Ne jamais fusionner dans `main` sans son accord explicite : lui demander à chaque fois s'il autorise la fusion.
+
 ## État
 Lot 0 (socle de build) terminé le 16/11/2026 : wrapper Gradle 9.7.1, `build-logic` (plugins `nemla.kmp.library`, `nemla.compose`,
 `nemla.feature`, `nemla.android.application`, `nemla.spotless`), tous les modules d'ARCHITECTURE §2 configurés, `androidApp`,
