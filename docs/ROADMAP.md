@@ -28,9 +28,21 @@
     plugin d'authentification (`apikey` Supabase, `Bearer`, un rejeu après 401 de session, jamais après un 401 de la passerelle IA),
     `TokenProvider` (rafraîchissement anticipé et sérialisé) au-dessus de `SessionTokenStore`, `safeRequest` (GoTrue, PostgREST, `/api/public`, HTML),
     `coreNetworkModule`, 25 tests.
-  - ☐ `core:data`.
-- `ai:local` : `RuleBasedStatementAnonymizer`, porté des règles de `specs/01` §6.2, avec tests de parité.
-- `ai:remote-nemla` : moteurs du tableau d'ARCHITECTURE §4. Tests de `AiRouter`.
+  - ☑ `core:data` (16/11/2026) : session chiffrée (`SessionStorage` sur `SecureStore`, `SessionManager` = `SessionTokenStore`,
+    rafraîchissement GoTrue `refresh_token`, passage à `SignedOut` à l'invalidation), `AuthRepository` (connexion, inscription avec
+    métadonnées, déconnexion locale même hors ligne, mot de passe oublié, `Flow<AuthState>` restauré au démarrage), `ProfileRepository`
+    (`bootstrap_user` + recopie des métadonnées d'inscription manquantes, profil, identité, budget en décimal exact, rappel, `suggest_pseudo`
+    optimiste), `CategoryRepository`, `QuotaRepository` (`ensure_month_quota`), consentements IA dans `SecureStore` (effacés à la
+    déconnexion et à l'invalidation), `AccountRepository` en `NotSupportedYet`, passerelle IA (`AiContextSource`, `ConnectivityMonitor`
+    remplaçable, `AiRouter` + `LocalFirstPolicy`, trace journalisée sans donnée utilisateur, ports dictée / relevé / charges / budget /
+    bilan ; relevé : CSV et texte seulement, anonymisation locale obligatoire, `NotSupportedYet` sans moteur `StatementParsing`),
+    `coreDataModule`, 53 tests.
+- ☑ `ai:local` (16/11/2026) : `RuleBasedStatementAnonymizer`, porté des règles de `specs/01` §6.2 (classes de caractères explicites pour
+  reproduire `\b`, `\s`, `\d` de JavaScript sur JVM, ICU et Kotlin/Native), `aiLocalModule`. 16 tests dont 22 cas de parité générés
+  avec une transcription JavaScript des règles serveur. Écarts volontaires : IBAN compact masqué, `knownNames`, idempotence (voir rapport du lot).
+- ☑ `ai:remote-nemla` (16/11/2026) : les cinq moteurs du tableau d'ARCHITECTURE §4, montants JSON → centimes sans flottant,
+  `/transcribe` lu en objet ou en chaîne, erreurs traduites en `AiError` sans contenu serveur, `aiRemoteNemlaModule`. 31 tests.
+- ☑ Tests de `AiRouter` (16/11/2026) : 33 tests.
 - `core:designsystem` d'après `specs/03`. Polices Outfit et DM Sans embarquées.
 - `feature:auth` d'après `specs/04`, `feature:home` (coquille), `shared` (navigation, Koin).
 

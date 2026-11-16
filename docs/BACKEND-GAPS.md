@@ -20,6 +20,9 @@ Détail et références de code : `specs/01-api-contracts.md` (§3.3, §5) et `s
 - RLS : un utilisateur peut modifier ses propres quotas (`user_quotas`) et lever sa suspension (`profiles.suspended`).
 - `/transcribe` et `/parse/recurring` : ni quota ni limite de taille. `/transcribe` renvoie un objet au lieu d'une chaîne.
 - Statuts 401/402/429 de la passerelle IA renvoyés tels quels ; certaines erreurs arrivent en HTML.
+- Anonymisation des relevés (`anonymizeStatement`) : un IBAN écrit sans espaces (`FR7630006000011234567890189`, courant dans les CSV)
+  n'est capté par aucune règle (ni IBAN, ni carte, ni numéro, faute de frontière de mot) et part en clair vers la passerelle IA.
+  L'anonymiseur mobile ajoute une règle pour ce cas ; `/import/file` doit être corrigé de la même façon.
 - Purge de compte : audio du bucket `voice-notes` non supprimé ; email conservé en clair dans `deleted_accounts`.
 - Pas d'export des données, pas de politique de confidentialité, pas de recueil de consentement.
 - Sous-traitants à déclarer : l'audio et les transcriptions partent chez OpenAI, les relevés anonymisés chez Google, via Lovable.

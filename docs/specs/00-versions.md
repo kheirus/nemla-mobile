@@ -71,7 +71,7 @@ Pourquoi minSdk 28 : Keystore matériel fiable, BiometricPrompt (API 28), TLS 1.
 
 | Élément | Version stable | Date | Source | Vérifié |
 |---|---|---|---|---|
-| Ktor client (core, content-negotiation, serialization-kotlinx-json, auth, logging, okhttp, darwin) | **3.6.1** | 30 oct. 2026 | https://ktor.io/docs/releases.html | oui |
+| Ktor client (core, content-negotiation, serialization-kotlinx-json, okhttp, darwin, mock pour les tests) | **3.6.1** | 30 oct. 2026 | https://ktor.io/docs/releases.html | oui |
 | kotlinx-coroutines | **1.11.0** (compilé avec Kotlin 2.2.20) | 9 mai 2026 | https://badges.mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core-tvosarm64/versions · https://newreleases.io/project/github/Kotlin/kotlinx.coroutines/release/1.11.0 | oui |
 | kotlinx-serialization-json | **1.13.0** (basé sur Kotlin 2.4.10) | ~11 nov. 2026 | https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json · https://newreleases.io/project/github/Kotlin/kotlinx.serialization/release/v1.13.0 | oui (la page GitHub Releases affichait encore 1.12.0 du 19 oct.) |
 | kotlinx-datetime | **0.8.0** (exige une stdlib ≥ 2.3.21) | 7 mai 2026 | https://github.com/kotlin/kotlinx-datetime · https://www.github.com/Kotlin/kotlinx-datetime/releases | oui |
@@ -134,7 +134,8 @@ Pourquoi minSdk 28 : Keystore matériel fiable, BiometricPrompt (API 28), TLS 1.
 
 Catalogue nettoyé au lot 0 : retrait de Navigation 3, du SDK Supabase, de SQLDelight, de Room 3 / SQLite, de KSP et de toutes
 les entrées non utilisées par les modules (BOM, Material 3 Adaptive, `ui-test`, splashscreen, `datastore-preferences` Android,
-kotlinx-io, Kermit, Coil, Kotest, `koin-test`, `koin-compose-navigation3`). Elles se réintroduisent au besoin, avec la version du §1.
+kotlinx-io, Kermit, Coil, Kotest, `koin-test`, `koin-compose-navigation3`). `ktor-client-auth` et `ktor-client-logging` ont aussi été retirés
+(lot 1) : l'authentification et le journal HTTP sont des plugins maison de `core:network`. Elles se réintroduisent au besoin, avec la version du §1.
 
 ```toml
 # nemla-mobile — versions stables vérifiées au 15/11/2026 (voir docs/specs/00-versions.md)
@@ -187,8 +188,6 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
-ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
