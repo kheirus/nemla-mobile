@@ -10,6 +10,7 @@ import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AiConsentLevel
 import app.nemla.core.domain.model.AiConsents
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.model.AppPreferences
 import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.Category
 import app.nemla.core.domain.model.CategoryBudget
@@ -37,7 +38,9 @@ import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
+import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.QuotaRepository
+import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.core.domain.usecase.ObserveAuthState
 import kotlinx.coroutines.CompletableDeferred
@@ -259,3 +262,30 @@ internal fun testStore(
     auth: FakeAuth = FakeAuth(),
     scope: CoroutineScope,
 ): VoiceReviewStore = VoiceReviewStore(ObserveAuthState(auth), scope)
+
+internal class FakeTranscriber : SpeechTranscriber {
+    val results = ArrayDeque<AppResult<String>>()
+    val languages = mutableListOf<AppLanguage>()
+    val received = mutableListOf<ByteArray>()
+
+    override suspend fun transcribe(
+        recording: VoiceRecording,
+        language: AppLanguage,
+    ): AppResult<String> {
+        languages += language
+        received += recording.wavBytes
+        return results.removeFirstOrNull() ?: AppResult.Success("loyer 750 euros")
+    }
+}
+
+internal class FakePreferences : PreferencesRepository {
+    private val state = MutableStateFlow<AppPreferences?>(AppPreferences.Default)
+    override val preferences: StateFlow<AppPreferences?> = state
+
+    override suspend fun load(): AppPreferences = state.value ?: AppPreferences.Default
+
+    override suspend fun update(preferences: AppPreferences): AppResult<Unit> {
+        state.value = preferences
+        return AppResult.Success(Unit)
+    }
+}

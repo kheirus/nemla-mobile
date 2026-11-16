@@ -66,4 +66,8 @@
   <string name="review_categories_failed">Categories are unavailable right now.</string>
   <string name="review_date_ok">OK</string>
   <string name="review_date_cancel">Cancel</string>
+  <string name="dictation_start">Dictate</string>
+  <string name="dictation_stop">Stop (%1$d/%2$ds)</string>
+  <string name="dictation_transcribing">Transcribing…</string>
+  <string name="dictation_failed">Transcription failed</string>
 </resources>

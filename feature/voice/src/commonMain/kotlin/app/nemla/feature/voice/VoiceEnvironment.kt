@@ -1,7 +1,7 @@
 package app.nemla.feature.voice
 
-import androidx.compose.ui.text.intl.Locale
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.usecase.CurrentLanguages
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -11,8 +11,10 @@ internal fun interface DictationLanguage {
     fun current(): AppLanguage
 }
 
-internal object SystemDictationLanguage : DictationLanguage {
-    override fun current(): AppLanguage = AppLanguage.fromTag(Locale.current.language.lowercase())
+internal class PreferredDictationLanguage(
+    private val languages: CurrentLanguages,
+) : DictationLanguage {
+    override fun current(): AppLanguage = languages.dictation()
 }
 
 internal fun interface Today {

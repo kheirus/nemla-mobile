@@ -2,6 +2,7 @@ package app.nemla.feature.voice.common
 
 import androidx.compose.runtime.Composable
 import app.nemla.feature.voice.resources.Res
+import app.nemla.feature.voice.resources.dictation_failed
 import app.nemla.feature.voice.resources.voice_consent_declined
 import app.nemla.feature.voice.resources.voice_error_generic
 import app.nemla.feature.voice.resources.voice_error_microphone
@@ -40,4 +41,5 @@ private fun VoiceMessage.resource(): StringResource =
         VoiceMessage.CONSENT_DECLINED -> Res.string.voice_consent_declined
         VoiceMessage.INTERRUPTED -> Res.string.voice_interrupted
         VoiceMessage.SAVED -> Res.string.voice_saved
+        VoiceMessage.TRANSCRIPTION_FAILED -> Res.string.dictation_failed
     }

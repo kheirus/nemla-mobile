@@ -2,16 +2,21 @@ package app.nemla.feature.voice
 
 import app.nemla.core.audio.MicrophonePermission
 import app.nemla.core.audio.VoiceRecorderFactory
+import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.PendingReview
 import app.nemla.core.domain.model.ReviewOrigin
 import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.CategoryRepository
+import app.nemla.core.domain.port.DeviceLanguage
 import app.nemla.core.domain.port.ExpenseReviewRepository
 import app.nemla.core.domain.port.PendingReviewOpener
+import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.QuotaRepository
+import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.feature.voice.capture.VoiceCaptureViewModel
+import app.nemla.feature.voice.dictation.DictationViewModel
 import app.nemla.feature.voice.review.VoiceReviewViewModel
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
@@ -34,12 +39,16 @@ class FeatureVoiceModuleTest : MainDispatcherTest() {
                         single<CategoryRepository> { FakeCategories() }
                         single<ExpenseReviewRepository> { FakeReviews() }
                         single<AuthRepository> { FakeAuth() }
+                        single<SpeechTranscriber> { FakeTranscriber() }
+                        single<PreferencesRepository> { FakePreferences() }
+                        single<DeviceLanguage> { DeviceLanguage { AppLanguage.FR } }
                     },
                     featureVoiceModule,
                 )
             }
         try {
             application.koin.get<VoiceCaptureViewModel>()
+            application.koin.get<DictationViewModel>()
             application.koin.get<PendingReviewOpener>().open(PendingReview(ReviewOrigin.IMPORT, null, listOf(draft("e-1", ""))))
             assertEquals(ReviewOrigin.IMPORT, application.koin.get<VoiceReviewStore>().origin)
             application.koin.get<VoiceReviewStore>().clear()

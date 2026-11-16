@@ -20,6 +20,7 @@ internal enum class VoiceMessage {
     CONSENT_DECLINED,
     INTERRUPTED,
     SAVED,
+    TRANSCRIPTION_FAILED,
 }
 
 internal enum class NoticeKind { Error, Info, Success }

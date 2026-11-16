@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -51,19 +50,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import app.nemla.core.audio.rememberMicrophonePermissionRequest
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
-import app.nemla.core.designsystem.component.NemlaButton
-import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaDialog
 import app.nemla.core.designsystem.component.NemlaProgressBar
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
+import app.nemla.feature.voice.common.AiConsentDialog
 import app.nemla.feature.voice.common.NoticeKind
 import app.nemla.feature.voice.common.text
 import app.nemla.feature.voice.resources.Res
-import app.nemla.feature.voice.resources.voice_consent_accept
-import app.nemla.feature.voice.resources.voice_consent_body
-import app.nemla.feature.voice.resources.voice_consent_decline
-import app.nemla.feature.voice.resources.voice_consent_title
 import app.nemla.feature.voice.resources.voice_dialog_description
 import app.nemla.feature.voice.resources.voice_dialog_title
 import app.nemla.feature.voice.resources.voice_elapsed
@@ -399,28 +393,9 @@ private fun Spinner() {
 
 @Composable
 private fun ConsentDialog(onAction: (VoiceCaptureAction) -> Unit) {
-    val colors = NemlaTheme.colors
-    AlertDialog(
-        onDismissRequest = { onAction(VoiceCaptureAction.ConsentDeclined) },
-        containerColor = colors.background,
-        titleContentColor = colors.foreground,
-        textContentColor = colors.mutedForeground,
-        icon = { Icon(NemlaIcons.ShieldCheck, contentDescription = null, tint = colors.primary) },
-        title = { Text(stringResource(Res.string.voice_consent_title), style = NemlaTheme.typography.cardTitle) },
-        text = { Text(stringResource(Res.string.voice_consent_body), style = NemlaTheme.typography.body) },
-        confirmButton = {
-            NemlaButton(
-                text = stringResource(Res.string.voice_consent_accept),
-                onClick = { onAction(VoiceCaptureAction.ConsentAccepted) },
-            )
-        },
-        dismissButton = {
-            NemlaButton(
-                text = stringResource(Res.string.voice_consent_decline),
-                onClick = { onAction(VoiceCaptureAction.ConsentDeclined) },
-                variant = NemlaButtonVariant.Ghost,
-            )
-        },
+    AiConsentDialog(
+        onAccept = { onAction(VoiceCaptureAction.ConsentAccepted) },
+        onDecline = { onAction(VoiceCaptureAction.ConsentDeclined) },
     )
 }
 
