@@ -2,8 +2,11 @@ package app.nemla.feature.voice
 
 import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.PendingReview
+import app.nemla.core.domain.model.ReviewOrigin
 import app.nemla.core.domain.model.UserId
 import app.nemla.core.domain.model.VoiceCapture
+import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.domain.usecase.ObserveAuthState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -25,6 +28,9 @@ internal class VoiceReviewStore(
     private val mutableOutcome = MutableStateFlow<ReviewOutcome?>(null)
     val outcome: StateFlow<ReviewOutcome?> = mutableOutcome.asStateFlow()
 
+    var origin: ReviewOrigin = ReviewOrigin.VOICE
+        private set
+
     private var announcement: Int? = null
     private var owner: UserId? = null
 
@@ -39,8 +45,15 @@ internal class VoiceReviewStore(
     }
 
     fun put(capture: VoiceCapture) {
+        origin = ReviewOrigin.VOICE
         mutablePending.value = capture
         announcement = capture.drafts.size
+    }
+
+    fun open(review: PendingReview) {
+        origin = review.origin
+        announcement = null
+        mutablePending.value = VoiceCapture(review.voiceEntryId, transcript = "", drafts = review.drafts)
     }
 
     fun takeAnnouncement(): Int? = announcement.also { announcement = null }
@@ -60,10 +73,17 @@ internal class VoiceReviewStore(
     fun clear() {
         mutablePending.value = null
         announcement = null
+        origin = ReviewOrigin.VOICE
     }
 
     fun close() {
         clear()
         scope.cancel()
     }
+}
+
+internal class StorePendingReviewOpener(
+    private val store: VoiceReviewStore,
+) : PendingReviewOpener {
+    override fun open(review: PendingReview) = store.open(review)
 }

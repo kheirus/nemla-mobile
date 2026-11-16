@@ -49,6 +49,7 @@ internal class VoiceReviewViewModel(
         MutableStateFlow(
             VoiceReviewUiState(
                 today = today.date(),
+                origin = store.origin,
                 isLoading = capture != null,
                 transcript = capture?.transcript?.takeIf { it.isNotBlank() },
                 lines = drafts.values.map { it.toLine(today.date()) },

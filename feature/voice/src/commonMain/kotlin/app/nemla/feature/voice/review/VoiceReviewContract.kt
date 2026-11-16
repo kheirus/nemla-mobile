@@ -2,6 +2,7 @@ package app.nemla.feature.voice.review
 
 import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.ReviewOrigin
 import kotlinx.datetime.LocalDate
 
 internal data class ReviewLine(
@@ -25,6 +26,7 @@ internal enum class ReviewMessage { SAVE_FAILED, DELETE_FAILED, CATEGORIES_UNAVA
 
 internal data class VoiceReviewUiState(
     val today: LocalDate,
+    val origin: ReviewOrigin = ReviewOrigin.VOICE,
     val isLoading: Boolean = true,
     val transcript: String? = null,
     val lines: List<ReviewLine> = emptyList(),
@@ -35,7 +37,8 @@ internal data class VoiceReviewUiState(
 ) {
     val canConfirm: Boolean get() = !isLoading && !isSaving && lines.isNotEmpty() && lines.none { it.isDeleting }
 
-    override fun toString(): String = "VoiceReviewUiState(isLoading=$isLoading, lines=${lines.size}, isSaving=$isSaving, message=$message)"
+    override fun toString(): String =
+        "VoiceReviewUiState(origin=$origin, isLoading=$isLoading, lines=${lines.size}, isSaving=$isSaving, message=$message)"
 }
 
 internal sealed interface VoiceReviewAction {

@@ -6,6 +6,8 @@ import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.ExpenseDraft
 import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.PendingReview
+import app.nemla.core.domain.model.ReviewOrigin
 import app.nemla.core.domain.model.ReviewedExpense
 import app.nemla.core.domain.model.VoiceEntryId
 import app.nemla.core.domain.usecase.ConfirmReviewedExpenses
@@ -207,5 +209,47 @@ class VoiceReviewViewModelTest : MainDispatcherTest() {
                 vm.onAction(VoiceReviewAction.LaterClicked)
                 assertEquals(VoiceReviewEffect.Close, awaitItem())
             }
+        }
+
+    @Test
+    fun pendingExpensesFromTheDashboardOpenWithoutTranscriptNorAnnouncement() =
+        runTest {
+            val store = testStore(scope = backgroundScope)
+            store.open(
+                PendingReview(
+                    ReviewOrigin.VOICE,
+                    VoiceEntryId("v-9"),
+                    listOf(draft("e-1", "", 700), draft("e-2", "", 300, categoryId = CategoryId("gone"))),
+                ),
+            )
+            val vm = viewModel(store)
+            val state = vm.state.value
+            assertEquals(ReviewOrigin.VOICE, state.origin)
+            assertNull(state.transcript)
+            assertNull(state.detectedCount)
+            assertEquals(listOf("", ""), state.lines.map { it.label })
+            assertEquals(listOf(groceries.id, null), state.lines.map { it.categoryId })
+            vm.effects.test {
+                vm.onAction(VoiceReviewAction.ConfirmClicked)
+                assertEquals(VoiceReviewEffect.Close, awaitItem())
+            }
+            assertEquals(listOf(VoiceEntryId("v-9")), reviews.marked)
+            assertTrue(reviews.outcomes.isEmpty())
+            assertNull(store.pending.value)
+        }
+
+    @Test
+    fun importGroupsKeepTheirOriginAndAreNotMarkedAsDictations() =
+        runTest {
+            val store = testStore(scope = backgroundScope)
+            store.open(PendingReview(ReviewOrigin.IMPORT, null, listOf(draft("e-1", ""))))
+            val vm = viewModel(store)
+            assertEquals(ReviewOrigin.IMPORT, vm.state.value.origin)
+            vm.effects.test {
+                vm.onAction(VoiceReviewAction.ConfirmClicked)
+                assertEquals(VoiceReviewEffect.Close, awaitItem())
+            }
+            assertTrue(reviews.marked.isEmpty())
+            assertEquals(listOf(ExpenseId("e-1")), reviews.confirmed.map { it.id })
         }
 }

@@ -1,6 +1,7 @@
 package app.nemla.feature.voice
 
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.domain.usecase.CaptureVoiceExpenses
 import app.nemla.core.domain.usecase.ConfirmReviewedExpenses
 import app.nemla.core.domain.usecase.DeletePendingExpense
@@ -35,6 +36,7 @@ val featureVoiceModule: Module =
         single<DictationLanguage> { SystemDictationLanguage }
         single<Today> { SystemToday }
         single { VoiceReviewStore(ObserveAuthState(get()), CoroutineScope(SupervisorJob() + Dispatchers.Default)) } onClose { it?.close() }
+        single<PendingReviewOpener> { StorePendingReviewOpener(get()) }
         viewModelOf(::VoiceCaptureViewModel)
         viewModel {
             VoiceReviewViewModel(

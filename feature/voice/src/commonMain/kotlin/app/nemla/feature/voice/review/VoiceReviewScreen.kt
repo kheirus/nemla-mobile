@@ -62,6 +62,7 @@ import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.ReviewOrigin
 import app.nemla.feature.voice.resources.Res
 import app.nemla.feature.voice.resources.review_amount
 import app.nemla.feature.voice.resources.review_categories_failed
@@ -74,11 +75,13 @@ import app.nemla.feature.voice.resources.review_date_ok
 import app.nemla.feature.voice.resources.review_delete
 import app.nemla.feature.voice.resources.review_delete_failed
 import app.nemla.feature.voice.resources.review_empty
+import app.nemla.feature.voice.resources.review_label_fallback
 import app.nemla.feature.voice.resources.review_later
 import app.nemla.feature.voice.resources.review_learned
 import app.nemla.feature.voice.resources.review_loading
 import app.nemla.feature.voice.resources.review_save_failed
 import app.nemla.feature.voice.resources.review_title
+import app.nemla.feature.voice.resources.review_title_import
 import app.nemla.feature.voice.resources.review_transcript
 import app.nemla.feature.voice.resources.review_unclear_label
 import app.nemla.feature.voice.resources.voice_detected
@@ -132,7 +135,16 @@ internal fun VoiceReviewScreen(
         NemlaCard(modifier = Modifier.fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
                 Text(
-                    text = stringResource(Res.string.review_title),
+                    text =
+                        stringResource(
+                            if (state.origin ==
+                                ReviewOrigin.IMPORT
+                            ) {
+                                Res.string.review_title_import
+                            } else {
+                                Res.string.review_title
+                            },
+                        ),
                     style = NemlaTheme.typography.cardTitle,
                     modifier = Modifier.semantics { heading() },
                 )
@@ -216,7 +228,7 @@ private fun ReviewLineTile(
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Text(
-                    text = line.label,
+                    text = line.label.ifBlank { stringResource(Res.string.review_label_fallback) },
                     style = NemlaTheme.typography.bodyStrong,
                     modifier = Modifier.weight(1f).padding(bottom = NemlaTheme.spacing.sm),
                 )

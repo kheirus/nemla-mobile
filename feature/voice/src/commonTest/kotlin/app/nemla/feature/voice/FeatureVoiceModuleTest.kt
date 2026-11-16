@@ -2,10 +2,13 @@ package app.nemla.feature.voice
 
 import app.nemla.core.audio.MicrophonePermission
 import app.nemla.core.audio.VoiceRecorderFactory
+import app.nemla.core.domain.model.PendingReview
+import app.nemla.core.domain.model.ReviewOrigin
 import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
+import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.domain.port.QuotaRepository
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.feature.voice.capture.VoiceCaptureViewModel
@@ -13,6 +16,7 @@ import app.nemla.feature.voice.review.VoiceReviewViewModel
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FeatureVoiceModuleTest : MainDispatcherTest() {
@@ -36,6 +40,9 @@ class FeatureVoiceModuleTest : MainDispatcherTest() {
             }
         try {
             application.koin.get<VoiceCaptureViewModel>()
+            application.koin.get<PendingReviewOpener>().open(PendingReview(ReviewOrigin.IMPORT, null, listOf(draft("e-1", ""))))
+            assertEquals(ReviewOrigin.IMPORT, application.koin.get<VoiceReviewStore>().origin)
+            application.koin.get<VoiceReviewStore>().clear()
             assertTrue(
                 application.koin
                     .get<VoiceReviewViewModel>()
