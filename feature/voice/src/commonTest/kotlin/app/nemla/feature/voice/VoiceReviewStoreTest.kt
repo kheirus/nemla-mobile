@@ -66,4 +66,14 @@ class VoiceReviewStoreTest {
             store.clear()
             assertEquals(ReviewOrigin.VOICE, store.origin)
         }
+
+    @Test
+    fun importedReviewsAreAnnouncedWithTheirCount() =
+        runTest(UnconfinedTestDispatcher()) {
+            val store = testStore(scope = backgroundScope)
+            store.open(PendingReview(ReviewOrigin.IMPORT, null, listOf(draft("e-1", ""), draft("e-2", "")), announce = true))
+            assertEquals(ReviewOrigin.IMPORT, store.origin)
+            assertEquals(2, store.takeAnnouncement())
+            assertNull(store.takeAnnouncement())
+        }
 }

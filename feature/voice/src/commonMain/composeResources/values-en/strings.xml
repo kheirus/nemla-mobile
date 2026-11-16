@@ -12,6 +12,13 @@
   <string name="voice_menu_manual">Manual entry</string>
   <string name="voice_menu_import">Import a statement</string>
   <string name="voice_menu_coming_soon">Coming soon</string>
+  <string name="voice_menu_import_formats">PDF or CSV — </string>
+  <string name="voice_menu_import_formats_only">PDF or CSV</string>
+  <plurals name="voice_menu_imports_left">
+    <item quantity="one">%1$d import left</item>
+    <item quantity="other">%1$d imports left</item>
+  </plurals>
+  <string name="voice_menu_import_exhausted">No import left this month</string>
   <string name="voice_menu_resume_review">Expenses to review</string>
   <string name="voice_menu_resume_review_hint">Resume reviewing your last dictation</string>
   <string name="voice_dialog_title">Dictate my expenses</string>
@@ -45,6 +52,10 @@
   <plurals name="voice_detected">
     <item quantity="one">%1$d expense detected</item>
     <item quantity="other">%1$d expenses detected</item>
+  </plurals>
+  <plurals name="voice_imported">
+    <item quantity="one">%1$d expense read — check it and confirm its category</item>
+    <item quantity="other">%1$d expenses read — check them and confirm their category</item>
   </plurals>
   <string name="review_title">Check the detected expenses</string>
   <string name="review_title_import">Check the expenses read from the file</string>

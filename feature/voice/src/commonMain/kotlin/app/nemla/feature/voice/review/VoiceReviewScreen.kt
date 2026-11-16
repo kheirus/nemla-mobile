@@ -87,6 +87,7 @@ import app.nemla.feature.voice.resources.review_unclear_label
 import app.nemla.feature.voice.resources.voice_detected
 import app.nemla.feature.voice.resources.voice_error_offline
 import app.nemla.feature.voice.resources.voice_error_timeout
+import app.nemla.feature.voice.resources.voice_imported
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -125,7 +126,12 @@ internal fun VoiceReviewScreen(
     NemlaScreen {
         state.detectedCount?.let { count ->
             NemlaBanner(
-                message = pluralStringResource(Res.plurals.voice_detected, count, count),
+                message =
+                    pluralStringResource(
+                        if (state.origin == ReviewOrigin.IMPORT) Res.plurals.voice_imported else Res.plurals.voice_detected,
+                        count,
+                        count,
+                    ),
                 kind = NemlaBannerKind.Success,
             )
         }

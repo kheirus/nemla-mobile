@@ -52,7 +52,7 @@ internal class VoiceReviewStore(
 
     fun open(review: PendingReview) {
         origin = review.origin
-        announcement = null
+        announcement = review.drafts.size.takeIf { review.announce }
         mutablePending.value = VoiceCapture(review.voiceEntryId, transcript = "", drafts = review.drafts)
     }
 

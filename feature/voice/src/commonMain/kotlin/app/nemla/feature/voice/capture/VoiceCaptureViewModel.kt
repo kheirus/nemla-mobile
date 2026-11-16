@@ -77,6 +77,7 @@ internal class VoiceCaptureViewModel(
             VoiceCaptureAction.MenuDismissed -> mutableState.update { it.copy(isMenuOpen = false) }
             VoiceCaptureAction.DictateClicked -> openDialog()
             VoiceCaptureAction.ResumeReviewClicked -> resumeReview()
+            VoiceCaptureAction.ImportClicked -> openImport()
             VoiceCaptureAction.DialogDismissed -> closeDialog()
             VoiceCaptureAction.RecordButtonClicked -> toggleRecording()
             VoiceCaptureAction.ConsentAccepted -> acceptConsent()
@@ -100,6 +101,11 @@ internal class VoiceCaptureViewModel(
     private fun resumeReview() {
         mutableState.update { it.copy(isMenuOpen = false) }
         if (store.pending.value != null) emit(VoiceCaptureEffect.OpenReview)
+    }
+
+    private fun openImport() {
+        mutableState.update { it.copy(isMenuOpen = false) }
+        if (mutableState.value.canImport) emit(VoiceCaptureEffect.OpenImport)
     }
 
     private fun closeDialog() {
@@ -264,23 +270,22 @@ internal class VoiceCaptureViewModel(
 
     private fun refreshQuota() {
         viewModelScope.launch {
-            val status =
-                when (val result = getQuota()) {
-                    is AppResult.Success -> {
-                        val quota = result.value
-                        if (quota.canDictate) QuotaStatus.Available(quota.voiceRemaining) else QuotaStatus.Exhausted
-                    }
-
-                    is AppResult.Failure -> {
-                        null
-                    }
-                }
+            val quota = (getQuota() as? AppResult.Success)?.value
             mutableState.update { current ->
-                val next = status ?: if (current.quota == QuotaStatus.Loading) QuotaStatus.Unknown else current.quota
-                current.copy(quota = next)
+                current.copy(
+                    quota = quota?.voiceRemaining.toStatus(current.quota),
+                    importQuota = quota?.importRemaining.toStatus(current.importQuota),
+                )
             }
         }
     }
+
+    private fun Int?.toStatus(previous: QuotaStatus): QuotaStatus =
+        when {
+            this == null -> if (previous == QuotaStatus.Loading) QuotaStatus.Unknown else previous
+            this > 0 -> QuotaStatus.Available(this)
+            else -> QuotaStatus.Exhausted
+        }
 
     private fun emit(effect: VoiceCaptureEffect) {
         viewModelScope.launch { effectChannel.send(effect) }

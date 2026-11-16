@@ -69,6 +69,10 @@ import app.nemla.feature.voice.resources.voice_menu_dictate
 import app.nemla.feature.voice.resources.voice_menu_dictate_max
 import app.nemla.feature.voice.resources.voice_menu_dictations_left
 import app.nemla.feature.voice.resources.voice_menu_import
+import app.nemla.feature.voice.resources.voice_menu_import_exhausted
+import app.nemla.feature.voice.resources.voice_menu_import_formats
+import app.nemla.feature.voice.resources.voice_menu_import_formats_only
+import app.nemla.feature.voice.resources.voice_menu_imports_left
 import app.nemla.feature.voice.resources.voice_menu_manual
 import app.nemla.feature.voice.resources.voice_menu_resume_review
 import app.nemla.feature.voice.resources.voice_menu_resume_review_hint
@@ -92,18 +96,21 @@ private const val SPINNER_PERIOD_MILLIS = 1_000
 fun VoiceCaptureButton(
     onOpenReview: () -> Unit,
     modifier: Modifier = Modifier,
+    onImportStatement: (() -> Unit)? = null,
 ) {
-    VoiceCaptureRoute(onOpenReview = onOpenReview, modifier = modifier)
+    VoiceCaptureRoute(onOpenReview = onOpenReview, onImportStatement = onImportStatement, modifier = modifier)
 }
 
 @Composable
 internal fun VoiceCaptureRoute(
     onOpenReview: () -> Unit,
+    onImportStatement: (() -> Unit)?,
     modifier: Modifier = Modifier,
     viewModel: VoiceCaptureViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentOnOpenReview by rememberUpdatedState(onOpenReview)
+    val currentOnImportStatement by rememberUpdatedState(onImportStatement)
     val requestMicrophone =
         rememberMicrophonePermissionRequest { granted ->
             viewModel.onAction(VoiceCaptureAction.MicrophonePermissionResult(granted))
@@ -116,12 +123,18 @@ internal fun VoiceCaptureRoute(
                 when (effect) {
                     VoiceCaptureEffect.RequestMicrophonePermission -> currentRequestMicrophone()
                     VoiceCaptureEffect.OpenReview -> currentOnOpenReview()
+                    VoiceCaptureEffect.OpenImport -> currentOnImportStatement?.invoke()
                 }
             }
         }
     }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onAction(VoiceCaptureAction.AppBackgrounded) }
-    VoiceCaptureContent(state = state, onAction = viewModel::onAction, modifier = modifier)
+    VoiceCaptureContent(
+        state = state,
+        onAction = viewModel::onAction,
+        modifier = modifier,
+        importAvailable = onImportStatement != null,
+    )
 }
 
 @Composable
@@ -129,6 +142,7 @@ internal fun VoiceCaptureContent(
     state: VoiceCaptureUiState,
     onAction: (VoiceCaptureAction) -> Unit,
     modifier: Modifier = Modifier,
+    importAvailable: Boolean = false,
 ) {
     Column(
         modifier = modifier,
@@ -157,7 +171,7 @@ internal fun VoiceCaptureContent(
         }
         Box {
             AddFab(onClick = { onAction(VoiceCaptureAction.FabClicked) })
-            AddMenu(state = state, onAction = onAction)
+            AddMenu(state = state, onAction = onAction, importAvailable = importAvailable)
         }
     }
     if (state.isDialogOpen) DictationDialog(state = state, onAction = onAction)
@@ -183,6 +197,7 @@ private fun AddFab(onClick: () -> Unit) {
 private fun AddMenu(
     state: VoiceCaptureUiState,
     onAction: (VoiceCaptureAction) -> Unit,
+    importAvailable: Boolean,
 ) {
     val colors = NemlaTheme.colors
     DropdownMenu(
@@ -218,9 +233,11 @@ private fun AddMenu(
         MenuEntry(
             icon = NemlaIcons.FileUp,
             title = stringResource(Res.string.voice_menu_import),
-            enabled = false,
-            onClick = {},
-            subtitle = { MenuHint(stringResource(Res.string.voice_menu_coming_soon)) },
+            enabled = importAvailable && state.canImport,
+            onClick = { onAction(VoiceCaptureAction.ImportClicked) },
+            subtitle = {
+                if (importAvailable) ImportQuota(state.importQuota) else MenuHint(stringResource(Res.string.voice_menu_coming_soon))
+            },
         )
     }
 }
@@ -290,6 +307,37 @@ private fun DictationQuota(quota: QuotaStatus) {
 
         QuotaStatus.Loading, QuotaStatus.Unknown -> {
             MenuHint(stringResource(Res.string.voice_menu_dictate_max).trimEnd(' ', '—').trimEnd())
+        }
+    }
+}
+
+@Composable
+private fun ImportQuota(quota: QuotaStatus) {
+    val colors = NemlaTheme.colors
+    val caption = NemlaTheme.typography.caption
+    when (quota) {
+        QuotaStatus.Exhausted -> {
+            Text(
+                stringResource(Res.string.voice_menu_import_exhausted),
+                style = caption.copy(fontWeight = FontWeight.SemiBold),
+                color = colors.destructive,
+            )
+        }
+
+        is QuotaStatus.Available -> {
+            val left = pluralStringResource(Res.plurals.voice_menu_imports_left, quota.remaining, quota.remaining)
+            val prefix = stringResource(Res.string.voice_menu_import_formats)
+            Text(
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = colors.mutedForeground)) { append(prefix) }
+                    withStyle(SpanStyle(color = colors.creditOk, fontWeight = FontWeight.SemiBold)) { append(left) }
+                },
+                style = caption,
+            )
+        }
+
+        QuotaStatus.Loading, QuotaStatus.Unknown -> {
+            MenuHint(stringResource(Res.string.voice_menu_import_formats_only))
         }
     }
 }

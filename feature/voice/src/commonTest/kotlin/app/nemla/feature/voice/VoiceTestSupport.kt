@@ -82,7 +82,8 @@ internal fun sampleCapture(vararg drafts: ExpenseDraft): VoiceCapture =
 internal fun quota(
     used: Int,
     limit: Int = 30,
-) = MonthlyQuota(YearMonth(2026, 11), used, limit, 0, 1)
+    importUsed: Int = 0,
+) = MonthlyQuota(YearMonth(2026, 11), used, limit, importUsed, 1)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class MainDispatcherTest {

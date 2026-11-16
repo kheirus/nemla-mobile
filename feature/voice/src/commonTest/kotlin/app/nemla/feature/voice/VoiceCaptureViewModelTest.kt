@@ -69,6 +69,33 @@ class VoiceCaptureViewModelTest : MainDispatcherTest() {
         }
 
     @Test
+    fun importEntryFollowsTheImportQuotaAndOpensTheImport() =
+        runTest {
+            val vm = viewModel()
+            assertEquals(QuotaStatus.Available(1), vm.state.value.importQuota)
+            vm.effects.test {
+                vm.onAction(VoiceCaptureAction.FabClicked)
+                vm.onAction(VoiceCaptureAction.ImportClicked)
+                assertEquals(VoiceCaptureEffect.OpenImport, awaitItem())
+            }
+            assertFalse(vm.state.value.isMenuOpen)
+        }
+
+    @Test
+    fun exhaustedImportQuotaDisablesTheImportEntry() =
+        runTest {
+            quotas.result = AppResult.Success(quota(used = 0, importUsed = 1))
+            val vm = viewModel()
+            assertEquals(QuotaStatus.Exhausted, vm.state.value.importQuota)
+            assertFalse(vm.state.value.canImport)
+            assertTrue(vm.state.value.canDictate)
+            vm.effects.test {
+                vm.onAction(VoiceCaptureAction.ImportClicked)
+                expectNoEvents()
+            }
+        }
+
+    @Test
     fun exhaustedCreditsDisableDictation() =
         runTest {
             quotas.result = AppResult.Success(quota(used = 30))

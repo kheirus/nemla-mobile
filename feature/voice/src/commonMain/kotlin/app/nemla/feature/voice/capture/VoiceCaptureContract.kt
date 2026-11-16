@@ -28,6 +28,7 @@ internal sealed interface CapturePhase {
 
 internal data class VoiceCaptureUiState(
     val quota: QuotaStatus = QuotaStatus.Loading,
+    val importQuota: QuotaStatus = QuotaStatus.Loading,
     val isMenuOpen: Boolean = false,
     val isDialogOpen: Boolean = false,
     val phase: CapturePhase = CapturePhase.Idle,
@@ -37,6 +38,8 @@ internal data class VoiceCaptureUiState(
     val hasPendingReview: Boolean = false,
 ) {
     val canDictate: Boolean get() = quota != QuotaStatus.Exhausted
+
+    val canImport: Boolean get() = importQuota != QuotaStatus.Exhausted
 
     val isDialogDismissible: Boolean get() = phase !is CapturePhase.Recording
 }
@@ -49,6 +52,8 @@ internal sealed interface VoiceCaptureAction {
     data object DictateClicked : VoiceCaptureAction
 
     data object ResumeReviewClicked : VoiceCaptureAction
+
+    data object ImportClicked : VoiceCaptureAction
 
     data object DialogDismissed : VoiceCaptureAction
 
@@ -71,4 +76,6 @@ internal sealed interface VoiceCaptureEffect {
     data object RequestMicrophonePermission : VoiceCaptureEffect
 
     data object OpenReview : VoiceCaptureEffect
+
+    data object OpenImport : VoiceCaptureEffect
 }

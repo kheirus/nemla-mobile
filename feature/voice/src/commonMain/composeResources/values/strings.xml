@@ -13,6 +13,14 @@
   <string name="voice_menu_manual">Saisie manuelle</string>
   <string name="voice_menu_import">Importer un relevé</string>
   <string name="voice_menu_coming_soon">Bientôt disponible</string>
+  <string name="voice_menu_import_formats">PDF ou CSV — </string>
+  <string name="voice_menu_import_formats_only">PDF ou CSV</string>
+  <plurals name="voice_menu_imports_left">
+    <item quantity="one">%1$d import restant</item>
+    <item quantity="many">%1$d imports restants</item>
+    <item quantity="other">%1$d imports restants</item>
+  </plurals>
+  <string name="voice_menu_import_exhausted">Crédit épuisé ce mois</string>
   <string name="voice_menu_resume_review">Dépenses à valider</string>
   <string name="voice_menu_resume_review_hint">Reprendre la vérification de votre dernière dictée</string>
   <string name="voice_dialog_title">Dicter mes dépenses</string>
@@ -47,6 +55,11 @@
     <item quantity="one">%1$d dépense détectée</item>
     <item quantity="many">%1$d dépenses détectées</item>
     <item quantity="other">%1$d dépenses détectées</item>
+  </plurals>
+  <plurals name="voice_imported">
+    <item quantity="one">%1$d dépense lue — vérifiez et validez sa catégorie</item>
+    <item quantity="many">%1$d dépenses lues — vérifiez et validez leur catégorie</item>
+    <item quantity="other">%1$d dépenses lues — vérifiez et validez leur catégorie</item>
   </plurals>
   <string name="review_title">Vérifiez les dépenses détectées</string>
   <string name="review_title_import">Vérifiez les dépenses lues dans le fichier</string>
