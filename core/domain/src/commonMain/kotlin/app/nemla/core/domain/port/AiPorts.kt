@@ -6,8 +6,8 @@ import app.nemla.core.domain.model.BudgetEstimate
 import app.nemla.core.domain.model.PeriodReview
 import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.ReviewPeriod
-import app.nemla.core.domain.model.StatementFile
 import app.nemla.core.domain.model.StatementImport
+import app.nemla.core.domain.model.StatementText
 import app.nemla.core.domain.model.VoiceCapture
 import app.nemla.core.domain.model.VoiceRecording
 
@@ -20,8 +20,9 @@ interface VoiceExpenseCapturer {
 
 interface StatementImporter {
     suspend fun import(
-        file: StatementFile,
+        statement: StatementText,
         language: AppLanguage,
+        onAnonymized: (redactions: Int) -> Unit = {},
     ): AppResult<StatementImport>
 }
 

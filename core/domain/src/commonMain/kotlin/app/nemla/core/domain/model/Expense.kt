@@ -115,11 +115,16 @@ class PendingReview(
     val origin: ReviewOrigin,
     val voiceEntryId: VoiceEntryId?,
     val drafts: List<ExpenseDraft>,
+    val announce: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean =
-        other is PendingReview && other.origin == origin && other.voiceEntryId == voiceEntryId && other.drafts == drafts
+        other is PendingReview &&
+            other.origin == origin &&
+            other.voiceEntryId == voiceEntryId &&
+            other.drafts == drafts &&
+            other.announce == announce
 
-    override fun hashCode(): Int = listOf(origin, voiceEntryId, drafts).hashCode()
+    override fun hashCode(): Int = listOf(origin, voiceEntryId, drafts, announce).hashCode()
 
     override fun toString(): String = "PendingReview(origin=$origin, drafts=${drafts.size})"
 }

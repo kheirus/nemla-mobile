@@ -69,14 +69,17 @@ class RecurringChargeDraft(
     override fun toString(): String = "RecurringChargeDraft(name=***, frequency=$frequency)"
 }
 
-enum class StatementFormat { PDF, CSV, SPREADSHEET, TEXT }
+enum class StatementFormat { PDF, CSV, TEXT }
 
-class StatementFile(
-    val fileName: String,
+class StatementText(
+    val text: String,
     val format: StatementFormat,
-    val bytes: ByteArray,
 ) {
-    override fun toString(): String = "StatementFile(format=$format, ${bytes.size} bytes)"
+    override fun equals(other: Any?): Boolean = other is StatementText && other.text == text && other.format == format
+
+    override fun hashCode(): Int = listOf(text, format).hashCode()
+
+    override fun toString(): String = "StatementText(format=$format, length=${text.length})"
 }
 
 data class StatementImport(
