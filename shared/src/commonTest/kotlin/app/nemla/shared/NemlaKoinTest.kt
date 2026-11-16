@@ -14,10 +14,17 @@ import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.BudgetPeriod
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.EmailAddress
+import app.nemla.core.domain.model.Expense
+import app.nemla.core.domain.model.ExpenseEdit
+import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.GlobalBudget
 import app.nemla.core.domain.model.Password
 import app.nemla.core.domain.model.ProfileIdentity
 import app.nemla.core.domain.model.PseudoAvailability
+import app.nemla.core.domain.model.RecurringCharge
+import app.nemla.core.domain.model.RecurringChargeDraft
+import app.nemla.core.domain.model.RecurringChargeId
 import app.nemla.core.domain.model.Session
 import app.nemla.core.domain.model.SignUpOutcome
 import app.nemla.core.domain.model.SignUpRequest
@@ -191,7 +198,7 @@ class NemlaKoinTest {
         preferences: MemoryPreferences = MemoryPreferences(),
     ) = AppViewModel(
         ObserveAuthState(auth),
-        ResolveStartDestination(profiles),
+        ResolveStartDestination(profiles, EmptyCharges, EmptyExpenses),
         ObservePreferences(preferences),
         LoadPreferences(preferences),
     )
@@ -308,4 +315,28 @@ private class MemoryPreferences : PreferencesRepository {
         state.value = preferences
         return AppResult.Success(Unit)
     }
+}
+
+private object EmptyCharges : RecurringChargeRepository {
+    override suspend fun list(): AppResult<List<RecurringCharge>> = AppResult.Success(emptyList())
+
+    override suspend fun addAll(drafts: List<RecurringChargeDraft>): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun delete(id: RecurringChargeId): AppResult<Unit> = AppResult.Success(Unit)
+}
+
+private object EmptyExpenses : ExpenseRepository {
+    override suspend fun list(query: ExpenseQuery): AppResult<List<Expense>> = AppResult.Success(emptyList())
+
+    override suspend fun searchByLabel(
+        term: String,
+        limit: Int,
+    ): AppResult<List<Expense>> = AppResult.Success(emptyList())
+
+    override suspend fun update(
+        id: ExpenseId,
+        edit: ExpenseEdit,
+    ): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun delete(id: ExpenseId): AppResult<Unit> = AppResult.Success(Unit)
 }

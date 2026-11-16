@@ -17,6 +17,7 @@ import app.nemla.core.domain.model.ChargeFrequency
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.DebitSettings
 import app.nemla.core.domain.model.DeferredDebit
+import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.RecurringChargeId
 import app.nemla.core.domain.model.ThemeMode
@@ -59,6 +60,18 @@ class SettingsRepositoriesTest {
 
             harness.recurring.addAll(emptyList())
             assertEquals(2, harness.requests.size)
+        }
+
+    @Test
+    fun blankAccountCheckReadsASingleExpenseWithoutLabels() =
+        runTest {
+            val harness = DataHarness(store = signedInStore()) { json("[]") }
+            assertEquals(AppResult.Success(emptyList()), harness.expenses.list(ExpenseQuery(limit = 1)))
+            val request = harness.requests.single()
+            assertEquals("/rest/v1/expenses", request.path)
+            assertEquals("1", request.query("limit"))
+            assertTrue(request.query("select").orEmpty().contains("montant"))
+            assertTrue(!request.query("select").orEmpty().contains("description"))
         }
 
     @Test

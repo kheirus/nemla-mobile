@@ -5,11 +5,13 @@ import app.nemla.core.common.AppResult
 import app.nemla.core.common.ValidationCode
 import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.Category
+import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.RecurringChargeId
 import app.nemla.core.domain.model.StartDestination
 import app.nemla.core.domain.model.VoiceRecording
 import app.nemla.core.domain.port.CategoryRepository
+import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeParser
 import app.nemla.core.domain.port.RecurringChargeRepository
@@ -17,13 +19,19 @@ import app.nemla.core.domain.port.SpeechTranscriber
 
 class ResolveStartDestination(
     private val profiles: ProfileRepository,
+    private val charges: RecurringChargeRepository,
+    private val expenses: ExpenseRepository,
 ) {
     suspend operator fun invoke(): StartDestination {
         profiles.bootstrap()
-        return when (val result = profiles.getProfile()) {
-            is AppResult.Success -> if (result.value.onboardingDone) StartDestination.DASHBOARD else StartDestination.ONBOARDING
-            is AppResult.Failure -> StartDestination.DASHBOARD
-        }
+        val profile = profiles.getProfile()
+        if (profile !is AppResult.Success) return StartDestination.DASHBOARD
+        if (profile.value.onboardingDone || profile.value.budget.monthlyCents != 0L) return StartDestination.DASHBOARD
+        val existingCharges = charges.list()
+        if (existingCharges !is AppResult.Success || existingCharges.value.isNotEmpty()) return StartDestination.DASHBOARD
+        val existingExpenses = expenses.list(ExpenseQuery(limit = 1))
+        if (existingExpenses !is AppResult.Success || existingExpenses.value.isNotEmpty()) return StartDestination.DASHBOARD
+        return StartDestination.ONBOARDING
     }
 }
 

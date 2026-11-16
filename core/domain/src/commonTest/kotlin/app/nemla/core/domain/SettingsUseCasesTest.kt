@@ -19,9 +19,15 @@ import app.nemla.core.domain.model.ChargeFrequency
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.DebitSettings
 import app.nemla.core.domain.model.DeferredDebit
+import app.nemla.core.domain.model.Expense
+import app.nemla.core.domain.model.ExpenseEdit
+import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.ExpenseQuery
+import app.nemla.core.domain.model.ExpenseSource
 import app.nemla.core.domain.model.Gender
 import app.nemla.core.domain.model.GlobalBudget
 import app.nemla.core.domain.model.NewCategory
+import app.nemla.core.domain.model.PaymentMethod
 import app.nemla.core.domain.model.ProfileIdentity
 import app.nemla.core.domain.model.PseudoAvailability
 import app.nemla.core.domain.model.RecurringCharge
@@ -34,6 +40,7 @@ import app.nemla.core.domain.model.UserProfile
 import app.nemla.core.domain.model.VoiceRecording
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
+import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeParser
@@ -55,6 +62,7 @@ import app.nemla.core.domain.usecase.UpdatePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -63,16 +71,45 @@ class SettingsUseCasesTest {
     private val profiles = RecordingProfiles()
     private val charges = RecordingCharges()
 
+    private val history = OneExpenseHistory()
+
+    private suspend fun resolve() = ResolveStartDestination(profiles, charges, history)()
+
     @Test
-    fun startDestinationFollowsTheOnboardingFlagAndFallsBackToTheDashboard() =
+    fun onlyABlankAccountGoesToOnboarding() =
         runTest {
             profiles.profile = AppResult.Success(profile(onboardingDone = false))
-            assertEquals(StartDestination.ONBOARDING, ResolveStartDestination(profiles)())
+            assertEquals(StartDestination.ONBOARDING, resolve())
             assertEquals(1, profiles.bootstraps)
+            assertEquals(listOf(ExpenseQuery(limit = 1)), history.queries)
             profiles.profile = AppResult.Success(profile(onboardingDone = true))
-            assertEquals(StartDestination.DASHBOARD, ResolveStartDestination(profiles)())
+            assertEquals(StartDestination.DASHBOARD, resolve())
+        }
+
+    @Test
+    fun accountsWithAnExpenseAChargeOrABudgetGoToTheDashboard() =
+        runTest {
+            profiles.profile = AppResult.Success(profile(onboardingDone = false, budgetCents = 150_000))
+            assertEquals(StartDestination.DASHBOARD, resolve())
+            profiles.profile = AppResult.Success(profile(onboardingDone = false))
+            charges.existing += RecurringCharge(RecurringChargeId("r"), "Loyer", 75_000, ChargeFrequency.MONTHLY, 5, null)
+            assertEquals(StartDestination.DASHBOARD, resolve())
+            charges.existing.clear()
+            history.result = AppResult.Success(listOf(history.sample))
+            assertEquals(StartDestination.DASHBOARD, resolve())
+        }
+
+    @Test
+    fun anyErrorGoesToTheDashboard() =
+        runTest {
             profiles.profile = AppResult.Failure(AppError.Network.Offline)
-            assertEquals(StartDestination.DASHBOARD, ResolveStartDestination(profiles)())
+            assertEquals(StartDestination.DASHBOARD, resolve())
+            profiles.profile = AppResult.Success(profile(onboardingDone = false))
+            charges.listResult = AppResult.Failure(AppError.Network.Timeout)
+            assertEquals(StartDestination.DASHBOARD, resolve())
+            charges.listResult = null
+            history.result = AppResult.Failure(AppError.Server(500))
+            assertEquals(StartDestination.DASHBOARD, resolve())
         }
 
     @Test
@@ -244,18 +281,20 @@ class SettingsUseCasesTest {
         type: CategoryType,
     ) = Category(CategoryId(name), name, "#E4572E", CategoryIcon.TAG, type, true, 1, true, CategoryBudget.None)
 
-    private fun profile(onboardingDone: Boolean) =
-        UserProfile(
-            userId = UserId("user-1"),
-            pseudo = null,
-            age = null,
-            gender = null,
-            household = null,
-            currency = Currency.EUR,
-            budget = GlobalBudget(0, null, BudgetPeriod.MONTH),
-            onboardingDone = onboardingDone,
-            dailyReminder = true,
-        )
+    private fun profile(
+        onboardingDone: Boolean,
+        budgetCents: Long = 0,
+    ) = UserProfile(
+        userId = UserId("user-1"),
+        pseudo = null,
+        age = null,
+        gender = null,
+        household = null,
+        currency = Currency.EUR,
+        budget = GlobalBudget(budgetCents, null, BudgetPeriod.MONTH),
+        onboardingDone = onboardingDone,
+        dailyReminder = true,
+    )
 }
 
 private class RecordingProfiles : ProfileRepository {
@@ -298,8 +337,10 @@ private class RecordingProfiles : ProfileRepository {
 private class RecordingCharges : RecurringChargeRepository {
     var addResult: AppResult<Unit> = AppResult.Success(Unit)
     val added = mutableListOf<RecurringChargeDraft>()
+    val existing = mutableListOf<RecurringCharge>()
+    var listResult: AppResult<List<RecurringCharge>>? = null
 
-    override suspend fun list(): AppResult<List<RecurringCharge>> = AppResult.Success(emptyList())
+    override suspend fun list(): AppResult<List<RecurringCharge>> = listResult ?: AppResult.Success(existing.toList())
 
     override suspend fun addAll(drafts: List<RecurringChargeDraft>): AppResult<Unit> {
         if (addResult is AppResult.Success) added += drafts
@@ -357,4 +398,40 @@ private class MemoryPreferences : PreferencesRepository {
         state.value = preferences
         return AppResult.Success(Unit)
     }
+}
+
+private class OneExpenseHistory : ExpenseRepository {
+    val sample =
+        Expense(
+            ExpenseId("e"),
+            null,
+            null,
+            null,
+            1_000,
+            LocalDate(2026, 11, 1),
+            LocalDate(2026, 11, 1),
+            ExpenseSource.MANUAL,
+            PaymentMethod.CARD,
+            true,
+            null,
+        )
+    var result: AppResult<List<Expense>> = AppResult.Success(emptyList())
+    val queries = mutableListOf<ExpenseQuery>()
+
+    override suspend fun list(query: ExpenseQuery): AppResult<List<Expense>> {
+        queries += query
+        return result
+    }
+
+    override suspend fun searchByLabel(
+        term: String,
+        limit: Int,
+    ): AppResult<List<Expense>> = AppResult.Failure(AppError.NotSupportedYet)
+
+    override suspend fun update(
+        id: ExpenseId,
+        edit: ExpenseEdit,
+    ): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun delete(id: ExpenseId): AppResult<Unit> = AppResult.Success(Unit)
 }
