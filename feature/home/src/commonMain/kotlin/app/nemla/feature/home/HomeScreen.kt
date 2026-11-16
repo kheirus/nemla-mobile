@@ -1,10 +1,17 @@
 package app.nemla.feature.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +54,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 internal fun HomeRoute(
     onSignedOut: () -> Unit,
+    floatingAction: @Composable () -> Unit = {},
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -60,11 +69,31 @@ internal fun HomeRoute(
             }
         }
     }
-    HomeScreen(state = state, onAction = viewModel::onAction)
+    HomeScreen(state = state, onAction = viewModel::onAction, floatingAction = floatingAction)
 }
 
 @Composable
 internal fun HomeScreen(
+    state: HomeUiState,
+    onAction: (HomeAction) -> Unit,
+    floatingAction: @Composable () -> Unit = {},
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        HomeContent(state = state, onAction = onAction)
+        Box(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(start = NemlaTheme.spacing.lg, end = NemlaTheme.spacing.lg, bottom = NemlaTheme.spacing.lg),
+        ) {
+            floatingAction()
+        }
+    }
+}
+
+@Composable
+private fun HomeContent(
     state: HomeUiState,
     onAction: (HomeAction) -> Unit,
 ) {
@@ -100,8 +129,11 @@ internal fun HomeScreen(
                 icon = NemlaIcons.Sparkles,
             )
         }
+        Spacer(modifier = Modifier.height(FLOATING_ACTION_CLEARANCE))
     }
 }
+
+private val FLOATING_ACTION_CLEARANCE = 88.dp
 
 @Composable
 private fun HomeHeader(

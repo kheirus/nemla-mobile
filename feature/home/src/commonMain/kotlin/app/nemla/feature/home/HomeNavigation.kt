@@ -1,5 +1,6 @@
 package app.nemla.feature.home
 
+import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -10,8 +11,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object HomeDestination
 
-fun NavGraphBuilder.homeScreen(onSignedOut: () -> Unit) {
-    composable<HomeDestination> { HomeRoute(onSignedOut = onSignedOut) }
+fun NavGraphBuilder.homeScreen(
+    onSignedOut: () -> Unit,
+    floatingAction: @Composable () -> Unit = {},
+) {
+    composable<HomeDestination> { HomeRoute(onSignedOut = onSignedOut, floatingAction = floatingAction) }
 }
 
 fun NavController.navigateToHome() {
