@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -175,7 +174,7 @@ private fun PeriodRow(
     val cursor = state.cursor
     val isYear = cursor.kind == PeriodKind.YEAR
     val colors = NemlaTheme.colors
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
+    Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
         NemlaSegmentedControl(
             options =
                 listOf(
@@ -184,11 +183,12 @@ private fun PeriodRow(
                 ),
             selected = cursor.kind,
             onSelect = { onAction(DashboardAction.PeriodKindSelected(it)) },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth(),
         )
         Row(
             modifier =
                 Modifier
+                    .fillMaxWidth()
                     .clip(CircleShape)
                     .background(colors.muted.copy(alpha = MUTED_PILL_ALPHA))
                     .padding(4.dp),
@@ -205,7 +205,7 @@ private fun PeriodRow(
                 style = NemlaTheme.typography.bodyEmphasis.tabular(),
                 textAlign = TextAlign.Center,
                 maxLines = 1,
-                modifier = Modifier.widthIn(min = 96.dp),
+                modifier = Modifier.weight(1f),
             )
             RoundArrow(
                 icon = NemlaIcons.ChevronRight,

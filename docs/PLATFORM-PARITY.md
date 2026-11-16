@@ -187,3 +187,5 @@ une plateforme ajouté) :
     « Sept » (CLDR en-GB). À comparer avec le navigateur.
 14. **Hors périmètre** : bannière d'astuces (§5.9), bandeau « bilan arrivé » (§5.10), notifications in-app et rappel quotidien
     (§5.11, §5.12 → lot 6), dialogue « débit immédiat ou différé » `PaymentModeGate` et réglages du débit (§11.2, §11.3 → lot 4).
+15. **Ligne période** : contrôle « Mois | Année » en pleine largeur, navigateur de période dessous, au lieu d'une seule ligne
+    `[1fr, auto]` : sur 393 pt de large, les libellés se tronquaient (« M… | Y… »), vu sur simulateur iOS.
