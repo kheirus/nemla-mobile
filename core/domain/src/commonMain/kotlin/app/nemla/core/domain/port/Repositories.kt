@@ -7,18 +7,23 @@ import app.nemla.core.domain.model.AiConsents
 import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.Category
 import app.nemla.core.domain.model.CategoryId
+import app.nemla.core.domain.model.CategoryOutcome
 import app.nemla.core.domain.model.CategoryUpdate
+import app.nemla.core.domain.model.ClassificationCorrection
 import app.nemla.core.domain.model.EmailAddress
+import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.GlobalBudget
 import app.nemla.core.domain.model.MonthlyQuota
 import app.nemla.core.domain.model.NewCategory
 import app.nemla.core.domain.model.Password
 import app.nemla.core.domain.model.ProfileIdentity
 import app.nemla.core.domain.model.PseudoAvailability
+import app.nemla.core.domain.model.ReviewedExpense
 import app.nemla.core.domain.model.Session
 import app.nemla.core.domain.model.SignUpOutcome
 import app.nemla.core.domain.model.SignUpRequest
 import app.nemla.core.domain.model.UserProfile
+import app.nemla.core.domain.model.VoiceEntryId
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
@@ -83,4 +88,18 @@ interface AccountRepository {
     suspend fun deleteAccount(): AppResult<Unit>
 
     suspend fun exportData(): AppResult<AccountExport>
+}
+
+interface ExpenseReviewRepository {
+    suspend fun learnedMerchantKeys(keys: Set<String>): AppResult<Set<String>>
+
+    suspend fun confirm(expense: ReviewedExpense): AppResult<Unit>
+
+    suspend fun delete(id: ExpenseId): AppResult<Unit>
+
+    suspend fun markVoiceEntryConfirmed(id: VoiceEntryId): AppResult<Unit>
+
+    suspend fun recordCategoryOutcome(outcome: CategoryOutcome): AppResult<Unit>
+
+    suspend fun logCorrection(correction: ClassificationCorrection): AppResult<Unit>
 }
