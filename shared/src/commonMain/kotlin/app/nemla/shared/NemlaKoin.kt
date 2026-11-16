@@ -2,6 +2,7 @@ package app.nemla.shared
 
 import app.nemla.ai.local.aiLocalModule
 import app.nemla.ai.remote.nemla.aiRemoteNemlaModule
+import app.nemla.core.audio.coreAudioModule
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.common.coreCommonModule
 import app.nemla.core.data.coreDataModule
@@ -11,6 +12,7 @@ import app.nemla.core.network.coreNetworkModule
 import app.nemla.core.security.coreSecurityModule
 import app.nemla.feature.auth.featureAuthModule
 import app.nemla.feature.home.featureHomeModule
+import app.nemla.feature.voice.featureVoiceModule
 import org.koin.core.Koin
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -39,11 +41,13 @@ internal fun nemlaModules(
         coreCommonModule,
         coreSecurityModule,
         coreNetworkModule,
+        coreAudioModule,
         aiLocalModule,
         aiRemoteNemlaModule,
         coreDataModule,
         featureAuthModule,
         featureHomeModule,
+        featureVoiceModule,
         appModule,
     )
 

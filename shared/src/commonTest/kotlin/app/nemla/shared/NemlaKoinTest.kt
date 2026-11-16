@@ -2,6 +2,11 @@ package app.nemla.shared
 
 import app.nemla.ai.api.AiCapability
 import app.nemla.ai.api.AiRouter
+import app.nemla.core.audio.MicrophoneAccess
+import app.nemla.core.audio.MicrophonePermission
+import app.nemla.core.audio.RecorderState
+import app.nemla.core.audio.VoiceRecorder
+import app.nemla.core.audio.VoiceRecorderFactory
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AuthState
@@ -14,8 +19,17 @@ import app.nemla.core.domain.model.UserId
 import app.nemla.core.domain.port.AccountRepository
 import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
+import app.nemla.core.domain.port.ExpenseReviewRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.VoiceExpenseCapturer
+import app.nemla.core.domain.usecase.CaptureVoiceExpenses
+import app.nemla.core.domain.usecase.ConfirmReviewedExpenses
+import app.nemla.core.domain.usecase.DeletePendingExpense
+import app.nemla.core.domain.usecase.FindLearnedExpenses
+import app.nemla.core.domain.usecase.GetMonthlyQuota
+import app.nemla.core.domain.usecase.GrantAiConsent
+import app.nemla.core.domain.usecase.ListCategories
+import app.nemla.core.domain.usecase.ObserveAiConsents
 import app.nemla.core.domain.usecase.ObserveAuthState
 import app.nemla.core.domain.usecase.RequestPasswordReset
 import app.nemla.core.domain.usecase.SignIn
@@ -30,6 +44,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -53,7 +68,12 @@ class NemlaKoinTest {
             apiBaseUrl = "https://nemla.app",
         )
 
-    private val testOverrides = module { single<SecureStore> { InMemorySecureStore() } }
+    private val testOverrides =
+        module {
+            single<SecureStore> { InMemorySecureStore() }
+            single<MicrophonePermission> { GrantedMicrophone }
+            single<VoiceRecorderFactory> { VoiceRecorderFactory { IdleRecorder } }
+        }
 
     @BeforeTest
     fun setUp() {
@@ -87,6 +107,15 @@ class NemlaKoinTest {
             koin.get<AiConsentRepository>()
             koin.get<AccountRepository>()
             koin.get<VoiceExpenseCapturer>()
+            koin.get<ExpenseReviewRepository>()
+            koin.get<CaptureVoiceExpenses>()
+            koin.get<GetMonthlyQuota>()
+            koin.get<ListCategories>()
+            koin.get<FindLearnedExpenses>()
+            koin.get<ConfirmReviewedExpenses>()
+            koin.get<DeletePendingExpense>()
+            koin.get<ObserveAiConsents>()
+            koin.get<GrantAiConsent>()
             koin.get<ObserveAuthState>()
             koin.get<SignIn>()
             koin.get<SignUp>()
@@ -131,6 +160,20 @@ class NemlaKoinTest {
         val signedIn = AuthState.SignedIn(Session(UserId("u"), email = null, expiresAt = null))
         assertEquals(RootTarget.Home, rootTargetFor(signedIn, hadSession = false))
     }
+}
+
+private object GrantedMicrophone : MicrophonePermission {
+    override fun status(): MicrophoneAccess = MicrophoneAccess.GRANTED
+}
+
+private object IdleRecorder : VoiceRecorder {
+    override val state: StateFlow<RecorderState> = MutableStateFlow(RecorderState.Idle)
+
+    override fun start() = Unit
+
+    override fun stop() = Unit
+
+    override fun cancel() = Unit
 }
 
 private class StateAuthRepository : AuthRepository {

@@ -35,6 +35,10 @@ import app.nemla.feature.auth.navigation.navigateToAuth
 import app.nemla.feature.home.homeScreen
 import app.nemla.feature.home.isHome
 import app.nemla.feature.home.navigateToHome
+import app.nemla.feature.voice.capture.VoiceCaptureButton
+import app.nemla.feature.voice.navigation.closeVoiceReview
+import app.nemla.feature.voice.navigation.navigateToVoiceReview
+import app.nemla.feature.voice.navigation.voiceGraph
 import app.nemla.shared.resources.Res
 import app.nemla.shared.resources.app_missing_config_body
 import app.nemla.shared.resources.app_missing_config_title
@@ -84,7 +88,11 @@ private fun NemlaNavHost(viewModel: AppViewModel = koinViewModel()) {
     NavHost(navController = navController, startDestination = SplashDestination) {
         composable<SplashDestination> { SplashScreen() }
         authGraph(navController = navController, onAuthenticated = { navController.showHome() })
-        homeScreen(onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) })
+        homeScreen(
+            onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
+            floatingAction = { VoiceCaptureButton(onOpenReview = { navController.navigateToVoiceReview() }) },
+        )
+        voiceGraph(onClose = { navController.closeVoiceReview() })
     }
 }
 
