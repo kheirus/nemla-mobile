@@ -67,3 +67,62 @@ logo absent du dépôt web (hébergé sur le CDN Lovable).
     de l'accueil ont été rédigés pour le mobile (« Pseudo » → « Username », « Femme » → « Woman », « Colocation » →
     « Shared housing » suivent les valeurs effectives de `specs/04` §I.1) ; à relire.
 
+
+## Lot 2 — dictée (16/11/2026)
+
+Écarts Android / iOS (dialogue, fiche de revue et logique 100 % Compose / `commonMain` ; seuls la capture micro et la demande de
+permission sont propres à chaque plateforme, dans `core:audio`) :
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Capture | `AudioRecord`, source `VOICE_RECOGNITION` puis `MIC`, 16 kHz mono PCM16 si accepté (sinon 48 / 44,1 kHz puis décimation) | `AVAudioEngine`, tap à la fréquence native (souvent 48 kHz), canal 0 en `Float`, décimation | Non : même WAV 16 kHz mono 16 bits, même détection de silence. Le traitement du signal du système (gain, réduction de bruit) diffère |
+| Session audio | Pas de demande de focus audio : une musique en cours continue | `AVAudioSession` catégorie `record`, mode `measurement` : la lecture des autres applications est interrompue pendant la dictée, puis notifiée à la fin | **Oui** |
+| Permission micro | Dialogue système ; après deux refus Android ne le montre plus et la dictée affiche « Accès au micro refusé. » (pas de lien vers les réglages) | Dialogue système une seule fois ; texte `NSMicrophoneUsageDescription` en français uniquement (pas de `en.lproj/InfoPlist.strings`) | **Oui**, rendu et texte système |
+| Passage en arrière-plan pendant l'enregistrement | `ON_STOP` : enregistrement annulé, rien n'est envoyé | Idem | Non |
+| Sélecteur de date | `DatePickerDialog` Material 3 Compose | Le même composant Compose (pas de `UIDatePicker`) | Non entre plateformes ; non natif sur iOS |
+| Menu « Ajouter », dialogues | `DropdownMenu`, `Dialog`, `AlertDialog` Compose | Les mêmes composants Compose | Non entre plateformes ; non natif sur iOS |
+| Vérification | Compilation, tests JVM ; aucun enregistrement réel sur émulateur ou appareil | Compilation, tests sur simulateur (logique) ; aucun enregistrement réel | À vérifier sur appareil |
+
+Écarts web / mobile introduits au lot 2 (à valider par le propriétaire) :
+
+1. **Stockage de l'audio** : le WAV n'est pas téléversé dans le bucket `voice-notes` et `audio_url` n'est jamais envoyé ; il part
+   directement en multipart vers `voice/process` et ne vit qu'en mémoire (remis à zéro après l'envoi). Rien ne reste côté stockage
+   en cas d'échec (le web y laisse l'audio, `specs/01` §2.1 étape 11).
+2. **Consentement IA** : dialogue explicite avant la première dictée (niveau `PERSONAL`), absent du web. Refus : rien n'est enregistré
+   ni envoyé, message neutre. Révocation prévue dans Mon espace (lot 4).
+3. **Langue de dictée** : langue du système (`en` si le système est en anglais, sinon `fr`) en attendant les préférences (lot 4).
+4. **Fiche de revue** : écran dédié (destination `voiceGraph`) ouvert après une dictée réussie, au lieu d'un bloc inséré dans le
+   tableau de bord (lot 3). « Plus tard » et le retour système reviennent à l'accueil. Les dépenses en attente ne peuvent être
+   rouvertes que pendant la session, par l'entrée « Dépenses à valider » ajoutée au menu « Ajouter » (en mémoire, oubliée au
+   redémarrage, à la déconnexion et au changement de compte) ; la carte « Dépenses à valider » (`specs/04` §5.3) attend
+   `GET /api/public/expenses`.
+5. **Libellé en lecture seule** dans la fiche (renommer exige `PUT /api/public/expenses/{id}`) ; la majuscule initiale n'est pas
+   réappliquée (le serveur l'a déjà fait à l'extraction). `prettyLabel` n'est pas porté (sans effet notable sur un libellé dicté ;
+   nécessaire pour l'import, lot 5).
+6. **Pas de détection de doublons** (lecture des libellés déchiffrés impossible) ni de **journal de correction**
+   (`classification_log_save` : port en `AppError.NotSupportedYet`, appel ignoré).
+7. **Enregistrement d'une ligne** : `PATCH /rest/v1/expenses` (`montant` décimal exact, `date`, `category_id`, `confirmed=true`)
+   au lieu de `expense_save` ; `moyen_paiement` et `source` ne sont pas réécrits (le web force `carte`, valeur par défaut des
+   lignes dictées : même résultat). Statut de la dictée : `PATCH voice_entries statut=confirmed`. Suppression : `DELETE` immédiat.
+8. **Apprentissage** : `record_category_correction` pour chaque ligne dont la clé marchand fait au moins 3 caractères, avec
+   `p_label` vide (ignoré par le RPC). Clé marchand calculée sur l'appareil par un portage de `normalizeMerchantKey` : le repli des
+   accents utilise une table des lettres latines décomposables (équivalent NFD pour le français ; `œ`, `æ`, `ß` deviennent des
+   séparateurs comme sur le web). La mention « Catégorie apprise… » vient, comme sur le web, de la lecture de `merchant_rules`.
+9. **Menu « Ajouter »** : « Saisie manuelle » et « Importer un relevé » affichés désactivés avec « Bientôt disponible ». Si le quota
+   est illisible, l'entrée dictée affiche « 30 s max » sans compteur et reste active (le serveur tranche).
+10. **Messages** : jamais de texte serveur. Erreurs traduites (quota 429, pas de parole / pas de dépense 422, trop volumineux 413,
+    aucune catégorie, hors ligne, délai, trop de demandes, générique « Traitement impossible »). Les erreurs micro sont traduites
+    (le web ne les traduit pas) et un message « Micro indisponible… » est ajouté. Les erreurs de traitement restent dans le dialogue
+    (ouvert) ; si l'utilisateur l'a fermé pendant le traitement, elles s'affichent dans une bannière au-dessus du bouton « Ajouter »
+    (6 s, touchable pour masquer), comme « Dépenses enregistrées ». « {n} dépense(s) détectée(s) » devient une bannière en tête de la
+    fiche. Pluriels réels (`plurals`) au lieu de « (s) ».
+11. **Montant** : saisie filtrée (chiffres, une virgule ou un point, deux décimales au plus, signe moins) ; vide = 0 et négatif
+    accepté comme sur le web ; séparateur affiché selon la langue (virgule en français). Converti en centimes sans flottant.
+12. **Date** : date future ramenée à aujourd'hui (jour local, pas UTC) ; affichée `jj/mm/aaaa` ; sélecteur Material 3.
+13. **Catégorie** : liste sans pastille de couleur, libellé « Catégorie » au-dessus du champ ; une catégorie supprimée entre-temps est
+    traitée comme absente. « Créez votre catégorie dans Mon espace » n'est pas un lien (Mon espace au lot 4).
+14. **Mise en page d'une ligne** : quatre rangées (libellé + montant, avertissements, catégorie, date + corbeille) au lieu de deux,
+    pour la largeur d'un téléphone.
+15. **Dialogue de dictée** : coins arrondis 16 dp, largeur maximale 384 dp, marge 16 dp (plein écran à coins carrés sur le web mobile) ;
+    bouton « Ajouter » en `ExtendedFloatingActionButton` Material 3 (pilule 56 dp, ombre M3). Aucune animation hors le spinner.
+16. **Arrière-plan** : l'enregistrement est annulé si l'application passe en arrière-plan (le web continue dans un onglet masqué).

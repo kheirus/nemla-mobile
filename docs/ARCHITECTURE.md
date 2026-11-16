@@ -36,20 +36,24 @@ core/network               fabrique HttpClient, gestion des jetons, correspondan
 core/security              stockage sécurisé (Keystore / Keychain), protection d'écran
 core/data                  implémentations des dépôts, API Supabase et nemla, passerelle domaine ↔ IA
 core/designsystem          thème, jetons, typographie, composants nemla
+core/audio                 enregistreur (WAV mono 16 kHz 16 bits en mémoire, silence, durée max), micro et permission
 ai/api                     contrats IA : capacités, moteurs, routeur, types de confidentialité
 ai/local                   moteurs embarqués (anonymisation par règles aujourd'hui, modèles locaux demain)
 ai/remote-nemla            moteurs adossés au backend nemla actuel (Lovable)
 feature/auth               connexion, inscription, mot de passe oublié
-feature/home               écran d'accueil authentifié (lot 1 : coquille)
+feature/home               écran d'accueil authentifié (lot 1 : coquille ; reçoit le bouton « Ajouter » par un emplacement)
+feature/voice              bouton « Ajouter », dialogue de dictée, consentement IA, fiche de revue
 ```
 
-Lots suivants : `core/audio`, `feature/voice`, `feature/dashboard`, `feature/onboarding`, `feature/settings`,
+Lots suivants : `feature/dashboard`, `feature/onboarding`, `feature/settings`,
 `feature/recurring`, `feature/import`, `feature/reports`, `ai/remote-<autre fournisseur>`.
 
 ### Règles de dépendance (vérifiées en revue)
 
 ```
 feature:*        -> core:domain, core:common, core:designsystem          (jamais core:data, jamais ai:*)
+feature:voice    -> + core:audio                                         (seule feature autorisée à l'utiliser)
+core:audio       -> core:common (+ Compose runtime ; androidx activity-compose sur Android, AVFAudio sur iOS)
 core:data        -> core:domain, core:common, core:network, core:security, ai:api
 core:domain      -> core:common                                          (rien d'autre : ni Ktor, ni Compose, ni IA)
 core:network     -> core:common
@@ -61,6 +65,9 @@ ai:remote-nemla  -> ai:api, core:network, core:common
 shared           -> tout (c'est le seul endroit qui assemble)
 androidApp       -> shared
 ```
+
+Une feature ne dépend jamais d'une autre : `feature:home` expose un emplacement (`floatingAction`) que `shared` remplit avec
+`VoiceCaptureButton` de `feature:voice`, et `shared` déclare la destination `voiceGraph` (fiche de revue).
 
 Le domaine ne connaît pas l'IA : il expose des ports métier (`VoiceExpenseCapturer`, `StatementImporter`…) que
 `core:data` implémente en s'appuyant sur `AiRouter`. Les écrans ne connaissent que des cas d'usage.
@@ -170,8 +177,9 @@ règles ci-dessus interdisent. Il faut un endpoint qui reçoit le texte déjà a
 | Transport | HTTPS uniquement (`usesCleartextTraffic=false`, ATS par défaut). Épinglage de certificat prévu quand le domaine d'API sera figé. |
 | Journaux | `AppLogger` n'accepte que des messages constants et des identifiants techniques. Le journal HTTP est désactivé en release et n'affiche jamais corps ni en-têtes. Les types sensibles redéfinissent `toString()`. |
 | Écran | `FLAG_SECURE` sur Android en release (pas de capture ni d'aperçu dans les applications récentes) ; voile sur iOS quand l'application passe en arrière-plan. |
-| Minimisation | Aucune donnée financière au repos (lot 1). Audio en mémoire, jamais écrit sur un stockage partagé. |
-| Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans les réglages. |
+| Minimisation | Aucune donnée financière au repos (lots 1 et 2). Audio en mémoire uniquement : jamais écrit sur disque ni téléversé dans le bucket `voice-notes` (le WAV part directement en multipart vers `voice/process`), tampons remis à zéro après envoi, refus ou annulation. Enregistrement annulé quand l'application passe en arrière-plan. La dictée en attente de revue reste en mémoire et est oubliée à la déconnexion ou au changement de compte. |
+| Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans les réglages. La dictée exige le niveau `PERSONAL` : dialogue avant la première dictée et à chaque `ConsentRequired` du routeur ; refus = rien n'est enregistré ni envoyé. |
+| Apprentissage | `record_category_correction` reçoit la clé marchand normalisée et un `p_label` vide (le RPC l'ignore) : le libellé ne quitte pas l'appareil pour l'apprentissage. |
 | Droits | Suppression de compte dans l'application (obligatoire App Store / Google Play) et export des données : ports prévus, dépendants du backend. |
 | Traceurs | Aucun SDK d'analyse, de publicité ou de suivi. Manifeste de confidentialité iOS (`PrivacyInfo.xcprivacy`) déclaré sans collecte tierce. |
 | Code | R8 activé en release. Aucun secret dans le dépôt ni dans le binaire. |
