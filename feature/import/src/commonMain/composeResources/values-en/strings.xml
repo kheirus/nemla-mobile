@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="import_title">Import a bank statement</string>
+  <string name="import_description">One file at a time: PDF or CSV. You will review the detected expenses before they are saved.</string>
+  <string name="import_trust_title">Your file is anonymised on your phone</string>
+  <string name="import_trust_body">IBAN, account or card numbers, account holder name, email, phone and address are removed on your phone, before anything is sent. The file itself never leaves your phone: only the anonymised text is sent to read your expenses, and only the expenses read are saved.</string>
+  <string name="import_choose_file">Choose a file</string>
+  <string name="import_no_file">—</string>
+  <string name="import_read">Read the file</string>
+  <string name="import_reading">Reading and anonymising…</string>
+  <string name="import_parsing">Reading your expenses…</string>
+  <plurals name="import_quota_left">
+    <item quantity="one">%1$d import left this month</item>
+    <item quantity="other">%1$d imports left this month</item>
+  </plurals>
+  <string name="import_quota_exhausted">Statement import limit reached for this month. It resets on the 1st of next month — dictation is still available.</string>
+  <plurals name="import_redactions">
+    <item quantity="one">%1$d personal item masked on your phone.</item>
+    <item quantity="other">%1$d personal items masked on your phone.</item>
+  </plurals>
+  <string name="import_consent_title">Statements and artificial intelligence</string>
+  <string name="import_consent_body">To read your expenses, the text of your statement, first anonymised on your phone (IBAN, account or card numbers, name, email, phone and address removed), is sent to the nemla server and then to an artificial intelligence provider. The file itself never leaves your phone. You can withdraw this consent later in My space.</string>
+  <string name="import_consent_accept">Accept</string>
+  <string name="import_consent_decline">Decline</string>
+  <string name="import_error_quota">Statement import limit reached for this month. It resets on the 1st of next month — dictation is still available.</string>
+  <string name="import_error_too_large">File too large (8 MB maximum).</string>
+  <string name="import_error_unreadable">This file cannot be read (scanned or empty PDF?). Try a CSV.</string>
+  <string name="import_error_spreadsheet">Excel files cannot be read by the app yet: export your statement as CSV (from your bank or your spreadsheet app), then import that CSV.</string>
+  <string name="import_error_pdf_unsupported">This PDF cannot be read on this Android version. Use a CSV export of your statement.</string>
+  <string name="import_error_open_failed">This file cannot be opened. Please choose it again.</string>
+  <string name="import_error_no_expense">No expense detected in this file.</string>
+  <string name="import_error_period_too_long">This file covers more than 2 months. An import handles one period at a time (2 months maximum): split your statement and import one period per import.</string>
+  <string name="import_error_no_category">No category set up.</string>
+  <string name="import_error_not_supported_yet">Statement import from the app is coming soon: your file was read and anonymised on your phone, but the server cannot receive it yet. Nothing was sent.</string>
+  <string name="import_error_offline">You are offline. Check your connection and try again.</string>
+  <string name="import_error_timeout">The server is taking too long to respond. Try again.</string>
+  <string name="import_error_rate_limited">Too many requests. Wait a moment and try again.</string>
+  <string name="import_error_consent_declined">Import cancelled: nothing was sent.</string>
+  <string name="import_error_failed">Import failed</string>
+</resources>

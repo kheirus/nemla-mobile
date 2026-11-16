@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="import_title">Importer un relevé de compte</string>
+  <string name="import_description">Un seul fichier à la fois : PDF ou CSV. Les dépenses détectées vous seront proposées avant enregistrement.</string>
+  <string name="import_trust_title">Votre fichier est anonymisé sur votre téléphone</string>
+  <string name="import_trust_body">IBAN, numéros de compte ou de carte, nom du titulaire, email, téléphone et adresse sont supprimés sur votre téléphone, avant tout envoi. Le fichier lui-même ne quitte jamais votre téléphone : seul le texte anonymisé est envoyé pour lire vos dépenses, et seules les dépenses lues sont enregistrées.</string>
+  <string name="import_choose_file">Choisir un fichier</string>
+  <string name="import_no_file">—</string>
+  <string name="import_read">Lire le fichier</string>
+  <string name="import_reading">Lecture et anonymisation en cours…</string>
+  <string name="import_parsing">Lecture des dépenses en cours…</string>
+  <plurals name="import_quota_left">
+    <item quantity="one">%1$d import restant ce mois</item>
+    <item quantity="many">%1$d imports restants ce mois</item>
+    <item quantity="other">%1$d imports restants ce mois</item>
+  </plurals>
+  <string name="import_quota_exhausted">Quota d'import de relevé atteint pour ce mois. Il repart à zéro le 1er du mois prochain — la dictée reste disponible.</string>
+  <plurals name="import_redactions">
+    <item quantity="one">%1$d élément personnel masqué sur votre téléphone.</item>
+    <item quantity="many">%1$d éléments personnels masqués sur votre téléphone.</item>
+    <item quantity="other">%1$d éléments personnels masqués sur votre téléphone.</item>
+  </plurals>
+  <string name="import_consent_title">Relevé et intelligence artificielle</string>
+  <string name="import_consent_body">Pour lire vos dépenses, le texte de votre relevé, d'abord anonymisé sur votre téléphone (IBAN, numéros de compte ou de carte, nom, email, téléphone et adresse retirés), est envoyé au serveur nemla puis à un fournisseur d'intelligence artificielle. Le fichier lui-même ne quitte jamais votre téléphone. Vous pourrez retirer cet accord plus tard dans Mon espace.</string>
+  <string name="import_consent_accept">Accepter</string>
+  <string name="import_consent_decline">Refuser</string>
+  <string name="import_error_quota">Quota d'import de relevé atteint pour ce mois. Il repart à zéro le 1er du mois prochain — la dictée reste disponible.</string>
+  <string name="import_error_too_large">Fichier trop volumineux (8 Mo maximum).</string>
+  <string name="import_error_unreadable">Impossible de lire ce fichier (PDF scanné ou vide ?). Essayez un CSV.</string>
+  <string name="import_error_spreadsheet">Les fichiers Excel ne sont pas encore lus par l'application : exportez votre relevé en CSV (depuis votre banque ou votre tableur), puis importez ce CSV.</string>
+  <string name="import_error_pdf_unsupported">Ce PDF ne peut pas être lu sur cette version d'Android. Utilisez un export CSV de votre relevé.</string>
+  <string name="import_error_open_failed">Impossible d'ouvrir ce fichier. Choisissez-le à nouveau.</string>
+  <string name="import_error_no_expense">Aucune dépense détectée dans ce fichier.</string>
+  <string name="import_error_period_too_long">Ce fichier couvre plus de 2 mois. Un import traite une seule période à la fois (2 mois maximum) : découpez votre relevé et importez une période par import.</string>
+  <string name="import_error_no_category">Aucune catégorie configurée.</string>
+  <string name="import_error_not_supported_yet">L'import de relevé depuis l'application arrive bientôt : votre fichier a été lu et anonymisé sur votre téléphone, mais le serveur ne peut pas encore le recevoir. Rien n'a été envoyé.</string>
+  <string name="import_error_offline">Vous êtes hors ligne. Vérifiez votre connexion puis réessayez.</string>
+  <string name="import_error_timeout">Le serveur met trop de temps à répondre. Réessayez.</string>
+  <string name="import_error_rate_limited">Trop de demandes. Patientez un instant puis réessayez.</string>
+  <string name="import_error_consent_declined">Import annulé : rien n'a été envoyé.</string>
+  <string name="import_error_failed">Import impossible</string>
+</resources>
