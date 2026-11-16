@@ -32,10 +32,9 @@ val featureVoiceModule: Module =
         factoryOf(::FindLearnedExpenses)
         factoryOf(::ConfirmReviewedExpenses)
         factoryOf(::DeletePendingExpense)
-        factory { ObserveAuthState(get()) }
         single<DictationLanguage> { SystemDictationLanguage }
         single<Today> { SystemToday }
-        single { VoiceReviewStore(get(), CoroutineScope(SupervisorJob() + Dispatchers.Default)) } onClose { it?.close() }
+        single { VoiceReviewStore(ObserveAuthState(get()), CoroutineScope(SupervisorJob() + Dispatchers.Default)) } onClose { it?.close() }
         viewModelOf(::VoiceCaptureViewModel)
         viewModel {
             VoiceReviewViewModel(
