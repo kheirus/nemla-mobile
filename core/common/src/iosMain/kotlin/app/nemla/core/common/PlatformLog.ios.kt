@@ -6,5 +6,5 @@ internal actual fun writePlatformLog(
     level: LogLevel,
     line: String,
 ) {
-    NSLog("%@", "$LOG_TAG [${level.name}] $line")
+    NSLog("$LOG_TAG [${level.name}] $line".replace("%", "%%"))
 }
