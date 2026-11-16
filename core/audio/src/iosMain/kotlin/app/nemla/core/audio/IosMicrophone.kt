@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import platform.AVFAudio.AVAudioEngine
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryRecord
-import platform.AVFAudio.AVAudioSessionModeMeasurement
 import platform.AVFAudio.AVAudioSessionRecordPermissionDenied
 import platform.AVFAudio.AVAudioSessionRecordPermissionGranted
 import platform.AVFAudio.AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
@@ -29,7 +28,6 @@ internal class IosMicrophone :
         val session = AVAudioSession.sharedInstance()
         val configured =
             session.setCategory(AVAudioSessionCategoryRecord, error = null) &&
-                session.setMode(AVAudioSessionModeMeasurement, error = null) &&
                 session.setActive(true, error = null)
         if (!configured) {
             deactivate(session)
