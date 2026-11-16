@@ -20,10 +20,14 @@ import app.nemla.core.data.ai.RoutedVoiceExpenseCapturer
 import app.nemla.core.data.ai.StatementTextExtractor
 import app.nemla.core.data.consent.SecureStoreAiConsentRepository
 import app.nemla.core.data.remote.KtorCategoryRepository
+import app.nemla.core.data.remote.KtorDeferredDebitRepository
+import app.nemla.core.data.remote.KtorExpenseRepository
 import app.nemla.core.data.remote.KtorExpenseReviewRepository
 import app.nemla.core.data.remote.KtorProfileRepository
 import app.nemla.core.data.remote.KtorQuotaRepository
+import app.nemla.core.data.remote.KtorRecurringChargeRepository
 import app.nemla.core.data.remote.Postgrest
+import app.nemla.core.data.remote.UnsupportedRecurringChargeMaterializer
 import app.nemla.core.data.session.GoTrueApi
 import app.nemla.core.data.session.KtorAuthRepository
 import app.nemla.core.data.session.SessionManager
@@ -33,11 +37,15 @@ import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.BudgetAdvisor
 import app.nemla.core.domain.port.CategoryRepository
+import app.nemla.core.domain.port.DeferredDebitRepository
+import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
+import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeParser
+import app.nemla.core.domain.port.RecurringChargeRepository
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.core.network.SessionTokenStore
@@ -76,6 +84,10 @@ val coreDataModule: Module =
         single<CategoryRepository> { KtorCategoryRepository(postgrest = get()) }
         single<QuotaRepository> { KtorQuotaRepository(postgrest = get()) }
         single<ExpenseReviewRepository> { KtorExpenseReviewRepository(postgrest = get()) }
+        single<ExpenseRepository> { KtorExpenseRepository(postgrest = get()) }
+        single<RecurringChargeRepository> { KtorRecurringChargeRepository(postgrest = get()) }
+        single<RecurringChargeMaterializer> { UnsupportedRecurringChargeMaterializer }
+        single<DeferredDebitRepository> { KtorDeferredDebitRepository(postgrest = get()) }
         single<AccountRepository> { UnsupportedAccountRepository }
 
         single<ConnectivityMonitor> { AssumeOnlineConnectivityMonitor }
