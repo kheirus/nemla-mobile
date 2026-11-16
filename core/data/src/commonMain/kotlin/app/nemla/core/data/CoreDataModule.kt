@@ -10,7 +10,6 @@ import app.nemla.core.data.account.UnsupportedAccountRepository
 import app.nemla.core.data.ai.AssumeOnlineConnectivityMonitor
 import app.nemla.core.data.ai.ConnectivityMonitor
 import app.nemla.core.data.ai.LoggingAiTraceListener
-import app.nemla.core.data.ai.PlainTextStatementExtractor
 import app.nemla.core.data.ai.RepositoryAiContextSource
 import app.nemla.core.data.ai.RoutedBudgetAdvisor
 import app.nemla.core.data.ai.RoutedPeriodReviewer
@@ -18,7 +17,6 @@ import app.nemla.core.data.ai.RoutedRecurringChargeParser
 import app.nemla.core.data.ai.RoutedSpeechTranscriber
 import app.nemla.core.data.ai.RoutedStatementImporter
 import app.nemla.core.data.ai.RoutedVoiceExpenseCapturer
-import app.nemla.core.data.ai.StatementTextExtractor
 import app.nemla.core.data.consent.SecureStoreAiConsentRepository
 import app.nemla.core.data.preferences.SecureStorePreferencesRepository
 import app.nemla.core.data.remote.KtorCategoryRepository
@@ -100,11 +98,10 @@ val coreDataModule: Module =
         single<AiTraceListener> { LoggingAiTraceListener(logger = get()) }
         single<AiRoutingPolicy> { LocalFirstPolicy }
         single { AiRouter(engines = getAll<AiEngine<*, *>>(), contextSource = get(), policy = get(), listener = get()) }
-        single<StatementTextExtractor> { PlainTextStatementExtractor }
 
         single<VoiceExpenseCapturer> { RoutedVoiceExpenseCapturer(router = get(), categories = get(), clock = Clock.System) }
         single<StatementImporter> {
-            RoutedStatementImporter(router = get(), extractor = get(), categories = get(), profiles = get())
+            RoutedStatementImporter(router = get(), categories = get(), profiles = get())
         }
         single<RecurringChargeParser> { RoutedRecurringChargeParser(router = get()) }
         single<SpeechTranscriber> { RoutedSpeechTranscriber(router = get()) }

@@ -2,6 +2,7 @@ package app.nemla.core.data
 
 import app.nemla.ai.api.AiAttempt
 import app.nemla.ai.api.AiCapability
+import app.nemla.ai.api.AiEngine
 import app.nemla.ai.api.AiError
 import app.nemla.ai.api.AiException
 import app.nemla.ai.api.AiRoutingContext
@@ -13,6 +14,7 @@ import app.nemla.ai.api.CategoryEstimate
 import app.nemla.ai.api.CategoryReview
 import app.nemla.ai.api.ChargeFrequency
 import app.nemla.ai.api.DataSensitivity
+import app.nemla.ai.api.EngineAvailability
 import app.nemla.ai.api.EngineDescriptor
 import app.nemla.ai.api.ExecutionLocation
 import app.nemla.ai.api.ExpenseDraft
@@ -34,7 +36,6 @@ import app.nemla.core.common.ValidationCode
 import app.nemla.core.common.getOrNull
 import app.nemla.core.data.ai.ConnectivityMonitor
 import app.nemla.core.data.ai.LoggingAiTraceListener
-import app.nemla.core.data.ai.PlainTextStatementExtractor
 import app.nemla.core.data.ai.RepositoryAiContextSource
 import app.nemla.core.data.ai.RoutedBudgetAdvisor
 import app.nemla.core.data.ai.RoutedPeriodReviewer
@@ -51,8 +52,8 @@ import app.nemla.core.domain.model.EstimateBasis
 import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.MonthSpending
 import app.nemla.core.domain.model.ReviewPeriod
-import app.nemla.core.domain.model.StatementFile
 import app.nemla.core.domain.model.StatementFormat
+import app.nemla.core.domain.model.StatementText
 import app.nemla.core.domain.model.VoiceEntryId
 import app.nemla.core.domain.model.VoiceRecording
 import app.nemla.core.security.InMemorySecureStore
@@ -72,7 +73,7 @@ class AiGatewayTest {
     private val draft = ExpenseDraft("exp-1", 4_200, "Marché", LocalDate(2026, 11, 15), "cat-1", "marche")
     private val capture = VoiceCapture("entry-1", Transcript("marché 42 euros", "fr"), listOf(draft))
 
-    private fun statement(text: String): StatementFile = StatementFile("releve.csv", StatementFormat.CSV, text.encodeToByteArray())
+    private fun statement(text: String): StatementText = StatementText(text, StatementFormat.CSV)
 
     private val statementText =
         "BANQUE EXEMPLE\nM. CAMILLE MARTIN\nRelevé de compte du 1 mars 2026 au 31 mars 2026\nDate Libellé Débit Crédit\n" +
@@ -194,7 +195,7 @@ class AiGatewayTest {
         runTest {
             val anonymizer = RuleBasedStatementAnonymizer()
             val importer =
-                RoutedStatementImporter(router(anonymizer), PlainTextStatementExtractor, FakeCategoryRepository(), FakeProfileRepository())
+                RoutedStatementImporter(router(anonymizer), FakeCategoryRepository(), FakeProfileRepository())
             assertEquals(AppError.NotSupportedYet, importer.import(statement(statementText), AppLanguage.FR).failure)
         }
 
@@ -208,7 +209,6 @@ class AiGatewayTest {
             val importer =
                 RoutedStatementImporter(
                     router(RuleBasedStatementAnonymizer(), parser),
-                    PlainTextStatementExtractor,
                     FakeCategoryRepository(),
                     FakeProfileRepository(pseudo = "Camille"),
                 )
@@ -232,7 +232,7 @@ class AiGatewayTest {
         runTest {
             val parser = FakeEngine(AiCapability.StatementParsing, "remote-parser") { ParsedStatement(emptyList()) }
             val importer =
-                RoutedStatementImporter(router(parser), PlainTextStatementExtractor, FakeCategoryRepository(), FakeProfileRepository())
+                RoutedStatementImporter(router(parser), FakeCategoryRepository(), FakeProfileRepository())
             assertEquals(AppError.NotSupportedYet, importer.import(statement(statementText), AppLanguage.FR).failure)
             assertTrue(parser.inputs.isEmpty())
         }
@@ -245,7 +245,6 @@ class AiGatewayTest {
             val importer =
                 RoutedStatementImporter(
                     router(RuleBasedStatementAnonymizer(), parser, context = context),
-                    PlainTextStatementExtractor,
                     FakeCategoryRepository(),
                     FakeProfileRepository(),
                 )
@@ -254,13 +253,12 @@ class AiGatewayTest {
         }
 
     @Test
-    fun unreadableOrUnsupportedStatementsAreRejectedLocally() =
+    fun tooShortStatementsAreRejectedLocally() =
         runTest {
             val parser = FakeEngine(AiCapability.StatementParsing, "remote-parser") { ParsedStatement(emptyList()) }
             val importer =
                 RoutedStatementImporter(
                     router(RuleBasedStatementAnonymizer(), parser),
-                    PlainTextStatementExtractor,
                     FakeCategoryRepository(),
                     FakeProfileRepository(),
                 )
@@ -268,11 +266,80 @@ class AiGatewayTest {
                 AppError.Validation(ValidationCode.UNREADABLE_FILE),
                 importer.import(statement("  \n  court  \n"), AppLanguage.FR).failure,
             )
-            val pdf = StatementFile("releve.pdf", StatementFormat.PDF, ByteArray(10))
-            assertEquals(AppError.NotSupportedYet, importer.import(pdf, AppLanguage.FR).failure)
-            val huge = StatementFile("releve.csv", StatementFormat.CSV, ByteArray(PlainTextStatementExtractor.MAX_BYTES + 1))
-            assertEquals(AppError.Validation(ValidationCode.PAYLOAD_TOO_LARGE), importer.import(huge, AppLanguage.FR).failure)
             assertTrue(parser.inputs.isEmpty())
+        }
+
+    private class ProbedParser(
+        private val available: Boolean,
+        private val behaviour: suspend (StatementParsingRequest) -> ParsedStatement,
+    ) : AiEngine<StatementParsingRequest, ParsedStatement> {
+        override val capability = AiCapability.StatementParsing
+        override val descriptor = EngineDescriptor("remote-parser", "fake", ExecutionLocation.REMOTE, 0)
+        val inputs = mutableListOf<StatementParsingRequest>()
+        var probes = 0
+
+        override suspend fun availability(): EngineAvailability {
+            probes++
+            return if (available) EngineAvailability.Ready else EngineAvailability.Unavailable("not_supported")
+        }
+
+        override suspend fun execute(input: StatementParsingRequest): ParsedStatement {
+            inputs += input
+            return behaviour(input)
+        }
+    }
+
+    private fun probedImporter(parser: ProbedParser): RoutedStatementImporter =
+        RoutedStatementImporter(router(RuleBasedStatementAnonymizer(), parser), FakeCategoryRepository(), FakeProfileRepository())
+
+    @Test
+    fun missingImportEndpointIsNotSupportedAndNothingIsSent() =
+        runTest {
+            val parser = ProbedParser(available = false) { ParsedStatement(emptyList()) }
+            val redactions = mutableListOf<Int>()
+            val result = probedImporter(parser).import(statement(statementText), AppLanguage.FR) { redactions += it }
+            assertEquals(AppError.NotSupportedYet, result.failure)
+            assertEquals(1, parser.probes)
+            assertTrue(parser.inputs.isEmpty())
+            assertEquals(1, redactions.size)
+            assertTrue(redactions.single() >= 4)
+        }
+
+    @Test
+    fun endpointDisappearingDuringTheCallIsNotSupported() =
+        runTest {
+            val parser = ProbedParser(available = true) { throw AiException(AiError.EngineFailure("not_supported")) }
+            assertEquals(AppError.NotSupportedYet, probedImporter(parser).import(statement(statementText), AppLanguage.FR).failure)
+        }
+
+    @Test
+    fun anonymizationIsReportedBeforeTheRemoteParserRuns() =
+        runTest {
+            val events = mutableListOf<String>()
+            val parser =
+                ProbedParser(available = true) {
+                    events += "parse"
+                    ParsedStatement(emptyList())
+                }
+            probedImporter(parser).import(statement(statementText), AppLanguage.FR) { events += "anonymized" }
+            assertEquals(listOf("anonymized", "parse"), events)
+        }
+
+    @Test
+    fun serverQuotaAndRejectionsAreTranslated() =
+        runTest {
+            val quota = ProbedParser(available = true) { throw AiException(AiError.QuotaExceeded) }
+            assertEquals(AppError.QuotaExceeded, probedImporter(quota).import(statement(statementText), AppLanguage.FR).failure)
+            val period = ProbedParser(available = true) { throw AiException(AiError.Rejected("PERIOD_TOO_LONG")) }
+            assertEquals(
+                AppError.Validation(ValidationCode.PERIOD_TOO_LONG),
+                probedImporter(period).import(statement(statementText), AppLanguage.FR).failure,
+            )
+            val empty = ProbedParser(available = true) { throw AiException(AiError.Rejected("NO_EXPENSE_DETECTED")) }
+            assertEquals(
+                AppError.Validation(ValidationCode.NO_EXPENSE_DETECTED),
+                probedImporter(empty).import(statement(statementText), AppLanguage.FR).failure,
+            )
         }
 
     @Test

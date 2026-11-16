@@ -23,8 +23,8 @@ import app.nemla.core.domain.model.BudgetEstimate
 import app.nemla.core.domain.model.PeriodReview
 import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.ReviewPeriod
-import app.nemla.core.domain.model.StatementFile
 import app.nemla.core.domain.model.StatementImport
+import app.nemla.core.domain.model.StatementText
 import app.nemla.core.domain.model.VoiceCapture
 import app.nemla.core.domain.model.VoiceRecording
 import app.nemla.core.domain.port.BudgetAdvisor
@@ -83,27 +83,25 @@ internal class RoutedVoiceExpenseCapturer(
 
 internal class RoutedStatementImporter(
     private val router: AiRouter,
-    private val extractor: StatementTextExtractor,
     private val categories: CategoryRepository,
     private val profiles: ProfileRepository,
 ) : StatementImporter {
     override suspend fun import(
-        file: StatementFile,
+        statement: StatementText,
         language: AppLanguage,
+        onAnonymized: (redactions: Int) -> Unit,
     ): AppResult<StatementImport> {
         if (router.enginesFor(AiCapability.StatementParsing).isEmpty()) return AppResult.Failure(AppError.NotSupportedYet)
-        return extractor.extract(file).flatMap { text ->
-            if (readableLength(text) < MIN_READABLE_CHARS) {
-                AppResult.Failure(AppError.Validation(ValidationCode.UNREADABLE_FILE))
-            } else {
-                anonymizeThenParse(text, language)
-            }
+        if (readableLength(statement.text) < MIN_READABLE_CHARS) {
+            return AppResult.Failure(AppError.Validation(ValidationCode.UNREADABLE_FILE))
         }
+        return anonymizeThenParse(statement.text, language, onAnonymized)
     }
 
     private suspend fun anonymizeThenParse(
         text: String,
         language: AppLanguage,
+        onAnonymized: (redactions: Int) -> Unit,
     ): AppResult<StatementImport> {
         val knownNames = listOfNotNull(profiles.getProfile().getOrNull()?.pseudo)
         val anonymized =
@@ -117,6 +115,7 @@ internal class RoutedStatementImporter(
                     result.value
                 }
             }
+        onAnonymized(anonymized.report.total)
         return categories.list().flatMap { owned ->
             val request = StatementParsingRequest(anonymized, language.tag, owned.map { CategoryHint(it.id.value, it.name) })
             router.runForApp(AiCapability.StatementParsing, request).flatMap { parsed ->
