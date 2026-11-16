@@ -20,6 +20,8 @@
   <string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key>
   <string>$(CURRENT_PROJECT_VERSION)</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>nemla utilise le micro uniquement pendant que vous dictez vos dépenses. L'enregistrement reste en mémoire et n'est envoyé pour être transcrit qu'avec votre accord.</string>
   <key>LSRequiresIPhoneOS</key>
   <true/>
   <key>CADisableMinimumFrameDurationOnPhone</key>
