@@ -38,6 +38,7 @@ import app.nemla.core.domain.model.ChargeFrequency as DomainChargeFrequency
 internal const val FAILURE_TIMEOUT = "timeout"
 internal const val FAILURE_RATE_LIMITED = "rate_limited"
 internal const val FAILURE_NOT_SUPPORTED = "not_supported"
+internal const val FAILURE_OFFLINE = "offline"
 
 internal fun AiError.toAppError(): AppError =
     when (this) {
@@ -74,6 +75,7 @@ internal fun AiError.toAppError(): AppError =
                 FAILURE_TIMEOUT -> AppError.Network.Timeout
                 FAILURE_RATE_LIMITED -> AppError.RateLimited
                 FAILURE_NOT_SUPPORTED -> AppError.NotSupportedYet
+                FAILURE_OFFLINE -> AppError.Network.Offline
                 else -> AppError.Server(null)
             }
         }

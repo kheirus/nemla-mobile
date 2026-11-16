@@ -306,6 +306,28 @@ class AiGatewayTest {
         }
 
     @Test
+    fun offlineProbeIsReportedAsOffline() =
+        runTest {
+            val parser =
+                object : AiEngine<StatementParsingRequest, ParsedStatement> {
+                    override val capability = AiCapability.StatementParsing
+                    override val descriptor = EngineDescriptor("remote-parser", "fake", ExecutionLocation.REMOTE, 0)
+                    var calls = 0
+
+                    override suspend fun availability(): EngineAvailability = EngineAvailability.Unavailable("offline")
+
+                    override suspend fun execute(input: StatementParsingRequest): ParsedStatement {
+                        calls++
+                        return ParsedStatement(emptyList())
+                    }
+                }
+            val importer =
+                RoutedStatementImporter(router(RuleBasedStatementAnonymizer(), parser), FakeCategoryRepository(), FakeProfileRepository())
+            assertEquals(AppError.Network.Offline, importer.import(statement(statementText), AppLanguage.FR).failure)
+            assertEquals(0, parser.calls)
+        }
+
+    @Test
     fun endpointDisappearingDuringTheCallIsNotSupported() =
         runTest {
             val parser = ProbedParser(available = true) { throw AiException(AiError.EngineFailure("not_supported")) }
