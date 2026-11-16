@@ -32,6 +32,8 @@ class NemlaColors(
     val warningBorder: Color,
     val warningContainer: Color,
     val onWarningContainer: Color,
+    val creditOk: Color,
+    val creditLow: Color,
     val shadow: Color,
     val scrim: Color,
 )
@@ -61,6 +63,8 @@ internal val LightNemlaColors =
         warningBorder = Color(0xFFFFB900),
         warningContainer = Color(0x99FFFBEB),
         onWarningContainer = Color(0xFFBB4D00),
+        creditOk = Color(0xFF218352),
+        creditLow = Color(0xFFCE7C09),
         shadow = Color(0xFF132419),
         scrim = Color(0xCC000000),
     )
@@ -90,6 +94,8 @@ internal val DarkNemlaColors =
         warningBorder = Color(0xFFFFB900),
         warningContainer = Color(0x33461901),
         onWarningContainer = Color(0xFFFFB900),
+        creditOk = Color(0xFF218352),
+        creditLow = Color(0xFFCE7C09),
         shadow = Color(0xFF132419),
         scrim = Color(0xCC000000),
     )

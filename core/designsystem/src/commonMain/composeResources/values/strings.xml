@@ -4,4 +4,5 @@
   <string name="ds_password_show">Afficher le mot de passe</string>
   <string name="ds_password_hide">Masquer le mot de passe</string>
   <string name="ds_loading">Chargement</string>
+  <string name="ds_close">Fermer</string>
 </resources>
