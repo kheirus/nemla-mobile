@@ -96,3 +96,17 @@ internal class ReportCategoryDto(
     val part: JsonElement? = null,
     val variation: JsonElement? = null,
 )
+
+@Serializable
+internal class ImportTextRequestDto(
+    val text: String,
+    val lang: String,
+    val today: String,
+)
+
+@Serializable
+internal class ImportResponseDto(
+    val kind: String? = null,
+    val redactions: Int = 0,
+    val expenses: List<ExpenseDto> = emptyList(),
+)

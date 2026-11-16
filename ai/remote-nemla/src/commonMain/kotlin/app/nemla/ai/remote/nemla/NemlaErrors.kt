@@ -8,6 +8,7 @@ import app.nemla.core.common.AppResult
 internal const val REASON_TIMEOUT = "timeout"
 internal const val REASON_RATE_LIMITED = "rate_limited"
 internal const val REASON_INVALID_RESPONSE = "invalid_response"
+internal const val REASON_NOT_SUPPORTED = "not_supported"
 
 internal fun AppError.toAiError(): AiError =
     when (this) {
@@ -22,7 +23,7 @@ internal fun AppError.toAiError(): AiError =
         is AppError.Server -> AiError.EngineFailure(status?.let { "server_$it" } ?: "server")
         AppError.NotFound -> AiError.EngineFailure("not_found")
         AppError.Configuration -> AiError.EngineFailure("configuration")
-        AppError.NotSupportedYet -> AiError.EngineFailure("not_supported")
+        AppError.NotSupportedYet -> AiError.EngineFailure(REASON_NOT_SUPPORTED)
         AppError.Storage, AppError.Unknown -> AiError.EngineFailure("unknown")
     }
 

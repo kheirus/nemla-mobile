@@ -7,6 +7,7 @@ import app.nemla.ai.api.ChargeFrequency
 import app.nemla.ai.api.ExpenseDraft
 import app.nemla.ai.api.MonthTotal
 import app.nemla.ai.api.ParsedRecurringCharges
+import app.nemla.ai.api.ParsedStatement
 import app.nemla.ai.api.PeriodReview
 import app.nemla.ai.api.RecurringChargeDraft
 import app.nemla.ai.api.ReviewPeriodKind
@@ -43,6 +44,8 @@ internal fun ExpenseDto.toDraft(merchant: String?): ExpenseDraft =
         categoryId = categoryId,
         merchant = merchant?.takeIf { it.isNotBlank() },
     )
+
+internal fun ImportResponseDto.toParsedStatement(): ParsedStatement = ParsedStatement(expenses.map { it.toDraft(null) })
 
 internal fun TranscribeDto.toTranscript(lang: String): Transcript = Transcript(transcript.transcriptText() ?: invalidResponse(), lang)
 

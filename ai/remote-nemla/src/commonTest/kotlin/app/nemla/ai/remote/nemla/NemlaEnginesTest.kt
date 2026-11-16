@@ -395,7 +395,7 @@ class NemlaEnginesTest {
         }
 
     @Test
-    fun koinModuleRegistersAllFiveEnginesAsAiEngines() {
+    fun koinModuleRegistersAllSixEnginesAsAiEngines() {
         val harness = RemoteHarness { json("{}") }
         val koin =
             koinApplication {
@@ -415,11 +415,12 @@ class NemlaEnginesTest {
                 AiCapability.RecurringParsing,
                 AiCapability.BudgetSuggestion,
                 AiCapability.PeriodReport,
+                AiCapability.StatementParsing,
             ),
             engines.map { it.capability }.toSet(),
         )
-        assertEquals(5, engines.map { it.descriptor.id }.toSet().size)
-        assertTrue(engines.none { it.capability == AiCapability.StatementParsing })
+        assertEquals(6, engines.map { it.descriptor.id }.toSet().size)
+        assertTrue(engines.none { it.capability == AiCapability.StatementAnonymization })
         assertTrue(engines.all { it.descriptor.location == ExecutionLocation.REMOTE })
     }
 }

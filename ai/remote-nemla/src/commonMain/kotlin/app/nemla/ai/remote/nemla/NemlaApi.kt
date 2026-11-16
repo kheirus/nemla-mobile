@@ -1,8 +1,10 @@
 package app.nemla.ai.remote.nemla
 
+import app.nemla.core.common.AppError
 import app.nemla.core.common.AppResult
 import app.nemla.core.network.BackendConfig
 import app.nemla.core.network.safeRequest
+import app.nemla.core.network.toAppError
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -10,10 +12,13 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import kotlinx.serialization.json.JsonObject
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class NemlaApi(
     private val client: HttpClient,
@@ -47,6 +52,53 @@ internal class NemlaApi(
         value: String,
     ): AppResult<PeriodReportDto> = safeRequest { client.get(endpoint("report/monthly")) { parameter(parameter, value) } }
 
+    suspend fun importText(body: ImportTextRequestDto): AppResult<ImportResponseDto> {
+        val response =
+            sendSafely {
+                client.post(endpoint(IMPORT_TEXT_PATH)) {
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+            }
+        return when (response) {
+            is AppResult.Failure -> {
+                response
+            }
+
+            is AppResult.Success -> {
+                if (response.value.isMissingEndpoint()) {
+                    AppResult.Failure(AppError.NotSupportedYet)
+                } else {
+                    safeRequest {
+                        response.value
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun isImportTextAvailable(): Boolean {
+        val response =
+            sendSafely {
+                client.post(endpoint(IMPORT_TEXT_PATH)) {
+                    contentType(ContentType.Application.Json)
+                    setBody(JsonObject(emptyMap()))
+                }
+            }
+        return response !is AppResult.Success || !response.value.isMissingEndpoint()
+    }
+
+    private suspend fun sendSafely(request: suspend () -> HttpResponse): AppResult<HttpResponse> =
+        try {
+            AppResult.Success(request())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            AppResult.Failure(e.toAppError())
+        }
+
+    private fun HttpResponse.isMissingEndpoint(): Boolean = status.value in MISSING_ENDPOINT_STATUSES
+
     private fun endpoint(path: String): String = config.apiBaseUrl.trim().trimEnd('/') + "/api/public/" + path
 
     private fun audioForm(
@@ -69,6 +121,8 @@ internal class NemlaApi(
         const val LANG_FIELD = "lang"
         const val AUDIO_FILE_NAME = "recording.wav"
         const val WAV_MIME_TYPE = "audio/wav"
+        const val IMPORT_TEXT_PATH = "import/text"
+        val MISSING_ENDPOINT_STATUSES = setOf(404, 405)
     }
 }
 

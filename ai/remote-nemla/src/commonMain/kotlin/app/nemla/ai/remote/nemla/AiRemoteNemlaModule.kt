@@ -13,4 +13,5 @@ val aiRemoteNemlaModule: Module =
         single { NemlaRecurringParsingEngine(get()) } bind AiEngine::class
         single { NemlaBudgetSuggestionEngine(get()) } bind AiEngine::class
         single { NemlaPeriodReportEngine(get()) } bind AiEngine::class
+        single { NemlaStatementParsingEngine(get()) } bind AiEngine::class
     }

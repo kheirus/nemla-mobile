@@ -6,17 +6,23 @@ import app.nemla.ai.api.AiError
 import app.nemla.ai.api.AiException
 import app.nemla.ai.api.BudgetEstimate
 import app.nemla.ai.api.BudgetSuggestionRequest
+import app.nemla.ai.api.EngineAvailability
 import app.nemla.ai.api.EngineDescriptor
 import app.nemla.ai.api.ExecutionLocation
 import app.nemla.ai.api.ParsedRecurringCharges
+import app.nemla.ai.api.ParsedStatement
 import app.nemla.ai.api.PeriodReportRequest
 import app.nemla.ai.api.PeriodReview
 import app.nemla.ai.api.RecurringParsingRequest
 import app.nemla.ai.api.ReviewPeriodKind
 import app.nemla.ai.api.SpeechRequest
+import app.nemla.ai.api.StatementParsingRequest
 import app.nemla.ai.api.Transcript
 import app.nemla.ai.api.VoiceCapture
 import app.nemla.core.common.ValidationCode
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 internal const val NEMLA_PROVIDER = "nemla-backend"
 
@@ -99,5 +105,33 @@ internal class NemlaPeriodReportEngine(
     private companion object {
         val MONTH_PATTERN = Regex("^[0-9]{4}-(0[1-9]|1[0-2])$")
         val YEAR_PATTERN = Regex("^[0-9]{4}$")
+    }
+}
+
+internal class NemlaStatementParsingEngine(
+    private val api: NemlaApi,
+    private val clock: Clock = Clock.System,
+    private val timeZone: () -> TimeZone = { TimeZone.currentSystemDefault() },
+) : AiEngine<StatementParsingRequest, ParsedStatement> {
+    override val capability: AiCapability<StatementParsingRequest, ParsedStatement> = AiCapability.StatementParsing
+    override val descriptor: EngineDescriptor = remoteDescriptor("nemla-statement-parsing", creditCost = 0)
+
+    override suspend fun availability(): EngineAvailability =
+        if (api.isImportTextAvailable()) EngineAvailability.Ready else EngineAvailability.Unavailable(REASON_NOT_SUPPORTED)
+
+    override suspend fun execute(input: StatementParsingRequest): ParsedStatement {
+        val text = input.statement.value
+        if (text.trim().length < MIN_TEXT_LENGTH) throw AiException(AiError.Rejected(ValidationCode.UNREADABLE_FILE.name))
+        val body =
+            ImportTextRequestDto(
+                text = text,
+                lang = backendLanguage(input.languageTag),
+                today = clock.todayIn(timeZone()).toString(),
+            )
+        return api.importText(body).valueOrThrow().toParsedStatement()
+    }
+
+    private companion object {
+        const val MIN_TEXT_LENGTH = 20
     }
 }
