@@ -96,8 +96,27 @@ Dépend des endpoints dépenses du backend.
   - à trancher par le propriétaire : `PrivacyInfo.xcprivacy` (données collectées encore vides alors que l'audio part au serveur),
     lien vers les réglages après un refus définitif du micro, traduction anglaise de `NSMicrophoneUsageDescription`.
 
-## Lot 3 — Tableau de bord ☐
+## Lot 3 — Tableau de bord ☑
 Météo du budget, graphique mensuel, « Où part l'argent », dépenses du jour, recherche. Débit différé (`specs/02`).
+- ☑ `core:domain` (16/11/2026) : dépenses sans libellé, charges fixes, `PeriodCursor`, débit différé (`specs/02` §8.1), formatage
+  monétaire et dates fr/en, ports de lecture / édition / recherche / matérialisation, cas d'usage. 24 nouveaux tests.
+- ☑ `core:data` : `KtorExpenseRepository` (lecture PostgREST sans libellé, `PATCH` montant / date / catégorie / moyen de paiement,
+  `DELETE`), charges fixes, profil de débit. 10 nouveaux tests.
+- ☑ `core:designsystem` : icônes, couleurs météo, couleurs de catégorie, contrôle segmenté, pastille de catégorie.
+- ☑ `feature:dashboard` (remplace `feature:home`, supprimé) : en-tête, « Dépenses à valider » (rouvre la fiche de revue), alertes de budget,
+  recherche par date, bloc pilote (période, montant, météo, graphique `Canvas`, filtre, moyenne), « Où part l'argent » (anneau) et budgets,
+  dépenses du jour paginées avec débit différé, édition réduite, tirer pour rafraîchir, erreurs avec « Réessayer ». 41 tests.
+- ☑ `feature:voice` : la fiche de revue s'ouvre aussi depuis les dépenses en attente.
+- Vérifié le 16/11/2026 : `spotlessApply`, tests des modules touchés, `:androidApp:assembleDebug`, `:shared:linkDebugFrameworkIosSimulatorArm64`,
+  `xcodebuild` ; affichage avec de vraies données sur simulateur iOS (troncature « Mois | Année » corrigée).
+- Reste à faire (reporté) :
+  - libellés des dépenses et recherche texte : dépendent de `GET /api/public/expenses` (`NotSupportedYet`) ;
+  - matérialisation des charges fixes : dépend de `POST /api/public/recurring/materialize` (`NotSupportedYet`) ;
+  - lot 4 : `PaymentModeGate`, réglages du débit, lien vers les budgets, « Gérer mon compte », création manuelle et type Fixe ;
+  - lot 6 : astuces, bandeau de bilan, notifications, rappel quotidien ;
+  - à trancher : incohérence de la météo du web (mois sans filtre, année avec filtre), graduations de l'axe Y, formatage monétaire
+    à comparer au navigateur ;
+  - essai complet sur Android (édition, suppression, revue en attente) : non fait.
 
 ## Lot 4 — Mon espace et onboarding ☐
 Budget, charges fixes, profil, préférences, catégories, crédits, suppression de compte, export.

@@ -50,4 +50,8 @@ Restes et écarts : `docs/ROADMAP.md` (lot 1) et `docs/PLATFORM-PARITY.md`. Poli
 Lot 2 (dictée) terminé le 16/11/2026 : `core:audio` (WAV 16 kHz mono, silence, 30 s, `AudioRecord` / `AVAudioEngine`, permission micro),
 `feature:voice` (bouton « Ajouter », dialogue de dictée, consentement IA `PERSONAL`, crédits, fiche de revue), confirmation des dépenses
 en PostgREST direct (libellé non modifiable faute d'endpoint). Capture réelle jamais essayée sur appareil. Restes et écarts : `docs/ROADMAP.md`
-(lot 2) et `docs/PLATFORM-PARITY.md`. Prochaine étape : lot 3.
+(lot 2) et `docs/PLATFORM-PARITY.md`.
+
+Lot 3 (tableau de bord) terminé le 16/11/2026 : `feature:dashboard` remplace `feature:home` (bloc pilote, météo, graphique et anneau en
+`Canvas`, « Où part l'argent », budgets, dépenses du jour, débit différé, édition réduite, dépenses à valider). Libellés et recherche
+texte indisponibles tant que le backend n'expose pas `GET /api/public/expenses`. Restes : `docs/ROADMAP.md` (lot 3). Prochaine étape : lot 4.
