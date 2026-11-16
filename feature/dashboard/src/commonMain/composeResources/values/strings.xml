@@ -121,4 +121,6 @@
   <string name="editor_delete_failed">Suppression impossible</string>
   <string name="editor_offline">Pas de connexion. Réessayez.</string>
   <string name="editor_timeout">Le serveur met trop de temps à répondre. Réessayez.</string>
+  <string name="dashboard_manage_account">Gérer mon compte</string>
+  <string name="alerts_adjust">Ajuster mes budgets par catégorie</string>
 </resources>

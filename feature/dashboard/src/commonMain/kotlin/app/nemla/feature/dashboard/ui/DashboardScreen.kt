@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -51,14 +52,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.nemla.core.designsystem.brand.NemlaLogo
 import app.nemla.core.designsystem.brand.NemlaLogoSize
+import app.nemla.core.designsystem.component.NemlaAppHeader
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
+import app.nemla.core.designsystem.component.NemlaMenuItem
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.model.Household
 import app.nemla.core.domain.model.PendingReview
 import app.nemla.core.domain.model.PeriodCursor
 import app.nemla.feature.dashboard.DashboardAction
@@ -75,6 +79,7 @@ import app.nemla.feature.dashboard.resources.dashboard_error_generic
 import app.nemla.feature.dashboard.resources.dashboard_error_offline
 import app.nemla.feature.dashboard.resources.dashboard_error_timeout
 import app.nemla.feature.dashboard.resources.dashboard_loading
+import app.nemla.feature.dashboard.resources.dashboard_manage_account
 import app.nemla.feature.dashboard.resources.dashboard_my_space
 import app.nemla.feature.dashboard.resources.dashboard_notice_deleted
 import app.nemla.feature.dashboard.resources.dashboard_notice_updated
@@ -90,12 +95,12 @@ import org.koin.compose.viewmodel.koinViewModel
 
 private val FloatingActionClearance = 88.dp
 private const val NOTICE_DURATION_MS = 4_000L
-private const val AVATAR_ALPHA = 0.15f
 
 @Composable
 internal fun DashboardRoute(
     onSignedOut: () -> Unit,
     onReviewPending: (PendingReview) -> Unit,
+    onOpenSettings: (Boolean) -> Unit,
     floatingAction: @Composable () -> Unit = {},
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
@@ -103,6 +108,7 @@ internal fun DashboardRoute(
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnSignedOut by rememberUpdatedState(onSignedOut)
     val currentOnReviewPending by rememberUpdatedState(onReviewPending)
+    val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.onAction(DashboardAction.Started)
@@ -110,6 +116,7 @@ internal fun DashboardRoute(
                 when (effect) {
                     is DashboardEffect.OpenReview -> currentOnReviewPending(effect.review)
                     DashboardEffect.SignedOut -> currentOnSignedOut()
+                    is DashboardEffect.OpenSettings -> currentOnOpenSettings(effect.categories)
                 }
             }
         }
@@ -208,7 +215,7 @@ private fun DashboardContent(
         return
     }
     if (state.view.pending.isNotEmpty()) PendingCard(state.view.pending, format, onAction)
-    if (state.view.alerts.isNotEmpty()) AlertsCard(state.view.alerts, format)
+    if (state.view.alerts.isNotEmpty()) AlertsCard(state.view.alerts, format) { onAction(DashboardAction.AdjustBudgetsClicked) }
     SearchCard(state, format, onAction)
     PilotCard(state, format, onAction)
     SpendingCard(state, format, onAction)
@@ -220,92 +227,38 @@ private fun DashboardHeader(
     state: DashboardUiState,
     onAction: (DashboardAction) -> Unit,
 ) {
-    val colors = NemlaTheme.colors
-    var menuOpen by remember { mutableStateOf(false) }
-    val title = state.pseudo ?: stringResource(Res.string.dashboard_my_space)
-    val menuDescription = stringResource(Res.string.dashboard_account_menu)
-    Column {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.sm),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            NemlaLogo(size = NemlaLogoSize.Header)
-            Box {
-                Surface(
-                    shape = CircleShape,
-                    color = colors.secondary,
-                    contentColor = colors.secondaryForeground,
-                    modifier =
-                        Modifier
-                            .clip(CircleShape)
-                            .clickable(role = Role.Button) { menuOpen = true }
-                            .semantics { contentDescription = menuDescription },
-                ) {
-                    Row(
-                        modifier = Modifier.padding(start = 4.dp, end = NemlaTheme.spacing.sm, top = 4.dp, bottom = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .size(28.dp)
-                                    .background(colors.accent.copy(alpha = AVATAR_ALPHA).compositeOver(colors.secondary), CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(NemlaIcons.UserRound, contentDescription = null, tint = colors.accent, modifier = Modifier.size(16.dp))
-                        }
-                        Text(
-                            text = title,
-                            style = NemlaTheme.typography.bodyStrong,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 96.dp),
-                        )
-                        Icon(
-                            NemlaIcons.ChevronDown,
-                            contentDescription = null,
-                            tint = colors.secondaryForeground.copy(alpha = 0.6f),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
-                DropdownMenu(
-                    expanded = menuOpen,
-                    onDismissRequest = { menuOpen = false },
-                    shape = RoundedCornerShape(NemlaTheme.radius.md),
-                    containerColor = colors.popover,
-                ) {
-                    Text(
-                        text = title,
-                        style = NemlaTheme.typography.bodyStrong,
-                        modifier = Modifier.padding(horizontal = NemlaTheme.spacing.md, vertical = NemlaTheme.spacing.xs),
-                    )
-                    HorizontalDivider(color = colors.border)
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(if (state.isSigningOut) Res.string.dashboard_signing_out else Res.string.dashboard_sign_out),
-                                style = NemlaTheme.typography.body,
-                            )
-                        },
-                        leadingIcon = { Icon(NemlaIcons.LogOut, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                        enabled = !state.isSigningOut,
-                        onClick = {
-                            menuOpen = false
-                            onAction(DashboardAction.SignOutClicked)
-                        },
-                    )
-                }
-            }
-        }
-        HorizontalDivider(color = colors.border)
+    NemlaAppHeader(
+        accountLabel = state.pseudo ?: stringResource(Res.string.dashboard_my_space),
+        avatar = householdIcon(state.household),
+        menuDescription = stringResource(Res.string.dashboard_account_menu),
+    ) { dismiss ->
+        NemlaMenuItem(
+            text = stringResource(Res.string.dashboard_manage_account),
+            icon = NemlaIcons.Settings,
+            onClick = {
+                dismiss()
+                onAction(DashboardAction.ManageAccountClicked)
+            },
+        )
+        NemlaMenuItem(
+            text = stringResource(if (state.isSigningOut) Res.string.dashboard_signing_out else Res.string.dashboard_sign_out),
+            icon = NemlaIcons.LogOut,
+            enabled = !state.isSigningOut,
+            onClick = {
+                dismiss()
+                onAction(DashboardAction.SignOutClicked)
+            },
+        )
     }
 }
+
+internal fun householdIcon(household: Household?): ImageVector =
+    when (household) {
+        Household.COUPLE -> NemlaIcons.HeartHandshake
+        Household.FAMILY -> NemlaIcons.Baby
+        Household.FLATSHARE -> NemlaIcons.HousePlus
+        Household.SINGLE, null -> NemlaIcons.UserRound
+    }
 
 private fun DashboardNotice.resource(): StringResource =
     when (this) {

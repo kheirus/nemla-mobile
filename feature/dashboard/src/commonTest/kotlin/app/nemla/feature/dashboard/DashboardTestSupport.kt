@@ -13,6 +13,7 @@ import app.nemla.core.domain.model.CategoryType
 import app.nemla.core.domain.model.CategoryUpdate
 import app.nemla.core.domain.model.ChargeFrequency
 import app.nemla.core.domain.model.Currency
+import app.nemla.core.domain.model.DebitSettings
 import app.nemla.core.domain.model.DeferredDebit
 import app.nemla.core.domain.model.EmailAddress
 import app.nemla.core.domain.model.Expense
@@ -27,6 +28,7 @@ import app.nemla.core.domain.model.PaymentMethod
 import app.nemla.core.domain.model.ProfileIdentity
 import app.nemla.core.domain.model.PseudoAvailability
 import app.nemla.core.domain.model.RecurringCharge
+import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.RecurringChargeId
 import app.nemla.core.domain.model.Session
 import app.nemla.core.domain.model.SignUpOutcome
@@ -159,6 +161,10 @@ internal class FakeProfiles(
 
     override suspend fun checkPseudo(pseudo: String): AppResult<PseudoAvailability> =
         AppResult.Success(PseudoAvailability(available = true, suggestions = emptyList()))
+
+    override suspend fun updateCurrency(currency: Currency): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun completeOnboarding(monthlyBudgetCents: Long): AppResult<Unit> = AppResult.Success(Unit)
 }
 
 internal class FakeCategories(
@@ -243,6 +249,10 @@ internal class FakeRecurring(
     var result: AppResult<List<RecurringCharge>> = AppResult.Success(emptyList()),
 ) : RecurringChargeRepository {
     override suspend fun list(): AppResult<List<RecurringCharge>> = result
+
+    override suspend fun addAll(drafts: List<RecurringChargeDraft>): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun delete(id: RecurringChargeId): AppResult<Unit> = AppResult.Success(Unit)
 }
 
 internal class FakeMaterializer : RecurringChargeMaterializer {
@@ -258,6 +268,13 @@ internal class FakeDebits(
     var result: AppResult<DeferredDebit> = AppResult.Success(DeferredDebit.Immediate),
 ) : DeferredDebitRepository {
     override suspend fun current(): AppResult<DeferredDebit> = result
+
+    override suspend fun settings(): AppResult<DebitSettings> = AppResult.Failure(AppError.NotSupportedYet)
+
+    override suspend fun save(
+        bankId: String?,
+        rule: DeferredDebit,
+    ): AppResult<Int> = AppResult.Failure(AppError.NotSupportedYet)
 }
 
 internal class FakeAuth : AuthRepository {
@@ -293,6 +310,7 @@ internal class DashboardHarness {
     val debits = FakeDebits()
     val auth = FakeAuth()
     var today: LocalDate = testToday
+    var language: AppLanguage = AppLanguage.FR
 
     fun viewModel(): DashboardViewModel =
         DashboardViewModel(
@@ -307,6 +325,6 @@ internal class DashboardHarness {
             deleteExpense = DeleteExpense(expenses),
             signOut = SignOut(auth),
             clock = { today },
-            language = { AppLanguage.FR },
+            language = { language },
         )
 }

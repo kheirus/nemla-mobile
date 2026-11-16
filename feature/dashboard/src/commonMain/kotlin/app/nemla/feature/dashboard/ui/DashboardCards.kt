@@ -41,6 +41,7 @@ import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaCategoryDot
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
+import app.nemla.core.designsystem.component.NemlaTextButton
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.CategoryColors
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -50,6 +51,7 @@ import app.nemla.feature.dashboard.DashboardUiState
 import app.nemla.feature.dashboard.logic.BudgetUsage
 import app.nemla.feature.dashboard.logic.PendingGroup
 import app.nemla.feature.dashboard.resources.Res
+import app.nemla.feature.dashboard.resources.alerts_adjust
 import app.nemla.feature.dashboard.resources.alerts_over
 import app.nemla.feature.dashboard.resources.alerts_planned
 import app.nemla.feature.dashboard.resources.alerts_title
@@ -154,6 +156,7 @@ internal fun PendingCard(
 internal fun AlertsCard(
     alerts: List<BudgetUsage>,
     format: DashboardFormat,
+    onAdjust: () -> Unit,
 ) {
     val colors = NemlaTheme.colors
     NemlaCard(
@@ -219,6 +222,11 @@ internal fun AlertsCard(
                 }
             }
         }
+        NemlaTextButton(
+            text = stringResource(Res.string.alerts_adjust),
+            onClick = onAdjust,
+            modifier = Modifier.padding(top = NemlaTheme.spacing.xs),
+        )
     }
 }
 

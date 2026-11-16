@@ -3,23 +3,31 @@ package app.nemla.feature.dashboard
 import app.cash.turbine.test
 import app.nemla.core.common.AppError
 import app.nemla.core.common.AppResult
+import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.model.AppPreferences
 import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.DeferredDebit
 import app.nemla.core.domain.model.ExpenseEdit
 import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.ExpenseQuery
+import app.nemla.core.domain.model.Household
 import app.nemla.core.domain.model.PaymentMethod
 import app.nemla.core.domain.model.PeriodKind
 import app.nemla.core.domain.model.ReviewOrigin
+import app.nemla.core.domain.model.UserProfile
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
+import app.nemla.core.domain.port.DeviceLanguage
 import app.nemla.core.domain.port.ExpenseRepository
+import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
@@ -442,6 +450,31 @@ class DashboardViewModelTest : MainDispatcherTest() {
     }
 
     @Test
+    fun accountMenuAndBudgetAlertsOpenMySpace() =
+        runTest {
+            val vm = harness.viewModel()
+            vm.effects.test {
+                vm.onAction(DashboardAction.ManageAccountClicked)
+                assertEquals(DashboardEffect.OpenSettings(categories = false), awaitItem())
+                vm.onAction(DashboardAction.AdjustBudgetsClicked)
+                assertEquals(DashboardEffect.OpenSettings(categories = true), awaitItem())
+            }
+        }
+
+    @Test
+    fun languageAndProfileAreRefreshedWhenTheScreenComesBack() {
+        val vm = harness.viewModel()
+        vm.onAction(DashboardAction.Started)
+        assertEquals(AppLanguage.FR, vm.state.value.language)
+        harness.language = AppLanguage.EN
+        harness.profiles.result = AppResult.Success(profile(pseudo = "Sam").withHousehold(Household.COUPLE))
+        vm.onAction(DashboardAction.Started)
+        assertEquals(AppLanguage.EN, vm.state.value.language)
+        assertEquals("Sam", vm.state.value.pseudo)
+        assertEquals(Household.COUPLE, vm.state.value.household)
+    }
+
+    @Test
     fun moduleResolvesTheViewModel() {
         val application =
             koinApplication {
@@ -454,6 +487,8 @@ class DashboardViewModelTest : MainDispatcherTest() {
                         single<RecurringChargeMaterializer> { harness.materializer }
                         single<DeferredDebitRepository> { harness.debits }
                         single<AuthRepository> { harness.auth }
+                        single<PreferencesRepository> { MemoryPreferences() }
+                        single<DeviceLanguage> { DeviceLanguage { AppLanguage.FR } }
                     },
                     featureDashboardModule,
                 )
@@ -468,4 +503,15 @@ class DashboardViewModelTest : MainDispatcherTest() {
             application.close()
         }
     }
+}
+
+private fun UserProfile.withHousehold(value: Household) =
+    UserProfile(userId, pseudo, age, gender, value, currency, budget, onboardingDone, dailyReminder)
+
+private class MemoryPreferences : PreferencesRepository {
+    override val preferences: StateFlow<AppPreferences?> = MutableStateFlow(AppPreferences.Default)
+
+    override suspend fun load(): AppPreferences = AppPreferences.Default
+
+    override suspend fun update(preferences: AppPreferences): AppResult<Unit> = AppResult.Success(Unit)
 }

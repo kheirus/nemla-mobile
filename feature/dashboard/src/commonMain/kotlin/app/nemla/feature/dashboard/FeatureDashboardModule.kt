@@ -1,6 +1,7 @@
 package app.nemla.feature.dashboard
 
 import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
+import app.nemla.core.domain.usecase.CurrentLanguages
 import app.nemla.core.domain.usecase.DeleteExpense
 import app.nemla.core.domain.usecase.GetDeferredDebit
 import app.nemla.core.domain.usecase.ListCategories
@@ -28,6 +29,7 @@ val featureDashboardModule: Module =
         factoryOf(::UpdateExpense)
         factoryOf(::DeleteExpense)
         single<DashboardClock> { SystemDashboardClock }
-        single<UiLanguage> { SystemUiLanguage }
+        factoryOf(::CurrentLanguages)
+        single<UiLanguage> { PreferredUiLanguage(get()) }
         viewModelOf(::DashboardViewModel)
     }

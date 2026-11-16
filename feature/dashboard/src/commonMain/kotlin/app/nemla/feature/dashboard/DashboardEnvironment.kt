@@ -1,7 +1,7 @@
 package app.nemla.feature.dashboard
 
-import androidx.compose.ui.text.intl.Locale
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.usecase.CurrentLanguages
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -11,8 +11,10 @@ internal fun interface UiLanguage {
     fun current(): AppLanguage
 }
 
-internal object SystemUiLanguage : UiLanguage {
-    override fun current(): AppLanguage = AppLanguage.fromTag(Locale.current.language.lowercase())
+internal class PreferredUiLanguage(
+    private val languages: CurrentLanguages,
+) : UiLanguage {
+    override fun current(): AppLanguage = languages.ui()
 }
 
 internal fun interface DashboardClock {

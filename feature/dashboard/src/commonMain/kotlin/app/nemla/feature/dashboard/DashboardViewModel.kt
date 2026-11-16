@@ -74,7 +74,7 @@ internal class DashboardViewModel(
     private val deleteExpense: DeleteExpense,
     private val signOut: SignOut,
     private val clock: DashboardClock,
-    language: UiLanguage,
+    private val language: UiLanguage,
 ) : ViewModel() {
     private var today: LocalDate = clock.today()
     private var profile: UserProfile? = null
@@ -92,7 +92,7 @@ internal class DashboardViewModel(
     private var loadJob: Job? = null
     private var yearJob: Job? = null
     private var searchJob: Job? = null
-    private val decimalSeparator = if (language.current() == AppLanguage.EN) '.' else ','
+    private var decimalSeparator = separatorFor(language.current())
 
     private val mutableState =
         MutableStateFlow(
@@ -142,6 +142,8 @@ internal class DashboardViewModel(
             DashboardAction.EditorDismissed -> dismissEditor()
             DashboardAction.NoticeDismissed -> mutableState.update { it.copy(notice = null) }
             DashboardAction.SignOutClicked -> signOutOnce()
+            DashboardAction.ManageAccountClicked -> openSettings(categories = false)
+            DashboardAction.AdjustBudgetsClicked -> openSettings(categories = true)
         }
     }
 
@@ -153,7 +155,18 @@ internal class DashboardViewModel(
         load(LoadMode.SILENT)
     }
 
+    private fun openSettings(categories: Boolean) {
+        viewModelScope.launch { effectChannel.send(DashboardEffect.OpenSettings(categories)) }
+    }
+
+    private fun refreshLanguage() {
+        val current = language.current()
+        decimalSeparator = separatorFor(current)
+        if (mutableState.value.language != current) mutableState.update { it.copy(language = current) }
+    }
+
     private fun load(mode: LoadMode) {
+        refreshLanguage()
         loadJob?.cancel()
         yearJob?.cancel()
         mutableState.update {
@@ -286,6 +299,7 @@ internal class DashboardViewModel(
                 view = view,
                 currency = profile?.currency ?: state.currency,
                 pseudo = profile?.pseudo?.trim()?.takeIf { it.isNotEmpty() },
+                household = profile?.household,
                 categories = categories.map { CategoryChoice(it.id, it.name, it.colorHex) },
                 search =
                     state.search.copy(
@@ -467,6 +481,8 @@ internal class DashboardViewModel(
         }
     }
 }
+
+private fun separatorFor(language: AppLanguage): Char = if (language == AppLanguage.EN) '.' else ','
 
 private fun <T> AppResult<T>.success(): T? = (this as? AppResult.Success)?.value
 

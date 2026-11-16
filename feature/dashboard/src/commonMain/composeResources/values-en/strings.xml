@@ -121,4 +121,6 @@
   <string name="editor_delete_failed">Could not delete</string>
   <string name="editor_offline">No connection. Try again.</string>
   <string name="editor_timeout">The server is taking too long to respond. Try again.</string>
+  <string name="dashboard_manage_account">Manage my account</string>
+  <string name="alerts_adjust">Adjust my category budgets</string>
 </resources>

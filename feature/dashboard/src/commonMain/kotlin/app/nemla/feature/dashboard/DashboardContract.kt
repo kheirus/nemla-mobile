@@ -5,6 +5,7 @@ import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.ExpenseSource
+import app.nemla.core.domain.model.Household
 import app.nemla.core.domain.model.PaymentMethod
 import app.nemla.core.domain.model.PendingReview
 import app.nemla.core.domain.model.PeriodCursor
@@ -67,6 +68,7 @@ internal data class DashboardUiState(
     val view: DashboardView,
     val currency: Currency = Currency.Default,
     val pseudo: String? = null,
+    val household: Household? = null,
     val isInitialLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val isPeriodLoading: Boolean = false,
@@ -168,6 +170,10 @@ internal sealed interface DashboardAction {
     data object NoticeDismissed : DashboardAction
 
     data object SignOutClicked : DashboardAction
+
+    data object ManageAccountClicked : DashboardAction
+
+    data object AdjustBudgetsClicked : DashboardAction
 }
 
 internal sealed interface DashboardEffect {
@@ -176,4 +182,8 @@ internal sealed interface DashboardEffect {
     ) : DashboardEffect
 
     data object SignedOut : DashboardEffect
+
+    data class OpenSettings(
+        val categories: Boolean,
+    ) : DashboardEffect
 }

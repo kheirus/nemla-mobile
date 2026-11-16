@@ -16,10 +16,16 @@ data object DashboardDestination
 fun NavGraphBuilder.dashboardScreen(
     onSignedOut: () -> Unit,
     onReviewPending: (PendingReview) -> Unit,
+    onOpenSettings: (categories: Boolean) -> Unit,
     floatingAction: @Composable () -> Unit = {},
 ) {
     composable<DashboardDestination> {
-        DashboardRoute(onSignedOut = onSignedOut, onReviewPending = onReviewPending, floatingAction = floatingAction)
+        DashboardRoute(
+            onSignedOut = onSignedOut,
+            onReviewPending = onReviewPending,
+            onOpenSettings = onOpenSettings,
+            floatingAction = floatingAction,
+        )
     }
 }
 
