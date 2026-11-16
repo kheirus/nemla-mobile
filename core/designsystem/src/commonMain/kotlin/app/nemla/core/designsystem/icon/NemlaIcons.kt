@@ -83,6 +83,62 @@ object NemlaIcons {
         )
     }
 
+    val Square: ImageVector by lazy {
+        lucide("Square", "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z")
+    }
+
+    val Loader: ImageVector by lazy {
+        lucide("Loader", "M21 12a9 9 0 1 1-6.219-8.56")
+    }
+
+    val Trash2: ImageVector by lazy {
+        lucide(
+            "Trash2",
+            "M3 6h18",
+            "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6",
+            "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2",
+            "M10 11v6",
+            "M14 11v6",
+        )
+    }
+
+    val Plus: ImageVector by lazy {
+        lucide("Plus", "M5 12h14", "M12 5v14")
+    }
+
+    val Pencil: ImageVector by lazy {
+        lucide(
+            "Pencil",
+            "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32" +
+                "a2 2 0 0 0 .83-.497z",
+            "M15 5l4 4",
+        )
+    }
+
+    val FileUp: ImageVector by lazy {
+        lucide(
+            "FileUp",
+            "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z",
+            "M14 2v4a2 2 0 0 0 2 2h4",
+            "M12 12v6",
+            "M15 15l-3-3-3 3",
+        )
+    }
+
+    val X: ImageVector by lazy {
+        lucide("X", "M18 6L6 18", "M6 6l12 12")
+    }
+
+    val Calendar: ImageVector by lazy {
+        lucide(
+            "Calendar",
+            "M8 2v4",
+            "M16 2v4",
+            "M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
+            "M3 10h18",
+        )
+    }
+
     private fun circle(
         cx: Float,
         cy: Float,
