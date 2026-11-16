@@ -249,3 +249,33 @@ une plateforme ajouté) :
 16. **Zone dangereuse** : confirmation dans un `AlertDialog`, puis message « La suppression du compte n'est pas encore disponible depuis
     l'application… » (`DELETE /api/public/account` manquant). Export des données : non construit (absent du web et du backend).
 17. **Hors périmètre** : dialogue `PaymentModeGate` du tableau de bord (§11.2, voir ROADMAP), rappel quotidien et bilans (lot 6).
+
+## Lot 5 — import de relevés (17/11/2026)
+
+Écarts Android / iOS (dialogue 100 % Compose ; seul le sélecteur de fichier système est natif) :
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Sélecteur de fichier | `ActivityResultContracts.OpenDocument` (types MIME PDF, CSV, texte, XLS/XLSX/XLSM, ODS) | `UIDocumentPickerViewController` en mode ouverture sans copie (`asCopy = false`), types `UTTypePDF`, CSV, texte brut, tableurs | **Oui**, rendu système de chaque OS |
+| Lecture du PDF | `PdfRenderer.Page.textContents` (Android 15, API 35) ou `PdfRendererPreV` (Android 12 à 14 avec l'extension SDK S ≥ 13, mise à jour Google Play) | PDFKit (`PDFPage.string`, pages jointes par une ligne vide) | **Oui** : sur Android 9 à 11, et 12 à 14 sans l'extension, message « Ce PDF ne peut pas être lu sur cette version d'Android. Utilisez un export CSV » |
+| Découpage du texte PDF | blocs de texte de PdfRenderer joints par un saut de ligne | texte de page PDFKit | Possible : ordre et sauts de ligne peuvent différer pour un même PDF ; sans effet attendu sur la lecture IA, à vérifier sur de vrais relevés |
+| Fichier iCloud / Drive non téléchargé | lecture par le fournisseur de documents | lecture directe ; pas de `NSFileCoordinator` | Possible sur iOS : « Impossible d'ouvrir ce fichier » si le fichier n'est pas sur l'appareil (non vérifié) |
+| Taille | `OpenableColumns.SIZE` puis lecture plafonnée à 8 Mo ; PDF : `statSize` | `NSURLFileSizeKey` puis `NSData` | Non |
+| Message PDF non lisible | mentionne Android | jamais affiché (PDFKit toujours présent) | Non |
+
+Écarts avec le web (§9 de `specs/04`), à valider :
+
+1. **Formats** : Excel (`.xls`, `.xlsx`, `.xlsm`, `.ods`) non lu (aucune bibliothèque au catalogue) ; le fichier reste sélectionnable et
+   l'application demande d'exporter en CSV. Textes adaptés : « PDF ou CSV » (description, sous-texte du menu « Ajouter »).
+2. **Encart de confiance** : « Votre fichier est anonymisé sur votre téléphone » ; le fichier ne quitte jamais l'appareil (le web
+   l'envoie au serveur, qui l'anonymise).
+3. **Consentement** : dialogue « Relevé et intelligence artificielle » (niveau `ANONYMIZED`) avant la première lecture ; absent du web.
+4. **Après anonymisation** : ligne « {n} éléments personnels masqués sur votre téléphone » pendant la lecture des dépenses et quand le
+   serveur ne peut pas recevoir le texte ; le bouton passe de « Lecture et anonymisation en cours… » à « Lecture des dépenses en cours… ».
+5. **Quota** : « {n} import restant ce mois » dans le dialogue ; « Lire le fichier » désactivé à 0 avec le message de remise à zéro le 1er
+   (adapté : « la dictée reste disponible », la saisie manuelle n'existant pas encore dans l'application).
+6. **Erreurs** : affichées dans le dialogue (bannière) et traduites ; les messages serveur 413/422/429 sont reconnus par leur code et
+   rendus en fr/en au lieu d'être affichés bruts. Perte : le détail « Ce fichier couvre N mois (… → …) » devient « plus de 2 mois ».
+7. **Succès** : bannière de la fiche de revue « {n} dépenses lues — vérifiez et validez leur catégorie » (traduite ; non traduite sur le web).
+8. **Anonymisation plus stricte que le serveur** : IBAN compact et téléphone français sans `+33` masqués ; la règle d'adresse s'arrête avant
+   un montant (« PARKING PLACE DE LA GARE 12,50 » devient « PARKING [ADRESSE] 12,50 » au lieu de « PARKING [ADRESSE],50 »).

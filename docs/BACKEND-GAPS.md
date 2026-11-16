@@ -15,11 +15,54 @@ Détail et références de code : `specs/01-api-contracts.md` (§3.3, §5) et `s
 | Générer les occurrences des charges fixes | server function | `POST /api/public/recurring/materialize` (lot 3 : port `RecurringChargeMaterializer` en `NotSupportedYet`, appel ignoré ; les charges fixes ne sont donc comptées dans les totaux que si le web les a déjà générées) |
 | Supprimer son compte (exigé par App Store et Google Play) | server function | `DELETE /api/public/account` (lot 4 : bouton et confirmation présents dans Mon espace, message « pas encore disponible depuis l'application », rien n'est supprimé) |
 | Exporter ses données (droit à la portabilité, RGPD art. 20) | absent du web et du backend | `GET /api/public/account/export` (JSON ou CSV : profil, catégories, dépenses avec libellés déchiffrés, charges fixes, quotas) ; lot 4 : rien n'est construit côté mobile |
-| Lire un relevé déjà anonymisé sur l'appareil | `/import/file` ne prend que le fichier brut | `POST /api/public/import/text` (texte anonymisé) |
+| Lire un relevé déjà anonymisé sur l'appareil | `/import/file` ne prend que le fichier brut | `POST /api/public/import/text` (texte anonymisé), contrat ci-dessous ; lot 5 : tant qu'il répond 404/405, l'application affiche « L'import de relevé depuis l'application arrive bientôt… Rien n'a été envoyé. » |
 | Extraire des dépenses d'un texte (pour la transcription locale) | absent | `POST /api/public/expenses/extract` |
 | Notifications | aucune notification serveur | table de jetons, envoi FCM / APNs planifié |
 | Lien de réinitialisation du mot de passe | redirection web | App Links / Universal Links déclarés dans Supabase |
 | URL de l'API, URL et clé publishable Supabase | absentes du dépôt | à fournir |
+
+## Contrat proposé : `POST /api/public/import/text` (lot 5)
+
+Le mobile extrait le texte du fichier et l'anonymise **sur l'appareil** (règles de `specs/01` §6.2, plus l'IBAN compact et le téléphone
+français sans `+33`). Il n'appelle jamais `/import/file`. L'endpoint reprend le pipeline de `importStatementForUser` (`specs/01` §6.1)
+**à partir de l'étape 4** : pas d'extraction, pas d'anonymisation serveur obligatoire (une seconde passe `anonymizeStatement` reste
+permise et sans effet sur un texte déjà masqué).
+
+- Authentification : `Authorization: Bearer <access_token>`, comme les autres `/api/public/*` (§1).
+- Corps `application/json` :
+  ```json
+  { "text": "<texte anonymisé, 20 à 90 000 caractères>", "lang": "fr|en", "today": "AAAA-MM-JJ", "kind": "pdf|csv|texte" }
+  ```
+  - `text` : requis ; texte déjà nettoyé (`cleanupText`) et tronqué à 90 000 caractères par l'appareil.
+  - `lang` : `normalizeLang` (tout sauf `"en"` donne `"fr"`).
+  - `today` : date locale de l'utilisateur ; remplace la date UTC du serveur pour les lignes sans date et le contrôle de période.
+    Valeur invalide ou absente : date UTC du serveur.
+  - `kind` : **facultatif**, défaut `"texte"` ; sert seulement à `usage_logs.metadata`. Le mobile ne l'envoie pas aujourd'hui
+    (`StatementParsingRequest` de `:ai:api` ne porte pas le format ; à arbitrer).
+- Contrôles, dans cet ordre, **avant tout appel IA** :
+  1. corps sans `text` (y compris la sonde `{}`), `text` non textuel : `400 {"error":"Texte manquant"}`, **sans** décompter le quota
+     ni appeler l'IA. Le mobile envoie `{}` avant chaque import pour savoir si l'endpoint existe : seules 404 et 405 signifient
+     « pas encore disponible » ;
+  2. `text` de plus de 90 000 caractères ou corps de plus de 8 Mo : `413 {"error":"Texte trop volumineux"}` ;
+  3. `text` trimé de moins de 20 caractères : `422 {"error":"Impossible de lire ce fichier (PDF scanné ou vide ?). Essayez un CSV."}` ;
+  4. quota : `ensure_month_quota`, puis `429` avec le message actuel de `/import/file` (`"Quota d'import de relevé atteint pour ce mois…"`,
+     doit commencer par `Quota`) ;
+  5. catégories : `400 {"error":"Aucune catégorie configurée"}`.
+- Traitement : étapes 6 à 13 de §6.1 à l'identique (découpage, extraction parallèle, déduplication, `422 "Aucune dépense détectée dans ce
+  fichier"`, `422 "Ce fichier couvre <n> mois…"` au-delà de 2 mois, 400 lignes, `expense_save` avec `confirmed=false`, `source="manual"`,
+  `usage_logs` avec `action "import.text"`).
+- **Quota décompté après le succès seulement** (`increment_import_quota`), comme `/import/file`. Une 404/405, une 4xx de contrôle ou
+  une erreur IA ne consomme rien.
+- Réponse 200 identique à `/import/file` :
+  ```json
+  { "kind": "texte", "redactions": 0,
+    "expenses": [ { "id": "uuid", "montant": 12.5, "description": "Carrefour market", "date": "AAAA-MM-JJ",
+                    "category_id": "uuid|null", "source": "manual" } ] }
+  ```
+  `redactions` compte les masquages de la seconde passe serveur (0 attendu) ; le mobile affiche son propre compte.
+- Erreurs : toujours `{"error": string}` en JSON (pas de page HTML) ; les messages 413/422/429 ci-dessus sont reconnus par leur début
+  (`Quota`, `Aucune dépense`, `Impossible de lire`, `Ce fichier couvre`, `Aucune catégorie`) et affichés traduits par l'application.
+- Le texte n'est jamais stocké ni journalisé côté serveur ; il part chez le sous-traitant IA (Google via Lovable) à déclarer.
 
 ## Sécurité et RGPD à corriger avant publication
 - RLS : un utilisateur peut modifier ses propres quotas (`user_quotas`) et lever sa suspension (`profiles.suspended`).

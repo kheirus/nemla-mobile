@@ -156,8 +156,42 @@ Budget, charges fixes, profil, préférences, catégories, crédits, suppression
   - onglet « Bilans » : historique au lot 6 ;
   - « Créez votre catégorie dans Mon espace » depuis la fiche de revue, création manuelle de dépense et type Fixe : non faits.
 
-## Lot 5 — Import de relevés ☐
+## Lot 5 — Import de relevés ☑
 Extraction du texte sur l'appareil (PDF, CSV), anonymisation locale, envoi du texte anonymisé. Dépend d'un nouvel endpoint.
+- Règle : aucun fichier brut ne quitte l'appareil ; `/import/file` n'est jamais appelé, même en repli.
+- ☑ `ai:local` (17/11/2026) : la règle d'adresse s'arrête avant un montant (le [RISQUE] serveur qui détruisait « 12,50 » n'est pas
+  reproduit) ; téléphone français sans `+33` masqué. Revue des règles de `specs/01` §6.2 : toutes présentes, plus l'IBAN compact.
+  2 nouveaux tests ; le cas de parité « address » est sorti de la comparaison stricte. Reproduits et documentés (pas de correction
+  simple et sûre) : ligne « CARREFOUR MARKET » seule masquée en `[NOM]`, mots de l'en-tête masqués partout.
+- ☑ `core:domain` : `StatementText` (texte + `StatementFormat` PDF / CSV / TEXT) remplace `StatementFile` (octets) ; `StatementImporter`
+  reçoit le texte et signale le nombre de masquages ; cas d'usage `ImportStatement` (quota d'import vérifié d'abord) et
+  `ImportedReviews` ; `PendingReview.announce`. 4 tests.
+- ☑ `ai:remote-nemla` : `NemlaStatementParsingEngine` sur `POST /api/public/import/text` (proposé) : JSON `{text, lang, today}`, sonde `{}`
+  dans `availability()` (404/405 → indisponible avant tout envoi), 404/405 pendant l'appel → `not_supported`, erreurs 413/422/429/400
+  traduites. 6 tests (MockEngine : corps = texte anonymisé uniquement).
+- ☑ `core:data` : `RoutedStatementImporter` sur le texte (longueur minimale, anonymisation locale obligatoire et vérifiée `ON_DEVICE`,
+  rappel du nombre de masquages, parsing distant) ; `not_supported` → `AppError.NotSupportedYet` ; extracteur d'octets supprimé.
+  4 nouveaux tests.
+- ☑ `core:documents` (nouveau) : `rememberDocumentPicker`, `DocumentTextReader` ; lecture en mémoire, 8 Mo vérifiés avant lecture,
+  UTF-8 non strict sans BOM, PDF (PdfRenderer API 35 / extension S 13, PDFKit), `cleanupText`, 90 000 caractères, seuil de 20 caractères,
+  tableurs refusés (« exportez en CSV »), octets remis à zéro. 14 tests.
+- ☑ `feature:voice` : entrée « Importer un relevé » du menu « Ajouter » active (imports restants, « Crédit épuisé ce mois ») ;
+  bannière « {n} dépenses lues… » dans la fiche de revue. 3 nouveaux tests.
+- ☑ `feature:import` (nouveau, paquet `app.nemla.feature.statementimport`) : dialogue §9 adapté, consentement `ANONYMIZED`, quota,
+  nombre de masquages, erreurs fr/en, fermeture impossible pendant le traitement. 16 tests.
+- ☑ `shared` : modules Koin, dialogue ouvert depuis le menu « Ajouter », fiche de revue ouverte avec les dépenses importées.
+- Vérifié le 17/11/2026 : `spotlessApply`, `allTests` des modules touchés (JVM et simulateur iOS), `:androidApp:assembleDebug`,
+  `:shared:linkDebugFrameworkIosSimulatorArm64`.
+- Reste à faire (reporté) :
+  - endpoint `POST /api/public/import/text` côté backend (`BACKEND-GAPS.md`) : tant qu'il manque, l'import s'arrête après
+    l'anonymisation locale avec le message « arrive bientôt… Rien n'a été envoyé. » ;
+  - Excel (`.xls`, `.xlsx`, `.xlsm`, `.ods`) : aucune bibliothèque au catalogue ; message « exportez en CSV » ;
+  - PDF sur Android 9 à 11 (et 12 à 14 sans l'extension SDK 13) : non lisible, message dédié ;
+  - pas d'OCR (PDF scanné refusé, comme le web) ;
+  - champ `kind` du contrat : non envoyé, `StatementParsingRequest` de `:ai:api` ne porte pas le format (à arbitrer : ajouter un champ
+    `format` à la requête, avec mise à jour d'ARCHITECTURE §4) ;
+  - essais sur appareil Android (sélecteur, PDF selon la version, Drive) et simulateur iOS (sélecteur, iCloud, PDFKit) : non faits ;
+  - partage « Ouvrir avec nemla » depuis une autre application : non construit.
 
 ## Lot 6 — Bilans, notifications, publication ☐
 Bilans, notifications (FCM / APNs, à construire côté serveur), fiches des stores, politique de confidentialité.

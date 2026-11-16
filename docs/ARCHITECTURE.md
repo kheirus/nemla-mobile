@@ -37,6 +37,7 @@ core/security              stockage sécurisé (Keystore / Keychain), protection
 core/data                  implémentations des dépôts, API Supabase et nemla, passerelle domaine ↔ IA
 core/designsystem          thème, jetons, typographie, composants nemla
 core/audio                 enregistreur (WAV mono 16 kHz 16 bits en mémoire, silence, durée max), micro et permission
+core/documents             sélecteur de fichier système, lecture en mémoire et extraction du texte (CSV, TXT, PDF) sur l'appareil
 ai/api                     contrats IA : capacités, moteurs, routeur, types de confidentialité
 ai/local                   moteurs embarqués (anonymisation par règles aujourd'hui, modèles locaux demain)
 ai/remote-nemla            moteurs adossés au backend nemla actuel (Lovable)
@@ -45,9 +46,11 @@ feature/dashboard          tableau de bord, écran authentifié principal (lot 3
 feature/voice              bouton « Ajouter », dialogue de dictée, consentement IA, fiche de revue, bouton « Dicter » réutilisable
 feature/onboarding         « Vos charges fixes » après la première connexion (lot 4)
 feature/settings           Mon espace : profil & budget (5 panneaux), bilans, crédits, catégories, zone dangereuse (lot 4)
+feature/import             dialogue « Importer un relevé de compte » (lot 5 ; paquet `app.nemla.feature.statementimport`,
+                           `import` étant un mot réservé de Kotlin et de Java)
 ```
 
-Lots suivants : `feature/import`, `feature/reports`, `ai/remote-<autre fournisseur>`.
+Lots suivants : `feature/reports`, `ai/remote-<autre fournisseur>`.
 
 ### Règles de dépendance (vérifiées en revue)
 
@@ -55,6 +58,8 @@ Lots suivants : `feature/import`, `feature/reports`, `ai/remote-<autre fournisse
 feature:*        -> core:domain, core:common, core:designsystem          (jamais core:data, jamais ai:*)
 feature:voice    -> + core:audio                                         (seule feature autorisée à l'utiliser)
 core:audio       -> core:common (+ Compose runtime ; androidx activity-compose sur Android, AVFAudio sur iOS)
+feature:import   -> + core:documents                                     (seule feature autorisée à l'utiliser)
+core:documents   -> core:common (+ Compose runtime et ui ; activity-compose et PdfRenderer sur Android, UIKit et PDFKit sur iOS)
 core:data        -> core:domain, core:common, core:network, core:security, ai:api
 core:domain      -> core:common                                          (rien d'autre : ni Ktor, ni Compose, ni IA)
 core:network     -> core:common
@@ -62,13 +67,16 @@ core:security    -> core:common
 core:designsystem-> (Compose uniquement)
 ai:api           -> (coroutines, kotlinx-datetime uniquement)
 ai:local         -> ai:api
-ai:remote-nemla  -> ai:api, core:network, core:common
+ai:remote-nemla  -> ai:api, core:network, core:common                   (tests : + ai:local, pour obtenir un AnonymizedText)
 shared           -> tout (c'est le seul endroit qui assemble)
 androidApp       -> shared
 ```
 
 Une feature ne dépend jamais d'une autre : `feature:dashboard` expose un emplacement (`floatingAction`) que `shared` remplit avec
-`VoiceCaptureButton` de `feature:voice`, et `shared` déclare la destination `voiceGraph` (fiche de revue). Pour rouvrir des dépenses
+`VoiceCaptureButton` de `feature:voice`, et `shared` déclare la destination `voiceGraph` (fiche de revue). L'entrée « Importer un relevé »
+du menu « Ajouter » appelle le rappel `onImportStatement` de `VoiceCaptureButton` ; `shared` affiche alors `StatementImportDialog` de
+`feature:import`, qui rend un `PendingReview` (origine `IMPORT`, `announce = true`) ; `shared` le confie à `PendingReviewOpener` puis ouvre
+`voiceGraph`, comme pour les dépenses en attente. Pour rouvrir des dépenses
 en attente depuis le tableau de bord, `feature:dashboard` émet un `PendingReview` (`core:domain`) par le rappel `onReviewPending` ;
 `shared` le confie au port `PendingReviewOpener` (implémenté par `feature:voice` au-dessus de `VoiceReviewStore`) puis ouvre `voiceGraph`.
 
@@ -165,8 +173,9 @@ sans toucher au reste de l'application.
 ```
 Dictée      : [SpeechToText local] → [ExpenseExtraction]           si un moteur de transcription local existe
               sinon VoiceExpenseCapture (backend nemla : audio → dépenses)
-Relevé      : extraction du texte sur l'appareil → StatementAnonymization (appareil, obligatoire)
-              → StatementParsing (distant, texte anonymisé uniquement)
+Relevé      : core:documents (sélection, lecture en mémoire, extraction, nettoyage, 90 000 caractères) dans feature:import
+              → ImportStatement (quota d'import) → StatementImporter (core:data) → StatementAnonymization (appareil, obligatoire)
+              → StatementParsing (distant, texte anonymisé uniquement : POST /api/public/import/text, proposé)
 Charges     : RecurringParsing
 Budget/Bilan: BudgetSuggestion / PeriodReport (calcul serveur aujourd'hui ; calcul local possible plus tard)
 ```
@@ -181,9 +190,15 @@ Budget/Bilan: BudgetSuggestion / PeriodReport (calcul serveur aujourd'hui ; calc
 | `ai:remote-nemla` | `NemlaRecurringParsingEngine` | `RecurringParsing` | distant |
 | `ai:remote-nemla` | `NemlaBudgetSuggestionEngine` | `BudgetSuggestion` | distant |
 | `ai:remote-nemla` | `NemlaPeriodReportEngine` | `PeriodReport` | distant |
+| `ai:remote-nemla` | `NemlaStatementParsingEngine` (lot 5) | `StatementParsing` | distant |
 
-`StatementParsing` n'a pas encore de moteur : le backend actuel n'accepte que le fichier brut (`/import/file`), ce que les
-règles ci-dessus interdisent. Il faut un endpoint qui reçoit le texte déjà anonymisé (voir `docs/BACKEND-GAPS.md`).
+`StatementParsing` (lot 5) : le mobile n'appelle **jamais** `/import/file`, même en repli, car cet endpoint reçoit le fichier brut.
+`NemlaStatementParsingEngine` envoie le seul texte anonymisé à l'endpoint **proposé** `POST /api/public/import/text`
+(contrat dans `docs/BACKEND-GAPS.md`). Son `availability()` sonde l'endpoint avec un corps vide `{}` : une réponse 404 ou 405 rend le
+moteur indisponible (`not_supported`) avant tout envoi du texte, et `core:data` traduit cet échec en `AppError.NotSupportedYet` (l'interface
+affiche « … Rien n'a été envoyé. »). Le moteur coûte 0 crédit pour le routeur (les crédits du routeur sont ceux de la dictée) ; le quota
+d'import est contrôlé par `ImportStatement` avant l'extraction, puis par le serveur. `StatementParsingRequest` ne porte pas le format du
+fichier : le champ `kind` n'est donc pas envoyé (point à arbitrer, voir ROADMAP lot 5).
 
 ### Ajouter une IA
 
@@ -200,8 +215,8 @@ règles ci-dessus interdisent. Il faut un endpoint qui reçoit le texte déjà a
 | Transport | HTTPS uniquement (`usesCleartextTraffic=false`, ATS par défaut). Épinglage de certificat prévu quand le domaine d'API sera figé. |
 | Journaux | `AppLogger` n'accepte que des messages constants et des identifiants techniques. Le journal HTTP est désactivé en release et n'affiche jamais corps ni en-têtes. Les types sensibles redéfinissent `toString()`. |
 | Écran | `FLAG_SECURE` sur Android en release (pas de capture ni d'aperçu dans les applications récentes) ; voile sur iOS quand l'application passe en arrière-plan. |
-| Minimisation | Aucune donnée financière au repos (lots 1 à 3 : le tableau de bord garde ses données en mémoire, dans le ViewModel). Audio en mémoire uniquement : jamais écrit sur disque ni téléversé dans le bucket `voice-notes` (le WAV part directement en multipart vers `voice/process`), tampons remis à zéro après envoi, refus ou annulation. Enregistrement annulé quand l'application passe en arrière-plan. La dictée en attente de revue reste en mémoire et est oubliée à la déconnexion ou au changement de compte. |
-| Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans Mon espace › Préférences (lot 4 : « Retirer mon accord » retire tous les niveaux). La dictée (FAB et bouton « Dicter ») exige le niveau `PERSONAL` : dialogue avant la première dictée et à chaque `ConsentRequired` du routeur ; refus = rien n'est enregistré ni envoyé. |
+| Minimisation | Aucune donnée financière au repos (lots 1 à 3 : le tableau de bord garde ses données en mémoire, dans le ViewModel). Audio en mémoire uniquement : jamais écrit sur disque ni téléversé dans le bucket `voice-notes` (le WAV part directement en multipart vers `voice/process`), tampons remis à zéro après envoi, refus ou annulation. Enregistrement annulé quand l'application passe en arrière-plan. La dictée en attente de revue reste en mémoire et est oubliée à la déconnexion ou au changement de compte. Relevés (lot 5) : le fichier n'est ni copié ni mis en cache (lecture du flux du sélecteur, iOS en mode ouverture sans copie), les octets lus sont remis à zéro après décodage, le texte extrait vit dans le ViewModel le temps de l'import ; seul le texte anonymisé quitte l'appareil ; ni nom de fichier, ni contenu, ni texte anonymisé dans les journaux (type d'erreur, format et longueur seulement). |
+| Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans Mon espace › Préférences (lot 4 : « Retirer mon accord » retire tous les niveaux). La dictée (FAB et bouton « Dicter ») exige le niveau `PERSONAL` : dialogue avant la première dictée et à chaque `ConsentRequired` du routeur ; refus = rien n'est enregistré ni envoyé. L'import de relevé exige `ANONYMIZED` (couvert aussi par `PERSONAL`) : dialogue propre à l'import avant la première lecture et sur `ConsentRequired` ; refus = rien n'est lu ni envoyé. |
 | Apprentissage | `record_category_correction` reçoit la clé marchand normalisée et un `p_label` vide (le RPC l'ignore) : le libellé ne quitte pas l'appareil pour l'apprentissage. |
 | Droits | Suppression de compte : bouton et confirmation dans Mon espace, port `AccountRepository.deleteAccount` en `NotSupportedYet` (message explicite, rien n'est supprimé) tant que `DELETE /api/public/account` n'existe pas. Export des données : absent du web et du backend, non construit (voir `BACKEND-GAPS.md`). |
 | Traceurs | Aucun SDK d'analyse, de publicité ou de suivi. Manifeste de confidentialité iOS (`PrivacyInfo.xcprivacy`) déclaré sans collecte tierce. |
