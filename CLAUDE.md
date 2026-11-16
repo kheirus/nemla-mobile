@@ -54,4 +54,10 @@ en PostgREST direct (libellé non modifiable faute d'endpoint). Capture réelle 
 
 Lot 3 (tableau de bord) terminé le 16/11/2026 : `feature:dashboard` remplace `feature:home` (bloc pilote, météo, graphique et anneau en
 `Canvas`, « Où part l'argent », budgets, dépenses du jour, débit différé, édition réduite, dépenses à valider). Libellés et recherche
-texte indisponibles tant que le backend n'expose pas `GET /api/public/expenses`. Restes : `docs/ROADMAP.md` (lot 3). Prochaine étape : lot 4.
+texte indisponibles tant que le backend n'expose pas `GET /api/public/expenses`. Restes : `docs/ROADMAP.md` (lot 3).
+
+Lot 4 terminé le 16/11/2026 : `feature:onboarding` (charges fixes saisies ou dictées, budget ; seuls les comptes vierges y sont envoyés,
+lien « Passer pour l'instant ») et `feature:settings` (Mon espace : budget, charges fixes, profil, préférences, carte bancaire, crédits,
+catégories ; onglet Bilans au lot 6). Dictée en texte via l'emplacement `DictationTextButton` de `feature:voice`. Suppression de compte
+en `NotSupportedYet`, export et rappel quotidien reportés. Restes et écarts : `docs/ROADMAP.md` (lot 4) et `docs/PLATFORM-PARITY.md`.
+Prochaine étape : lot 5.
