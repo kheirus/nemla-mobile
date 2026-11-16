@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="ds_brand_name">nemla</string>
+  <string name="ds_password_show">Show password</string>
+  <string name="ds_password_hide">Hide password</string>
+  <string name="ds_loading">Loading</string>
+</resources>

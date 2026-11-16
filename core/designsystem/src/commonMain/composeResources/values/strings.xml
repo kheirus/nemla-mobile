@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="ds_brand_name">nemla</string>
+  <string name="ds_password_show">Afficher le mot de passe</string>
+  <string name="ds_password_hide">Masquer le mot de passe</string>
+  <string name="ds_loading">Chargement</string>
+</resources>
