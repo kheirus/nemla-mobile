@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="onboarding_title">Vos charges fixes</string>
+  <string name="onboarding_intro">Tapez ou dictez en vrac : « Netflix 15 €, Spotify 10 €, internet 30 €, loyer 750 € le 5 ».</string>
+  <string name="onboarding_input_label">Vos charges fixes en vrac</string>
+  <string name="onboarding_input_placeholder">Netflix 15€, Spotify 10€, internet 30€…</string>
+  <string name="onboarding_analyze">Analyser</string>
+  <string name="onboarding_review_title">Vérifiez avant d'enregistrer</string>
+  <string name="onboarding_name">Nom</string>
+  <string name="onboarding_amount">Montant</string>
+  <string name="onboarding_category">Catégorie</string>
+  <string name="onboarding_frequency">Fréquence</string>
+  <string name="onboarding_monthly">Mensuelle</string>
+  <string name="onboarding_yearly">Annuelle</string>
+  <string name="onboarding_remove">Retirer</string>
+  <string name="onboarding_budget_label">Budget mensuel disponible (%1$s)</string>
+  <string name="onboarding_budget_placeholder">2000</string>
+  <string name="onboarding_save">Enregistrer et voir mon tableau de bord</string>
+  <string name="onboarding_analysis_failed">Analyse impossible</string>
+  <string name="onboarding_save_failed">Enregistrement impossible</string>
+  <string name="onboarding_offline">Pas de connexion internet. Réessayez.</string>
+  <string name="onboarding_nothing_detected">Aucune charge fixe détectée</string>
+  <string name="onboarding_my_space">Mon espace</string>
+  <string name="onboarding_account_menu">Ouvrir le menu du compte</string>
+  <string name="onboarding_sign_out">Se déconnecter</string>
+  <string name="onboarding_dismiss">Masquer le message</string>
+</resources>

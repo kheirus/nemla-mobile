@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="onboarding_title">Your fixed costs</string>
+  <string name="onboarding_intro">Type or dictate freely: “Netflix €15, Spotify €10, internet €30, rent €750 on the 5th”.</string>
+  <string name="onboarding_input_label">Your fixed costs, freely</string>
+  <string name="onboarding_input_placeholder">Netflix €15, Spotify €10, internet €30…</string>
+  <string name="onboarding_analyze">Analyse</string>
+  <string name="onboarding_review_title">Review before saving</string>
+  <string name="onboarding_name">Name</string>
+  <string name="onboarding_amount">Amount</string>
+  <string name="onboarding_category">Category</string>
+  <string name="onboarding_frequency">Frequency</string>
+  <string name="onboarding_monthly">Monthly</string>
+  <string name="onboarding_yearly">Yearly</string>
+  <string name="onboarding_remove">Remove</string>
+  <string name="onboarding_budget_label">Available monthly budget (%1$s)</string>
+  <string name="onboarding_budget_placeholder">2000</string>
+  <string name="onboarding_save">Save and see my dashboard</string>
+  <string name="onboarding_analysis_failed">Analysis failed</string>
+  <string name="onboarding_save_failed">Save failed</string>
+  <string name="onboarding_offline">No internet connection. Try again.</string>
+  <string name="onboarding_nothing_detected">No fixed expense detected</string>
+  <string name="onboarding_my_space">My space</string>
+  <string name="onboarding_account_menu">Open the account menu</string>
+  <string name="onboarding_sign_out">Sign out</string>
+  <string name="onboarding_dismiss">Hide the message</string>
+</resources>
