@@ -39,4 +39,9 @@ Lot 1 (fondations) terminé le 16/11/2026 : `core:*`, `ai:*`, `core:designsystem
 `feature:auth` (connexion, inscription, mot de passe oublié), `feature:home` (coquille), `shared` (App, navigation pilotée par la
 session, assemblage Koin), coquilles Android (`NemlaApplication`, R8 vérifié) et iOS (`startNemla` + `mainViewController`).
 Restes et écarts : `docs/ROADMAP.md` (lot 1) et `docs/PLATFORM-PARITY.md`. Polices Outfit / DM Sans et logo à fournir
-(fichier unique `NemlaFonts.kt`, monogramme provisoire dans `brand/NemlaLogo.kt`). Prochaine étape : lot 2.
+(fichier unique `NemlaFonts.kt`, monogramme provisoire dans `brand/NemlaLogo.kt`).
+
+Lot 2 (dictée) terminé le 16/11/2026 : `core:audio` (WAV 16 kHz mono, silence, 30 s, `AudioRecord` / `AVAudioEngine`, permission micro),
+`feature:voice` (bouton « Ajouter », dialogue de dictée, consentement IA `PERSONAL`, crédits, fiche de revue), confirmation des dépenses
+en PostgREST direct (libellé non modifiable faute d'endpoint). Capture réelle jamais essayée sur appareil. Restes et écarts : `docs/ROADMAP.md`
+(lot 2) et `docs/PLATFORM-PARITY.md`. Prochaine étape : lot 3.

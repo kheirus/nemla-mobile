@@ -69,9 +69,32 @@
   - onboarding après inscription (lot 4) ; aujourd'hui l'inscription avec session ouvre l'accueil ;
   - lancement sur simulateur iOS non fait (aucun simulateur démarré) ; affichage vérifié sur émulateur Android uniquement.
 
-## Lot 2 — Dictée ☐
+## Lot 2 — Dictée ☑
 `core:audio` (WAV mono 16 kHz 16 bits, 30 s, arrêt après 3 s de silence), `feature:voice` (bouton, enregistrement, fiche de revue), consentement IA.
 Dépend des endpoints dépenses du backend.
+- ☑ `core:audio` (16/11/2026) : encodeur WAV, décimation au plus proche, détecteur de silence (RMS < 0,01 par bloc de 4096, 3 s),
+  durée max 30 s, rejet < 4096 octets, `VoiceRecorder` (`StateFlow`), Android `AudioRecord` (16 kHz ou natif + décimation),
+  iOS `AVAudioEngine`, `MicrophonePermission` + `rememberMicrophonePermissionRequest`, audio en mémoire seulement, `coreAudioModule`. 25 tests.
+- ☑ `core:domain` : `ExpenseReviewRepository`, `MerchantKeys` (portage de `normalizeMerchantKey`), `AmountInput` (texte → centimes),
+  cas d'usage de dictée, quota, catégories, règles apprises, suppression et confirmation. 17 nouveaux tests.
+- ☑ `core:data` : `KtorExpenseReviewRepository` en PostgREST direct (`PATCH expenses` montant / date / catégorie / `confirmed`,
+  `DELETE`, `PATCH voice_entries statut=confirmed`, lecture `merchant_rules`, RPC `record_category_correction` sans libellé) ;
+  `logCorrection` en `NotSupportedYet`. 11 nouveaux tests.
+- ☑ `core:designsystem` : icônes de dictée et de revue, couleurs de crédits, `NemlaDialog`, `NemlaProgressBar`.
+- ☑ `feature:voice` : bouton « Ajouter » et menu (dictée avec crédits restants ; saisie manuelle et import désactivés), dialogue de dictée
+  (§6.2), consentement IA `PERSONAL` avant la première dictée et sur `ConsentRequired`, erreurs traduites, fiche de revue (`voiceGraph`)
+  alimentée par la réponse de `voice/process`. 29 tests (×2 cibles).
+- ☑ Branchement : emplacement `floatingAction` dans `feature:home`, `shared` (Koin + navigation), `RECORD_AUDIO` (Android),
+  `NSMicrophoneUsageDescription` (iOS).
+- Vérifié le 16/11/2026 : `spotlessApply`, tests des modules du lot, `:androidApp:assembleDebug`, `:shared:linkDebugFrameworkIosSimulatorArm64`,
+  `xcodebuild` simulateur arm64.
+- Reste à faire (reporté) :
+  - essai réel de la capture sur appareil ou émulateur et sur simulateur iOS (permissions, silence, interruptions, envoi à `voice/process`) : non fait ;
+  - libellé modifiable, `prettyLabel`, détection de doublons, carte « Dépenses à valider » persistante : dépendent de `GET` / `PUT /api/public/expenses` ;
+  - journal de correction : dépend de `POST /api/public/classification-log` ;
+  - langue de dictée et révocation du consentement dans Mon espace (lot 4) ;
+  - à trancher par le propriétaire : `PrivacyInfo.xcprivacy` (données collectées encore vides alors que l'audio part au serveur),
+    lien vers les réglages après un refus définitif du micro, traduction anglaise de `NSMicrophoneUsageDescription`.
 
 ## Lot 3 — Tableau de bord ☐
 Météo du budget, graphique mensuel, « Où part l'argent », dépenses du jour, recherche. Débit différé (`specs/02`).
