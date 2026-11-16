@@ -139,6 +139,93 @@ object NemlaIcons {
         )
     }
 
+    val ChevronLeft: ImageVector by lazy {
+        lucide("ChevronLeft", "M15 18l-6-6 6-6")
+    }
+
+    val ChevronRight: ImageVector by lazy {
+        lucide("ChevronRight", "M9 18l6-6-6-6")
+    }
+
+    val Sun: ImageVector by lazy {
+        lucide(
+            "Sun",
+            circle(12f, 12f, 4f),
+            "M12 2v2",
+            "M12 20v2",
+            "M4.93 4.93l1.41 1.41",
+            "M17.66 17.66l1.41 1.41",
+            "M2 12h2",
+            "M20 12h2",
+            "M6.34 17.66l-1.41 1.41",
+            "M19.07 4.93l-1.41 1.41",
+        )
+    }
+
+    val Cloud: ImageVector by lazy {
+        lucide("Cloud", "M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z")
+    }
+
+    val CloudRain: ImageVector by lazy {
+        lucide(
+            "CloudRain",
+            "M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242",
+            "M16 14v6",
+            "M8 14v6",
+            "M12 16v6",
+        )
+    }
+
+    val CloudLightning: ImageVector by lazy {
+        lucide(
+            "CloudLightning",
+            "M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973",
+            "M13 12l-3 5h4l-3 5",
+        )
+    }
+
+    val Filter: ImageVector by lazy {
+        lucide("Filter", "M22 3H2l8 9.46V19l4 2v-8.54z")
+    }
+
+    val Search: ImageVector by lazy {
+        lucide("Search", circle(11f, 11f, 8f), "M21 21l-4.3-4.3")
+    }
+
+    val CalendarDays: ImageVector by lazy {
+        lucide(
+            "CalendarDays",
+            "M8 2v4",
+            "M16 2v4",
+            "M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
+            "M3 10h18",
+            "M8 14h.01",
+            "M12 14h.01",
+            "M16 14h.01",
+            "M8 18h.01",
+            "M12 18h.01",
+            "M16 18h.01",
+        )
+    }
+
+    val CreditCard: ImageVector by lazy {
+        lucide("CreditCard", "M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z", "M2 10h20")
+    }
+
+    val UserRound: ImageVector by lazy {
+        lucide("UserRound", circle(12f, 8f, 5f), "M20 21a8 8 0 0 0-16 0")
+    }
+
+    val RefreshCw: ImageVector by lazy {
+        lucide(
+            "RefreshCw",
+            "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8",
+            "M21 3v5h-5",
+            "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16",
+            "M8 16H3v5",
+        )
+    }
+
     private fun circle(
         cx: Float,
         cy: Float,

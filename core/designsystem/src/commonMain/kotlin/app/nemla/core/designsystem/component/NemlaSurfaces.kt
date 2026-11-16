@@ -33,6 +33,8 @@ import app.nemla.core.designsystem.theme.NemlaTheme
 fun NemlaCard(
     modifier: Modifier = Modifier,
     contentPadding: Dp = NemlaTheme.spacing.cardPadding,
+    borderColor: Color = NemlaTheme.colors.border,
+    containerColor: Color = NemlaTheme.colors.card,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = NemlaTheme.colors
@@ -46,9 +48,9 @@ fun NemlaCard(
                 spotColor = colors.shadow.copy(alpha = 0.06f),
             ),
         shape = shape,
-        color = colors.card,
+        color = containerColor,
         contentColor = colors.cardForeground,
-        border = BorderStroke(1.dp, colors.border),
+        border = BorderStroke(1.dp, borderColor),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {

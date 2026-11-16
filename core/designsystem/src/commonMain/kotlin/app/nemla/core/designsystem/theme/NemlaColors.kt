@@ -34,9 +34,18 @@ class NemlaColors(
     val onWarningContainer: Color,
     val creditOk: Color,
     val creditLow: Color,
+    val weatherSun: Color,
+    val weatherCloud: Color,
+    val weatherRain: Color,
+    val weatherStorm: Color,
     val shadow: Color,
     val scrim: Color,
 )
+
+private val WeatherSun = Color(0xFF16A34A)
+private val WeatherCloud = Color(0xFFD97706)
+private val WeatherRain = Color(0xFFEA580C)
+private val WeatherStorm = Color(0xFFDC2626)
 
 internal val LightNemlaColors =
     NemlaColors(
@@ -65,6 +74,10 @@ internal val LightNemlaColors =
         onWarningContainer = Color(0xFFBB4D00),
         creditOk = Color(0xFF218352),
         creditLow = Color(0xFFCE7C09),
+        weatherSun = WeatherSun,
+        weatherCloud = WeatherCloud,
+        weatherRain = WeatherRain,
+        weatherStorm = WeatherStorm,
         shadow = Color(0xFF132419),
         scrim = Color(0xCC000000),
     )
@@ -96,6 +109,10 @@ internal val DarkNemlaColors =
         onWarningContainer = Color(0xFFFFB900),
         creditOk = Color(0xFF218352),
         creditLow = Color(0xFFCE7C09),
+        weatherSun = WeatherSun,
+        weatherCloud = WeatherCloud,
+        weatherRain = WeatherRain,
+        weatherStorm = WeatherStorm,
         shadow = Color(0xFF132419),
         scrim = Color(0xCC000000),
     )
