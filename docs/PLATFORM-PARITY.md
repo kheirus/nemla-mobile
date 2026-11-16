@@ -76,7 +76,7 @@ permission sont propres à chaque plateforme, dans `core:audio`) :
 | Sujet | Android | iOS | Visible ? |
 |---|---|---|---|
 | Capture | `AudioRecord`, source `VOICE_RECOGNITION` puis `MIC`, 16 kHz mono PCM16 si accepté (sinon 48 / 44,1 kHz puis décimation) | `AVAudioEngine`, tap à la fréquence native (souvent 48 kHz), canal 0 en `Float`, décimation | Non : même WAV 16 kHz mono 16 bits, même détection de silence. Le traitement du signal du système (gain, réduction de bruit) diffère |
-| Session audio | Pas de demande de focus audio : une musique en cours continue | `AVAudioSession` catégorie `record`, mode `measurement` : la lecture des autres applications est interrompue pendant la dictée, puis notifiée à la fin | **Oui** |
+| Session audio | Pas de demande de focus audio : une musique en cours continue | `AVAudioSession` catégorie `record` (mode par défaut) : la lecture des autres applications est interrompue pendant la dictée, puis notifiée à la fin | **Oui** |
 | Permission micro | Dialogue système ; après deux refus Android ne le montre plus et la dictée affiche « Accès au micro refusé. » (pas de lien vers les réglages) | Dialogue système une seule fois ; texte `NSMicrophoneUsageDescription` en français uniquement (pas de `en.lproj/InfoPlist.strings`) | **Oui**, rendu et texte système |
 | Passage en arrière-plan pendant l'enregistrement | `ON_STOP` : enregistrement annulé, rien n'est envoyé | Idem | Non |
 | Sélecteur de date | `DatePickerDialog` Material 3 Compose | Le même composant Compose (pas de `UIDatePicker`) | Non entre plateformes ; non natif sur iOS |
