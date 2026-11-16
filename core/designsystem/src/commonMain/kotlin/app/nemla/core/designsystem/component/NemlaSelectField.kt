@@ -51,6 +51,8 @@ fun <T> NemlaSelectField(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    labelVisible: Boolean = true,
+    leading: (@Composable (T) -> Unit)? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val colors = NemlaTheme.colors
@@ -60,12 +62,14 @@ fun <T> NemlaSelectField(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.labelGap),
     ) {
-        Text(
-            text = label,
-            style = NemlaTheme.typography.label,
-            color = colors.foreground,
-            modifier = Modifier.clearAndSetSemantics { },
-        )
+        if (labelVisible) {
+            Text(
+                text = label,
+                style = NemlaTheme.typography.label,
+                color = colors.foreground,
+                modifier = Modifier.clearAndSetSemantics { },
+            )
+        }
         Box {
             Row(
                 modifier =
@@ -80,7 +84,9 @@ fun <T> NemlaSelectField(
                             stateDescription = selectedLabel ?: placeholder
                         }.padding(horizontal = NemlaTheme.spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
             ) {
+                if (leading != null && selected != null) leading(selected)
                 Text(
                     text = selectedLabel ?: placeholder,
                     style = NemlaTheme.typography.input,
@@ -104,6 +110,7 @@ fun <T> NemlaSelectField(
                     val isSelected = option.value == selected
                     DropdownMenuItem(
                         text = { Text(text = option.label, style = NemlaTheme.typography.body) },
+                        leadingIcon = leading?.let { draw -> { draw(option.value) } },
                         onClick = {
                             expanded = false
                             onSelect(option.value)

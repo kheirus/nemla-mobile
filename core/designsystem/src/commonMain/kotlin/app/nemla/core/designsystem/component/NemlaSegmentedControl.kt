@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -28,6 +29,7 @@ fun <T> NemlaSegmentedControl(
     selected: T,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
+    labelMaxLines: Int = 1,
 ) {
     val colors = NemlaTheme.colors
     val shape = RoundedCornerShape(NemlaTheme.radius.lg)
@@ -40,7 +42,7 @@ fun <T> NemlaSegmentedControl(
                 .selectableGroup(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        options.forEach { option -> Segment(option, option.value == selected, onSelect) }
+        options.forEach { option -> Segment(option, option.value == selected, labelMaxLines, onSelect) }
     }
 }
 
@@ -48,6 +50,7 @@ fun <T> NemlaSegmentedControl(
 private fun <T> RowScope.Segment(
     option: NemlaOption<T>,
     isSelected: Boolean,
+    labelMaxLines: Int,
     onSelect: (T) -> Unit,
 ) {
     val colors = NemlaTheme.colors
@@ -68,8 +71,9 @@ private fun <T> RowScope.Segment(
             text = option.label,
             style = NemlaTheme.typography.button,
             color = if (isSelected) colors.foreground else colors.mutedForeground,
-            maxLines = 1,
+            maxLines = labelMaxLines,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
         )
     }
 }

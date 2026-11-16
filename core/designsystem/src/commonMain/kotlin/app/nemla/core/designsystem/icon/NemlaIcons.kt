@@ -226,6 +226,98 @@ object NemlaIcons {
         )
     }
 
+    val Wallet: ImageVector by lazy {
+        lucide(
+            "Wallet",
+            "M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1",
+            "M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4",
+        )
+    }
+
+    val Repeat: ImageVector by lazy {
+        lucide("Repeat", "M17 2l4 4-4 4", "M3 11v-1a4 4 0 0 1 4-4h14", "M7 22l-4-4 4-4", "M21 13v1a4 4 0 0 1-4 4H3")
+    }
+
+    val User: ImageVector by lazy {
+        lucide("User", "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2", circle(12f, 7f, 4f))
+    }
+
+    val Settings: ImageVector by lazy {
+        lucide(
+            "Settings",
+            "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38" +
+                "a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38" +
+                "a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18" +
+                "a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08" +
+                "a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08" +
+                "a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z",
+            circle(12f, 12f, 3f),
+        )
+    }
+
+    val ArrowLeft: ImageVector by lazy {
+        lucide("ArrowLeft", "M12 19l-7-7 7-7", "M19 12H5")
+    }
+
+    val Moon: ImageVector by lazy {
+        lucide("Moon", "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z")
+    }
+
+    val Wand: ImageVector by lazy {
+        lucide(
+            "Wand",
+            "M21.64 3.64l-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0" +
+                "L21.64 5.36a1.2 1.2 0 0 0 0-1.72",
+            "M14 7l3 3",
+            "M5 6v4",
+            "M19 14v4",
+            "M10 2v2",
+            "M7 8H3",
+            "M21 16h-4",
+            "M11 3H9",
+        )
+    }
+
+    val ListTree: ImageVector by lazy {
+        lucide("ListTree", "M21 12h-8", "M21 6H8", "M21 18h-8", "M3 6v4c0 1.1.9 2 2 2h3", "M3 10v6c0 1.1.9 2 2 2h3")
+    }
+
+    val HeartHandshake: ImageVector by lazy {
+        lucide(
+            "HeartHandshake",
+            "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5" +
+                "c0 2.3 1.5 4.05 3 5.5l7 7z",
+            "M12 5L9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66",
+            "M18 15l-2-2",
+            "M15 18l-2-2",
+        )
+    }
+
+    val Baby: ImageVector by lazy {
+        lucide(
+            "Baby",
+            "M9 12h.01",
+            "M15 12h.01",
+            "M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5",
+            "M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3" +
+                "c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1",
+        )
+    }
+
+    val HousePlus: ImageVector by lazy {
+        lucide(
+            "HousePlus",
+            "M13.22 2.416a2 2 0 0 0-2.511.057l-7 5.999A2 2 0 0 0 3 10v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.354",
+            "M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8",
+            "M15 6h6",
+            "M18 3v6",
+        )
+    }
+
+    val BarChart: ImageVector by lazy {
+        lucide("BarChart", "M3 3v16a2 2 0 0 0 2 2h16", "M18 17V9", "M13 17V5", "M8 17v-3")
+    }
+
     private fun circle(
         cx: Float,
         cy: Float,

@@ -57,6 +57,7 @@ fun NemlaTextField(
     isPassword: Boolean = false,
     maxLength: Int? = null,
     autofill: NemlaAutofill? = null,
+    labelVisible: Boolean = true,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -80,12 +81,14 @@ fun NemlaTextField(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.labelGap),
     ) {
-        Text(
-            text = label,
-            style = NemlaTheme.typography.label,
-            color = colors.foreground,
-            modifier = Modifier.clearAndSetSemantics { },
-        )
+        if (labelVisible) {
+            Text(
+                text = label,
+                style = NemlaTheme.typography.label,
+                color = colors.foreground,
+                modifier = Modifier.clearAndSetSemantics { },
+            )
+        }
         BasicTextField(
             value = value,
             onValueChange = { next -> onValueChange(if (maxLength != null) next.take(maxLength) else next) },
