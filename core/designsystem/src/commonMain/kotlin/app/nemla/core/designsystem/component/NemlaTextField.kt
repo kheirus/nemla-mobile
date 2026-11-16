@@ -25,9 +25,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -54,6 +56,7 @@ fun NemlaTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     isPassword: Boolean = false,
     maxLength: Int? = null,
+    autofill: NemlaAutofill? = null,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -101,6 +104,7 @@ fun NemlaTextField(
                     .semantics {
                         contentDescription = label
                         if (error != null) error(error)
+                        if (autofill != null) contentType = autofill.contentType
                     },
             decorationBox = { innerTextField ->
                 Row(
@@ -138,6 +142,15 @@ fun NemlaTextField(
             )
         }
     }
+}
+
+enum class NemlaAutofill(
+    internal val contentType: ContentType,
+) {
+    Email(ContentType.EmailAddress),
+    Password(ContentType.Password),
+    NewPassword(ContentType.NewPassword),
+    NewUsername(ContentType.NewUsername),
 }
 
 @Composable
