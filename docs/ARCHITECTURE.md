@@ -80,7 +80,8 @@ le port `SpeechTranscriber` (implémenté dans `core:data` par la capacité `Spe
 reçoit le texte, l'état actif (pour désactiver « Analyser ») et les messages d'erreur déjà traduits.
 
 Aiguillage après connexion (`shared`, `AppViewModel`) : à chaque nouvel utilisateur connecté, `ResolveStartDestination` appelle
-`bootstrap_user` puis lit `profiles.onboarding_done` ; faux → onboarding, vrai ou erreur → tableau de bord. Mon espace s'ouvre depuis
+`bootstrap_user` puis lit le profil : onboarding seulement si `onboarding_done` est faux et que le compte est vierge (budget mensuel 0,
+aucune charge fixe, aucune dépense lue avec `limit=1`) ; sinon, ou en cas d'erreur, tableau de bord. L'onboarding peut être passé. Mon espace s'ouvre depuis
 le menu de l'en-tête du tableau de bord (« Gérer mon compte ») ou le lien des alertes de budget (onglet Catégories) ; « Retour » dépile.
 
 Préférences locales (langue de l'application, langue de dictée, thème) : port `PreferencesRepository` (`StateFlow`), implémenté dans

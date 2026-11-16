@@ -132,7 +132,11 @@ Budget, charges fixes, profil, préférences, catégories, crédits, suppression
   des champs et listes, pastille dans les listes, libellés sur deux lignes du contrôle segmenté.
 - ☑ `feature:voice` : `DictationTextButton` (même enregistreur, consentement `PERSONAL`, transcription), dialogue de consentement commun,
   langue de dictée lue dans les préférences. 5 nouveaux tests.
-- ☑ `feature:onboarding` : « Vos charges fixes » (§4) avec analyse, dictée, revue, budget et enregistrement. 9 tests.
+- ☑ `feature:onboarding` : « Vos charges fixes » (§4) avec analyse, dictée, revue, budget et enregistrement, lien « Passer pour
+  l'instant » (sans écriture). 10 tests.
+- ☑ Correctif (16/11/2026, constaté sur simulateur iOS) : un compte web existant avec `onboarding_done = false` restait bloqué sur
+  l'onboarding. L'aiguillage n'envoie plus vers l'onboarding que les comptes vierges (budget 0, aucune charge fixe, aucune dépense) ;
+  toute erreur mène au tableau de bord. 3 tests de domaine et 1 test de données ajoutés.
 - ☑ `feature:settings` : Mon espace (§12) : onglets, cinq panneaux de « Profil & budget » (budget, charges fixes, profil, préférences,
   carte bancaire §11.3), zone dangereuse, crédits, catégories ; « Bilans » en attente. 14 tests.
 - ☑ `feature:dashboard` : « Gérer mon compte », lien « Ajuster mes budgets par catégorie », avatar selon la situation familiale, langue

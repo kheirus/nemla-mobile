@@ -207,9 +207,12 @@ une plateforme ajouté) :
 
 Écarts web / mobile introduits au lot 4 (à valider par le propriétaire) :
 
-1. **Onboarding imposé** : après connexion, `bootstrap_user` puis lecture de `onboarding_done` ; faux → onboarding (le web ne force
-   jamais). Les comptes web qui n'ont jamais vu l'onboarding (confirmation par email, reconnexion) le verront une fois. Erreur réseau →
-   tableau de bord. Pendant cette vérification, l'écran de connexion reste affiché (ou l'écran de démarrage au lancement).
+1. **Onboarding imposé aux seuls comptes vierges** : après connexion, `bootstrap_user`, puis onboarding seulement si `onboarding_done`
+   est faux **et** que le compte est vierge (budget mensuel à 0, aucune charge fixe, aucune dépense : une lecture `limit=1` sans libellé).
+   Sinon, ou en cas d'erreur, tableau de bord. Le web ne force jamais l'onboarding ; les comptes web déjà utilisés n'y passent donc pas.
+   Pendant cette vérification, l'écran de connexion reste affiché (ou l'écran de démarrage au lancement).
+   **Ajout** : lien « Passer pour l'instant » sous « Enregistrer et voir mon tableau de bord », qui ouvre le tableau de bord sans rien
+   écrire (`onboarding_done` reste faux : l'onboarding revient au prochain lancement tant que le compte est vierge). Absent du web.
 2. **Onboarding** : libellé « Budget mensuel disponible ({symbole}) » avec la devise du profil (ÉCART web corrigé : « € » en dur) ; menu
    de l'en-tête réduit à « Se déconnecter » (pas de « Gérer mon compte », qui permettrait de contourner l'onboarding) ; « Aucune charge
    fixe détectée » affiché aussi ici ; pas de toast « Configuration enregistrée » (le tableau de bord s'ouvre directement) ; erreurs en
