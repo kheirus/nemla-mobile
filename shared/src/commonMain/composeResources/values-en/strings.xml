@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_missing_config_title">Missing configuration</string>
+  <string name="app_missing_config_body">Set SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and API_BASE_URL (https addresses) in local.properties for Android or in iosApp/Config.xcconfig for iOS, then rebuild the app.</string>
+  <string name="app_unavailable_title">App unavailable</string>
+  <string name="app_unavailable_body">This version of the app cannot connect to the service. Update it or try again later.</string>
+</resources>

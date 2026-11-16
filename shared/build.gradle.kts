@@ -34,3 +34,7 @@ kotlin {
         }
     }
 }
+
+compose.resources {
+    packageOfResClass = "app.nemla.shared.resources"
+}
