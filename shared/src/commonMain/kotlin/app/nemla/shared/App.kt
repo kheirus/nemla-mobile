@@ -1,15 +1,16 @@
 package app.nemla.shared
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -27,6 +28,7 @@ import app.nemla.core.designsystem.component.NemlaLoadingIndicator
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaScreenAlignment
 import app.nemla.core.designsystem.theme.NemlaTheme
+import app.nemla.core.domain.model.ThemeMode
 import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.network.BackendConfig
 import app.nemla.feature.auth.navigation.AuthEntry
@@ -36,7 +38,14 @@ import app.nemla.feature.auth.navigation.navigateToAuth
 import app.nemla.feature.dashboard.dashboardScreen
 import app.nemla.feature.dashboard.isDashboard
 import app.nemla.feature.dashboard.navigateToDashboard
+import app.nemla.feature.onboarding.isOnboarding
+import app.nemla.feature.onboarding.navigateToOnboarding
+import app.nemla.feature.onboarding.onboardingScreen
+import app.nemla.feature.settings.SettingsTab
+import app.nemla.feature.settings.navigateToSettings
+import app.nemla.feature.settings.settingsScreen
 import app.nemla.feature.voice.capture.VoiceCaptureButton
+import app.nemla.feature.voice.dictation.DictationTextButton
 import app.nemla.feature.voice.navigation.closeVoiceReview
 import app.nemla.feature.voice.navigation.navigateToVoiceReview
 import app.nemla.feature.voice.navigation.voiceGraph
@@ -55,48 +64,72 @@ internal data object SplashDestination
 
 @Composable
 fun App() {
-    NemlaTheme {
-        val config = koinInject<BackendConfig>()
-        if (config.isComplete) {
-            NemlaNavHost()
-        } else {
-            MissingConfigurationScreen(isDebug = koinInject<AppBuildInfo>().isDebug)
+    val viewModel = koinViewModel<AppViewModel>()
+    val preferences by viewModel.preferences.collectAsStateWithLifecycle()
+    val loaded = preferences
+    if (loaded == null) {
+        NemlaTheme { Box(modifier = Modifier.fillMaxSize().background(NemlaTheme.colors.background)) }
+        return
+    }
+    val dark =
+        when (loaded.theme) {
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
+            ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        }
+    val navController = rememberNavController()
+    ProvideAppLanguage(loaded.appLanguage) {
+        NemlaTheme(darkTheme = dark) {
+            val config = koinInject<BackendConfig>()
+            if (config.isComplete) {
+                NemlaNavHost(viewModel, navController)
+            } else {
+                MissingConfigurationScreen(isDebug = koinInject<AppBuildInfo>().isDebug)
+            }
         }
     }
 }
 
 @Composable
-private fun NemlaNavHost(viewModel: AppViewModel = koinViewModel()) {
-    val navController = rememberNavController()
+private fun NemlaNavHost(
+    viewModel: AppViewModel,
+    navController: NavHostController,
+) {
     val reviewOpener = koinInject<PendingReviewOpener>()
-    val authState by viewModel.authState.collectAsStateWithLifecycle()
-    var hadSession by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(authState) {
-        when (val target = rootTargetFor(authState, hadSession)) {
-            null -> {
-                Unit
-            }
-
-            RootTarget.Home -> {
-                hadSession = true
-                navController.showHome()
-            }
-
-            is RootTarget.Auth -> {
-                navController.showAuth(target)
-            }
+    val target by viewModel.target.collectAsStateWithLifecycle()
+    LaunchedEffect(target) {
+        when (val current = target) {
+            null -> Unit
+            RootTarget.Home -> navController.showHome()
+            RootTarget.Onboarding -> navController.showOnboarding()
+            is RootTarget.Auth -> navController.showAuth(current)
         }
     }
+    val dictation: @Composable (Boolean, (String) -> Unit, (Boolean) -> Unit, (String) -> Unit) -> Unit =
+        { enabled, onTranscript, onActiveChange, onMessage -> DictationTextButton(enabled, onTranscript, onActiveChange, onMessage) }
     NavHost(navController = navController, startDestination = SplashDestination) {
         composable<SplashDestination> { SplashScreen() }
-        authGraph(navController = navController, onAuthenticated = { navController.showHome() })
+        authGraph(navController = navController, onAuthenticated = {})
+        onboardingScreen(
+            onFinished = { viewModel.onOnboardingFinished() },
+            onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
+            dictation = dictation,
+        )
         dashboardScreen(
             onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
             onReviewPending = { review ->
                 reviewOpener.open(review)
                 navController.navigateToVoiceReview()
             },
+            onOpenSettings = { categories ->
+                navController.navigateToSettings(if (categories) SettingsTab.CATEGORIES else SettingsTab.PROFILE)
+            },
             floatingAction = { VoiceCaptureButton(onOpenReview = { navController.navigateToVoiceReview() }) },
+        )
+        settingsScreen(
+            onClose = { if (!navController.popBackStack()) navController.navigateToDashboard() },
+            onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
+            dictation = dictation,
         )
         voiceGraph(onClose = { navController.closeVoiceReview() })
     }
@@ -105,6 +138,11 @@ private fun NemlaNavHost(viewModel: AppViewModel = koinViewModel()) {
 private fun NavHostController.showHome() {
     if (currentDestination?.isDashboard() == true) return
     navigateToDashboard()
+}
+
+private fun NavHostController.showOnboarding() {
+    if (currentDestination?.isOnboarding() == true) return
+    navigateToOnboarding()
 }
 
 private fun NavHostController.showAuth(target: RootTarget.Auth) {

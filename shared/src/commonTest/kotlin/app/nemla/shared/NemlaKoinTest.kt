@@ -9,23 +9,33 @@ import app.nemla.core.audio.VoiceRecorder
 import app.nemla.core.audio.VoiceRecorderFactory
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.common.AppResult
+import app.nemla.core.domain.model.AppPreferences
 import app.nemla.core.domain.model.AuthState
+import app.nemla.core.domain.model.BudgetPeriod
+import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.EmailAddress
+import app.nemla.core.domain.model.GlobalBudget
 import app.nemla.core.domain.model.Password
+import app.nemla.core.domain.model.ProfileIdentity
+import app.nemla.core.domain.model.PseudoAvailability
 import app.nemla.core.domain.model.Session
 import app.nemla.core.domain.model.SignUpOutcome
 import app.nemla.core.domain.model.SignUpRequest
 import app.nemla.core.domain.model.UserId
+import app.nemla.core.domain.model.UserProfile
 import app.nemla.core.domain.port.AccountRepository
 import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
+import app.nemla.core.domain.port.DeviceLanguage
 import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
 import app.nemla.core.domain.port.PendingReviewOpener
+import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
 import app.nemla.core.domain.usecase.CaptureVoiceExpenses
@@ -39,10 +49,13 @@ import app.nemla.core.domain.usecase.GrantAiConsent
 import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
 import app.nemla.core.domain.usecase.ListRecurringCharges
+import app.nemla.core.domain.usecase.LoadPreferences
 import app.nemla.core.domain.usecase.MaterializeRecurringCharges
 import app.nemla.core.domain.usecase.ObserveAiConsents
 import app.nemla.core.domain.usecase.ObserveAuthState
+import app.nemla.core.domain.usecase.ObservePreferences
 import app.nemla.core.domain.usecase.RequestPasswordReset
+import app.nemla.core.domain.usecase.ResolveStartDestination
 import app.nemla.core.domain.usecase.SearchExpensesByDate
 import app.nemla.core.domain.usecase.SignIn
 import app.nemla.core.domain.usecase.SignOut
@@ -71,6 +84,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NemlaKoinTest {
@@ -148,6 +162,10 @@ class NemlaKoinTest {
             koin.get<GetDeferredDebit>()
             koin.get<UpdateExpense>()
             koin.get<DeleteExpense>()
+            koin.get<PreferencesRepository>()
+            koin.get<SpeechTranscriber>()
+            koin.get<DeviceLanguage>()
+            koin.get<ResolveStartDestination>()
             assertTrue(koin.get<ScreenProtection>().isEnabled)
             val router = koin.get<AiRouter>()
             assertEquals(1, router.enginesFor(AiCapability.StatementAnonymization).size)
@@ -167,15 +185,44 @@ class NemlaKoinTest {
             koin.get<AppViewModel>()
         }
 
+    private fun appViewModel(
+        auth: StateAuthRepository,
+        profiles: OnboardingProfiles,
+        preferences: MemoryPreferences = MemoryPreferences(),
+    ) = AppViewModel(
+        ObserveAuthState(auth),
+        ResolveStartDestination(profiles),
+        ObservePreferences(preferences),
+        LoadPreferences(preferences),
+    )
+
     @Test
     fun appViewModelFollowsTheSession() {
         val auth = StateAuthRepository()
-        val vm = AppViewModel(ObserveAuthState(auth))
+        val vm = appViewModel(auth, OnboardingProfiles(onboardingDone = true))
         assertEquals(AuthState.Unknown, vm.authState.value)
+        assertNull(vm.target.value)
+        assertEquals(AppPreferences.Default, vm.preferences.value)
         auth.state.value = AuthState.SignedIn(Session(UserId("u"), email = null, expiresAt = null))
         assertTrue(vm.authState.value is AuthState.SignedIn)
+        assertEquals(RootTarget.Home, vm.target.value)
         auth.state.value = AuthState.SignedOut
         assertEquals(AuthState.SignedOut, vm.authState.value)
+        assertEquals(RootTarget.Auth(AuthEntry.SignIn), vm.target.value)
+    }
+
+    @Test
+    fun newUsersGoThroughOnboardingOnceAndTokenRefreshesDoNotReRoute() {
+        val auth = StateAuthRepository()
+        val profiles = OnboardingProfiles(onboardingDone = false)
+        val vm = appViewModel(auth, profiles)
+        auth.state.value = AuthState.SignedIn(Session(UserId("u"), email = null, expiresAt = null))
+        assertEquals(RootTarget.Onboarding, vm.target.value)
+        assertEquals(1, profiles.bootstraps)
+        auth.state.value = AuthState.SignedIn(Session(UserId("u"), email = null, expiresAt = Instant.fromEpochSeconds(10)))
+        assertEquals(1, profiles.bootstraps)
+        vm.onOnboardingFinished()
+        assertEquals(RootTarget.Home, vm.target.value)
     }
 
     @Test
@@ -220,4 +267,45 @@ private class StateAuthRepository : AuthRepository {
     override suspend fun requestPasswordReset(email: EmailAddress): AppResult<Unit> = AppResult.Success(Unit)
 
     override suspend fun refreshSession(): AppResult<Session> = AppResult.Success(session)
+}
+
+private class OnboardingProfiles(
+    private val onboardingDone: Boolean,
+) : ProfileRepository {
+    var bootstraps = 0
+
+    override suspend fun bootstrap(): AppResult<Unit> {
+        bootstraps++
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun getProfile(): AppResult<UserProfile> =
+        AppResult.Success(
+            UserProfile(UserId("u"), null, null, null, null, Currency.EUR, GlobalBudget(0, null, BudgetPeriod.MONTH), onboardingDone, true),
+        )
+
+    override suspend fun updateIdentity(identity: ProfileIdentity): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun updateBudget(budget: GlobalBudget): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun setDailyReminder(enabled: Boolean): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun checkPseudo(pseudo: String): AppResult<PseudoAvailability> =
+        AppResult.Success(PseudoAvailability(true, emptyList()))
+
+    override suspend fun updateCurrency(currency: Currency): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun completeOnboarding(monthlyBudgetCents: Long): AppResult<Unit> = AppResult.Success(Unit)
+}
+
+private class MemoryPreferences : PreferencesRepository {
+    private val state = MutableStateFlow<AppPreferences?>(null)
+    override val preferences: StateFlow<AppPreferences?> = state
+
+    override suspend fun load(): AppPreferences = state.value ?: AppPreferences.Default.also { state.value = it }
+
+    override suspend fun update(preferences: AppPreferences): AppResult<Unit> {
+        state.value = preferences
+        return AppResult.Success(Unit)
+    }
 }
