@@ -14,6 +14,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class StatementAnonymizerTest {
+    private val deliberateDeviations = setOf("address")
+
     private val prefix = "Relevé de compte\nDate Libellé Débit Crédit\n"
 
     private fun anonymize(
@@ -27,7 +29,7 @@ class StatementAnonymizerTest {
 
     @Test
     fun matchesServerOutputForEveryRule() {
-        for (case in serverParityCases) {
+        for (case in serverParityCases.filterNot { it.name in deliberateDeviations }) {
             val result = anonymize(case.input)
             assertEquals(case.expected, result.text, case.name)
             assertEquals(case.redactions, result.report.total, case.name)
@@ -80,8 +82,26 @@ class StatementAnonymizerTest {
     @Test
     fun knownMerchantQuirksFromTheServerArePreserved() {
         assertEquals("[NOM]", body("CARREFOUR MARKET"))
-        assertEquals("PARKING [ADRESSE],50", body("PARKING PLACE DE LA GARE 12,50"))
         assertEquals("PRLV SEPA", body("PRLV SEPA"))
+    }
+
+    @Test
+    fun addressRuleStopsBeforeTheAmountUnlikeTheServer() {
+        assertEquals("PARKING [ADRESSE] 12,50", body("PARKING PLACE DE LA GARE 12,50"))
+        assertEquals("PEAGE [ADRESSE] 1 234,56", body("PEAGE ROUTE DES ALPES 1 234,56"))
+        assertEquals("CB [ADRESSE] -8.40 EUR", body("CB COURS MIRABEAU -8.40 EUR"))
+        assertEquals("LIVRAISON [ADRESSE], 7,90", body("LIVRAISON 12 bis rue Victor Hugo, 7,90"))
+        assertEquals("CB [ADRESSE]", body("CB 3 PLACE DU MARCHE 1945"))
+        assertEquals("VIR [ADRESSE] 15,00", body("VIR RUE DU 8 MAI 15,00"))
+    }
+
+    @Test
+    fun frenchPhoneNumbersAreRedactedBeyondServerRules() {
+        assertEquals("APPEL [TEL] 2,00", body("APPEL 06 12 34 56 78 2,00"))
+        assertEquals("APPEL [TEL] 2,00", body("APPEL 01.23.45.67.89 2,00"))
+        assertEquals(mapOf(PiiKind.PHONE to 1), counts("APPEL 06-12-34-56-78 2,00"))
+        assertEquals("02.03.2026 CB LIDL 12,30", body("02.03.2026 CB LIDL 12,30"))
+        assertEquals("03.12.24 45.67", body("03.12.24 45.67"))
     }
 
     @Test

@@ -98,6 +98,7 @@ internal object StatementAnonymizer {
         text = counter.replace(text, StatementPatterns.email, PiiKind.EMAIL, "[EMAIL]")
         text = counter.replace(text, StatementPatterns.internationalPhone, PiiKind.PHONE, "[TEL]")
         text = counter.replace(text, StatementPatterns.labelledPhone, PiiKind.PHONE, "Tél. : [TEL]")
+        text = counter.replace(text, StatementPatterns.nationalPhone, PiiKind.PHONE, "[TEL]")
         text = counter.replace(text, StatementPatterns.postcodeCity, PiiKind.POSTAL_ADDRESS, "[VILLE]")
         text = counter.replace(text, StatementPatterns.address, PiiKind.POSTAL_ADDRESS, "[ADRESSE]")
         return text

@@ -35,6 +35,8 @@ internal object StatementPatterns {
     val email = regex("[A-Za-z0-9_.+-]+@[A-Za-z0-9_-]+\\.[A-Za-z0-9_.]+")
     val internationalPhone = regex("\\+$DIGIT{1,3}[ .-]?$DIGIT(?:[ .-]?$DIGIT{2}){4}$BOUNDARY")
     val labelledPhone = regex("${BOUNDARY}T[ée]l\\.?$SPACE*(?:agence)?$SPACE*:?$SPACE*[0-9 .+-]{8,}", ignoreCase = true)
+    val nationalPhone =
+        regex("${BOUNDARY}0[1-9](?:(?: $DIGIT{2}){4}|(?:\\.$DIGIT{2}){4}|(?:-$DIGIT{2}){4})$BOUNDARY")
     val postcodeCity = regex("$BOUNDARY$DIGIT{5}$SPACE+[$UPPER][$LATIN'’ -]{2,}$BOUNDARY")
 
     private const val ADDRESS_KEYWORDS =
@@ -42,9 +44,11 @@ internal object StatementPatterns {
             "lieu[- ]dit|hameau|r[ée]sidence|b[âa]timent|bat\\.?|escalier|[ée]tage|porte|appartement|appt|" +
             "bo[îi]te postale|bp|cedex|street|road|avenue"
 
+    private const val AMOUNT = "(?<!$DIGIT)[-+]?$DIGIT{1,3}(?:[ .\u00A0\u202F]$DIGIT{3})*[,.]$DIGIT{2}(?!$DIGIT)"
+
     val address =
         regex(
-            "$BOUNDARY(?:$DIGIT{1,4}$SPACE?(?:bis|ter)?$SPACE?)?(?:$ADDRESS_KEYWORDS)$BOUNDARY[^\n,;]*",
+            "$BOUNDARY(?:$DIGIT{1,4}$SPACE?(?:bis|ter)?$SPACE?)?(?:$ADDRESS_KEYWORDS)$BOUNDARY(?:(?!$SPACE*$AMOUNT)[^\n,;])*",
             ignoreCase = true,
         )
 
