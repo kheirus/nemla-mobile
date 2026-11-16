@@ -189,3 +189,60 @@ une plateforme ajouté) :
     (§5.11, §5.12 → lot 6), dialogue « débit immédiat ou différé » `PaymentModeGate` et réglages du débit (§11.2, §11.3 → lot 4).
 15. **Ligne période** : contrôle « Mois | Année » en pleine largeur, navigateur de période dessous, au lieu d'une seule ligne
     `[1fr, auto]` : sur 393 pt de large, les libellés se tronquaient (« M… | Y… »), vu sur simulateur iOS.
+
+## Lot 4 — Mon espace et onboarding (16/11/2026)
+
+Écarts Android / iOS (écrans, logique et préférences 100 % Compose / `commonMain` ; seul code propre à une plateforme :
+`ProvideAppLanguage`, `expect/actual` dans `shared`) :
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Changement de langue de l'application | `Locale.setDefault` + `LocalConfiguration` surchargée, puis recomposition sous `key(langue)` (même `NavController`) | Écriture de `AppleLanguages` dans `NSUserDefaults`, puis même recomposition | À vérifier sur appareil. Sur iOS, `AppleLanguages` est persistant et ne change les textes rendus par le système (dialogue du micro…) qu'au prochain lancement ; sur Android ces textes suivent la langue du système. L'API « langue par application » d'Android 13 n'est pas utilisée (pas d'AppCompat). |
+| Thème clair / sombre | `NemlaTheme(darkTheme)` | Idem | Non. Barres système non recolorées à chaud sur Android (fond de fenêtre défini au lancement). |
+| Retour depuis un panneau de Mon espace | Bouton / geste système (`NavigationBackHandler`) | Geste de bord via `navigationevent` de Compose | À vérifier sur simulateur iOS |
+| Claviers numériques (montants, jours, âge) | `KeyboardType.Decimal` / `Number` | Pavé décimal iOS ; le séparateur dépend de la région de l'appareil | Oui, rendu système ; la virgule et le point sont acceptés |
+| Interrupteur « Visible », sélecteur de date (carte), menus | Composants Material 3 Compose | Les mêmes (pas de `UISwitch` ni de `UIDatePicker`) | Non entre plateformes ; non natif sur iOS |
+| Bouton « Dicter » (onboarding, charges fixes) | Même enregistreur que le FAB (`AudioRecord`) | `AVAudioEngine` | Non ; capture jamais essayée sur appareil |
+| Vérification | Compilation, tests JVM, APK debug | Compilation du framework, tests sur simulateur (logique) | Écrans non lancés sur émulateur ni simulateur |
+
+Écarts web / mobile introduits au lot 4 (à valider par le propriétaire) :
+
+1. **Onboarding imposé** : après connexion, `bootstrap_user` puis lecture de `onboarding_done` ; faux → onboarding (le web ne force
+   jamais). Les comptes web qui n'ont jamais vu l'onboarding (confirmation par email, reconnexion) le verront une fois. Erreur réseau →
+   tableau de bord. Pendant cette vérification, l'écran de connexion reste affiché (ou l'écran de démarrage au lancement).
+2. **Onboarding** : libellé « Budget mensuel disponible ({symbole}) » avec la devise du profil (ÉCART web corrigé : « € » en dur) ; menu
+   de l'en-tête réduit à « Se déconnecter » (pas de « Gérer mon compte », qui permettrait de contourner l'onboarding) ; « Aucune charge
+   fixe détectée » affiché aussi ici ; pas de toast « Configuration enregistrée » (le tableau de bord s'ouvre directement) ; erreurs en
+   bannière (5 s) au lieu de toasts. Aucune validation, comme le web (montant illisible = 0, budget vide = 0).
+3. **Dictée des charges fixes** : lit `transcript.text` (le web passe l'objet et échoue, `specs/01` §2.2). La transcription est ajoutée
+   au texte (« , ») puis seule analysée, dans l'onboarding comme dans Mon espace. Bouton « Transcription… » pendant l'envoi.
+4. **Toasts** : bannières en haut du panneau ouvert (4 s, touchables pour fermer), comme aux lots 2 et 3.
+5. **En-têtes** : avatar selon la situation familiale (aussi sur le tableau de bord) ; menu du tableau de bord : « Gérer mon compte »
+   puis « Se déconnecter » ; Mon espace et onboarding : « Se déconnecter » seul. Raccourci administrateur absent (back-office web).
+6. **Onglets** : contrôle segmenté pleine largeur, libellés sur deux lignes au besoin. Onglet « Bilans » : état « Bilans bientôt
+   disponibles » (historique au lot 6).
+7. **Textes non traduits sur le web** (sous-titres des entrées, « Crédits », « / mois », noms de pays des devises) : traduits en
+   anglais. Sous-titre des Préférences : « Devise, langue, thème et accord IA. » (pas de rappel, voir 8).
+8. **Préférences** : rappel quotidien absent (notifications au lot 6) ; encadré « installez nemla sur votre écran d'accueil » supprimé
+   (propre au web) ; **ajout** d'un bloc « Dictée et intelligence artificielle » avec « Retirer mon accord » (promis par le texte de
+   consentement du lot 2, absent du web) ; devise enregistrée dans le profil et appliquée sans rechargement (le tableau de bord la relit
+   au retour) ; langue de l'application appliquée à chaud sans rechargement, langue de dictée annoncée dans la langue de l'interface
+   (le web affiche « Dictation language: English » en dur). Thème : tant qu'aucun choix n'est fait, l'application suit le système (lot 1)
+   et la carte cochée reflète le thème effectif ; le web est clair par défaut.
+9. **Langues stockées localement** (comme le web), dans `SecureStore` ; par défaut la langue du système pour l'interface **et** la dictée
+   (le web prend « fr » pour la dictée).
+10. **Mon profil** : âge contrôlé localement (14 à 120) avec message ; reste en mode édition après « Enregistrer mon profil » comme le
+    web ; puces « Suggestions : » si le pseudo est pris.
+11. **Gérer mon budget** : montant décimal accepté (affiché sans décimales s'il est rond) ; « Estimer pour moi » désactivé sans
+    historique ; contrôle « Par mois | Par an » segmenté.
+12. **Mes charges fixes** : récapitulatif « Total / mois | Total / an » en tuiles, pagination 6 par page avec boutons 32 dp, suppression
+    sans confirmation (comme le web), jour borné à 1–28 à l'enregistrement.
+13. **Catégories** : budget enregistré à la perte du focus ou sur « OK » du clavier ; un échec de l'interrupteur « Visible » rétablit la
+    valeur et affiche « Enregistrement impossible » (le web est silencieux) ; suppression sans confirmation (catégories non par défaut).
+14. **Ma carte bancaire** : portée initiale « À partir d'aujourd'hui » si aucun choix n'a été fait ou si le débit est immédiat, « À partir
+    d'une date précise » si une date est enregistrée, sinon « Toutes mes dépenses » ; le nombre de dépenses replacées s'affiche sur une
+    seconde ligne de la bannière ; sélecteur de date Material 3. Noms des banques non traduits (dont « Autre banque »).
+15. **Crédits** : « Crédits indisponibles pour le moment. » en cas d'erreur (le web n'affiche rien).
+16. **Zone dangereuse** : confirmation dans un `AlertDialog`, puis message « La suppression du compte n'est pas encore disponible depuis
+    l'application… » (`DELETE /api/public/account` manquant). Export des données : non construit (absent du web et du backend).
+17. **Hors périmètre** : dialogue `PaymentModeGate` du tableau de bord (§11.2, voir ROADMAP), rappel quotidien et bilans (lot 6).

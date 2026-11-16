@@ -42,11 +42,12 @@ ai/local                   moteurs embarqués (anonymisation par règles aujourd
 ai/remote-nemla            moteurs adossés au backend nemla actuel (Lovable)
 feature/auth               connexion, inscription, mot de passe oublié
 feature/dashboard          tableau de bord, écran authentifié principal (lot 3 ; remplace la coquille feature/home du lot 1)
-feature/voice              bouton « Ajouter », dialogue de dictée, consentement IA, fiche de revue
+feature/voice              bouton « Ajouter », dialogue de dictée, consentement IA, fiche de revue, bouton « Dicter » réutilisable
+feature/onboarding         « Vos charges fixes » après la première connexion (lot 4)
+feature/settings           Mon espace : profil & budget (5 panneaux), bilans, crédits, catégories, zone dangereuse (lot 4)
 ```
 
-Lots suivants : `feature/onboarding`, `feature/settings`,
-`feature/recurring`, `feature/import`, `feature/reports`, `ai/remote-<autre fournisseur>`.
+Lots suivants : `feature/import`, `feature/reports`, `ai/remote-<autre fournisseur>`.
 
 ### Règles de dépendance (vérifiées en revue)
 
@@ -71,6 +72,23 @@ Une feature ne dépend jamais d'une autre : `feature:dashboard` expose un emplac
 en attente depuis le tableau de bord, `feature:dashboard` émet un `PendingReview` (`core:domain`) par le rappel `onReviewPending` ;
 `shared` le confie au port `PendingReviewOpener` (implémenté par `feature:voice` au-dessus de `VoiceReviewStore`) puis ouvre `voiceGraph`.
 
+La dictée de texte libre (onboarding, panneau « Mes charges fixes ») suit le même principe : `feature:onboarding` et
+`feature:settings` exposent un emplacement composable (`OnboardingDictationSlot`, `SettingsDictationSlot`, de signature
+`(enabled, onTranscript, onActiveChange, onMessage) -> Unit`) que `shared` remplit avec `DictationTextButton` de `feature:voice`.
+Ce bouton reprend l'enregistreur du FAB (30 s, 3 s de silence, « Arrêter ({s}/{max}s) »), le consentement `PERSONAL` et transcrit via
+le port `SpeechTranscriber` (implémenté dans `core:data` par la capacité `SpeechToText`, `POST /api/public/transcribe`). La feature hôte
+reçoit le texte, l'état actif (pour désactiver « Analyser ») et les messages d'erreur déjà traduits.
+
+Aiguillage après connexion (`shared`, `AppViewModel`) : à chaque nouvel utilisateur connecté, `ResolveStartDestination` appelle
+`bootstrap_user` puis lit `profiles.onboarding_done` ; faux → onboarding, vrai ou erreur → tableau de bord. Mon espace s'ouvre depuis
+le menu de l'en-tête du tableau de bord (« Gérer mon compte ») ou le lien des alertes de budget (onglet Catégories) ; « Retour » dépile.
+
+Préférences locales (langue de l'application, langue de dictée, thème) : port `PreferencesRepository` (`StateFlow`), implémenté dans
+`core:data` sur `SecureStore` (clé `preferences.v1`, conservée à la déconnexion). La devise reste dans `profiles.devise`. `shared` applique
+le thème (`NemlaTheme(darkTheme)`) et la langue (`ProvideAppLanguage`, `expect/actual` : `Locale.setDefault` + `LocalConfiguration`
+sur Android, `AppleLanguages` sur iOS, puis recomposition sous `key(langue)` avec le même `NavController`). `DeviceLanguage` (langue
+du système au démarrage) sert de valeur par défaut ; `CurrentLanguages` donne aux ViewModels la langue d'interface et de dictée.
+
 Le domaine ne connaît pas l'IA : il expose des ports métier (`VoiceExpenseCapturer`, `StatementImporter`…) que
 `core:data` implémente en s'appuyant sur `AiRouter`. Les écrans ne connaissent que des cas d'usage.
 
@@ -79,6 +97,8 @@ Le domaine ne connaît pas l'IA : il expose des ports métier (`VoiceExpenseCapt
 - Paquet d'un module : `app.nemla.<chemin du module>` (`app.nemla.core.domain`, `app.nemla.feature.auth`, `app.nemla.ai.local`).
 - Chaque module qui fournit des objets expose un module Koin public nommé `<nom>Module` (`coreDataModule`, `featureAuthModule`…).
 - Écran : `XxxRoute` (branché au ViewModel, sans paramètre d'état) qui délègue à `XxxScreen` (sans état, prévisualisable).
+  Mon espace compte un ViewModel hôte (onglet, panneau ouvert, en-tête, suppression du compte) et un couple Route / ViewModel par
+  panneau ou onglet (budget, charges fixes, profil, préférences, carte, crédits, catégories), tous liés à la même entrée de navigation.
   État : `data class XxxUiState` immuable. Événements : `sealed interface XxxAction`. Effets ponctuels : `Flow` d'`XxxEffect`.
 - ViewModel : `androidx.lifecycle.ViewModel` multiplateforme, `StateFlow`, `viewModelScope`, collecte avec `collectAsStateWithLifecycle`.
 - Erreurs : pas d'exception à travers les couches. Les dépôts renvoient `AppResult<T>` ; `CancellationException` est toujours relancée.
@@ -180,9 +200,9 @@ règles ci-dessus interdisent. Il faut un endpoint qui reçoit le texte déjà a
 | Journaux | `AppLogger` n'accepte que des messages constants et des identifiants techniques. Le journal HTTP est désactivé en release et n'affiche jamais corps ni en-têtes. Les types sensibles redéfinissent `toString()`. |
 | Écran | `FLAG_SECURE` sur Android en release (pas de capture ni d'aperçu dans les applications récentes) ; voile sur iOS quand l'application passe en arrière-plan. |
 | Minimisation | Aucune donnée financière au repos (lots 1 à 3 : le tableau de bord garde ses données en mémoire, dans le ViewModel). Audio en mémoire uniquement : jamais écrit sur disque ni téléversé dans le bucket `voice-notes` (le WAV part directement en multipart vers `voice/process`), tampons remis à zéro après envoi, refus ou annulation. Enregistrement annulé quand l'application passe en arrière-plan. La dictée en attente de revue reste en mémoire et est oubliée à la déconnexion ou au changement de compte. |
-| Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans les réglages. La dictée exige le niveau `PERSONAL` : dialogue avant la première dictée et à chaque `ConsentRequired` du routeur ; refus = rien n'est enregistré ni envoyé. |
+| Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans Mon espace › Préférences (lot 4 : « Retirer mon accord » retire tous les niveaux). La dictée (FAB et bouton « Dicter ») exige le niveau `PERSONAL` : dialogue avant la première dictée et à chaque `ConsentRequired` du routeur ; refus = rien n'est enregistré ni envoyé. |
 | Apprentissage | `record_category_correction` reçoit la clé marchand normalisée et un `p_label` vide (le RPC l'ignore) : le libellé ne quitte pas l'appareil pour l'apprentissage. |
-| Droits | Suppression de compte dans l'application (obligatoire App Store / Google Play) et export des données : ports prévus, dépendants du backend. |
+| Droits | Suppression de compte : bouton et confirmation dans Mon espace, port `AccountRepository.deleteAccount` en `NotSupportedYet` (message explicite, rien n'est supprimé) tant que `DELETE /api/public/account` n'existe pas. Export des données : absent du web et du backend, non construit (voir `BACKEND-GAPS.md`). |
 | Traceurs | Aucun SDK d'analyse, de publicité ou de suivi. Manifeste de confidentialité iOS (`PrivacyInfo.xcprivacy`) déclaré sans collecte tierce. |
 | Code | R8 activé en release. Aucun secret dans le dépôt ni dans le binaire. |
 

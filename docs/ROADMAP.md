@@ -118,8 +118,39 @@ Météo du budget, graphique mensuel, « Où part l'argent », dépenses du jour
     à comparer au navigateur ;
   - essai complet sur Android (édition, suppression, revue en attente) : non fait.
 
-## Lot 4 — Mon espace et onboarding ☐
+## Lot 4 — Mon espace et onboarding ☑
 Budget, charges fixes, profil, préférences, catégories, crédits, suppression de compte, export.
+- ☑ `core:domain` (16/11/2026) : préférences (`AppPreferences`, `ThemeMode`), banques et réglage du débit (`Banks`, `DebitSettings`),
+  règles de budget (`BudgetRules`, §8.6), palette et suggestions de catégories (`CategoryPalette.pickUnusedColor`, `hslToHex`,
+  `CategoryNames`, §8.3 et §8.5), ports `SpeechTranscriber`, `PreferencesRepository`, `DeviceLanguage`, ajouts aux ports profil (devise,
+  fin d'onboarding), charges fixes (insertion en lot, suppression) et débit différé (lecture complète, enregistrement + `apply_debit_rule`),
+  cas d'usage d'aiguillage, d'onboarding et de Mon espace. 12 nouveaux tests.
+- ☑ `core:data` : `RoutedSpeechTranscriber` (`SpeechToText` → `/transcribe`), `SecureStorePreferencesRepository`, PostgREST : insertion en
+  lot et suppression de `recurring_expenses`, upsert `{monthly_budget, onboarding_done}`, `devise`, débit différé + RPC. 6 nouveaux tests.
+- ☑ `core:designsystem` : en-tête applicatif partagé (`NemlaAppHeader`, `NemlaMenuItem`), zone de texte, interrupteur, carte de choix,
+  bouton icône, puce, entrée de liste, icônes (portefeuille, répétition, réglages, lune, baguette, situation familiale…), libellé masquable
+  des champs et listes, pastille dans les listes, libellés sur deux lignes du contrôle segmenté.
+- ☑ `feature:voice` : `DictationTextButton` (même enregistreur, consentement `PERSONAL`, transcription), dialogue de consentement commun,
+  langue de dictée lue dans les préférences. 5 nouveaux tests.
+- ☑ `feature:onboarding` : « Vos charges fixes » (§4) avec analyse, dictée, revue, budget et enregistrement. 9 tests.
+- ☑ `feature:settings` : Mon espace (§12) : onglets, cinq panneaux de « Profil & budget » (budget, charges fixes, profil, préférences,
+  carte bancaire §11.3), zone dangereuse, crédits, catégories ; « Bilans » en attente. 14 tests.
+- ☑ `feature:dashboard` : « Gérer mon compte », lien « Ajuster mes budgets par catégorie », avatar selon la situation familiale, langue
+  relue à chaque rechargement. 2 nouveaux tests.
+- ☑ `shared` : aiguillage onboarding / tableau de bord (`AppViewModel`), destinations onboarding et Mon espace, emplacement de dictée,
+  thème et langue appliqués depuis les préférences. 2 nouveaux tests.
+- Vérifié le 16/11/2026 : `spotlessApply`, `allTests` des modules touchés (JVM et simulateur iOS), `:androidApp:assembleDebug`,
+  `:shared:linkDebugFrameworkIosSimulatorArm64`.
+- Reste à faire (reporté) :
+  - essai sur appareil Android et simulateur iOS : aiguillage, changement de langue à chaud (recomposition avec le même `NavController`),
+    thème, dictée des charges fixes, retour système depuis un panneau : non fait ;
+  - dialogue `PaymentModeGate` du tableau de bord (§11.2) : le formulaire de débit vit dans `feature:settings` et une feature ne dépend
+    pas d'une autre ; à trancher (formulaire dans `core:designsystem` sous forme générique, ou emplacement rempli par `shared`) ;
+  - suppression du compte : dépend de `DELETE /api/public/account` (port en `NotSupportedYet`, message affiché) ;
+  - export des données : reporté, absent du web et du backend (endpoint à créer, `BACKEND-GAPS.md`) ;
+  - rappel quotidien (Préférences) : lot 6 avec les notifications ;
+  - onglet « Bilans » : historique au lot 6 ;
+  - « Créez votre catégorie dans Mon espace » depuis la fiche de revue, création manuelle de dépense et type Fixe : non faits.
 
 ## Lot 5 — Import de relevés ☐
 Extraction du texte sur l'appareil (PDF, CSV), anonymisation locale, envoi du texte anonymisé. Dépend d'un nouvel endpoint.

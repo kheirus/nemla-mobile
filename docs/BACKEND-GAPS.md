@@ -13,7 +13,8 @@ Détail et références de code : `specs/01-api-contracts.md` (§3.3, §5) et `s
 | Dater une dictée selon le jour local de l'utilisateur | `voice/process` prend la date UTC du serveur | champ facultatif `today` (AAAA-MM-JJ) dans le multipart de `voice/process` |
 | Journal de correction | server function | `POST /api/public/classification-log` |
 | Générer les occurrences des charges fixes | server function | `POST /api/public/recurring/materialize` (lot 3 : port `RecurringChargeMaterializer` en `NotSupportedYet`, appel ignoré ; les charges fixes ne sont donc comptées dans les totaux que si le web les a déjà générées) |
-| Supprimer son compte (exigé par App Store et Google Play) | server function | `DELETE /api/public/account` |
+| Supprimer son compte (exigé par App Store et Google Play) | server function | `DELETE /api/public/account` (lot 4 : bouton et confirmation présents dans Mon espace, message « pas encore disponible depuis l'application », rien n'est supprimé) |
+| Exporter ses données (droit à la portabilité, RGPD art. 20) | absent du web et du backend | `GET /api/public/account/export` (JSON ou CSV : profil, catégories, dépenses avec libellés déchiffrés, charges fixes, quotas) ; lot 4 : rien n'est construit côté mobile |
 | Lire un relevé déjà anonymisé sur l'appareil | `/import/file` ne prend que le fichier brut | `POST /api/public/import/text` (texte anonymisé) |
 | Extraire des dépenses d'un texte (pour la transcription locale) | absent | `POST /api/public/expenses/extract` |
 | Notifications | aucune notification serveur | table de jetons, envoi FCM / APNs planifié |
@@ -22,7 +23,9 @@ Détail et références de code : `specs/01-api-contracts.md` (§3.3, §5) et `s
 
 ## Sécurité et RGPD à corriger avant publication
 - RLS : un utilisateur peut modifier ses propres quotas (`user_quotas`) et lever sa suspension (`profiles.suspended`).
-- `/transcribe` et `/parse/recurring` : ni quota ni limite de taille. `/transcribe` renvoie un objet au lieu d'une chaîne.
+- `/transcribe` et `/parse/recurring` : ni quota ni limite de taille. `/transcribe` renvoie un objet au lieu d'une chaîne
+  (le mobile lit `transcript.text` ou une chaîne ; lot 4 : utilisés par l'onboarding et « Mes charges fixes »).
+- RLS `profiles` : `onboarding_done` est modifiable par l'utilisateur (l'aiguillage vers l'onboarding n'est donc pas une garantie serveur).
 - Statuts 401/402/429 de la passerelle IA renvoyés tels quels ; certaines erreurs arrivent en HTML.
 - Anonymisation des relevés (`anonymizeStatement`) : un IBAN écrit sans espaces (`FR7630006000011234567890189`, courant dans les CSV)
   n'est capté par aucune règle (ni IBAN, ni carte, ni numéro, faute de frontière de mot) et part en clair vers la passerelle IA.
