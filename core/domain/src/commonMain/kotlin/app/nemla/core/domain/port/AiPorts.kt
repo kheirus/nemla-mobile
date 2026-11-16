@@ -25,6 +25,13 @@ interface StatementImporter {
     ): AppResult<StatementImport>
 }
 
+interface SpeechTranscriber {
+    suspend fun transcribe(
+        recording: VoiceRecording,
+        language: AppLanguage,
+    ): AppResult<String>
+}
+
 interface RecurringChargeParser {
     suspend fun parse(
         text: String,

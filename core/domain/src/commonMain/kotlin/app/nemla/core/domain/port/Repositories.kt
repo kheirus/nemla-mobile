@@ -4,12 +4,15 @@ import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AccountExport
 import app.nemla.core.domain.model.AiConsentLevel
 import app.nemla.core.domain.model.AiConsents
+import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.model.AppPreferences
 import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.Category
 import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.CategoryOutcome
 import app.nemla.core.domain.model.CategoryUpdate
 import app.nemla.core.domain.model.ClassificationCorrection
+import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.EmailAddress
 import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.GlobalBudget
@@ -25,6 +28,7 @@ import app.nemla.core.domain.model.SignUpRequest
 import app.nemla.core.domain.model.UserProfile
 import app.nemla.core.domain.model.VoiceEntryId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface AuthRepository {
     fun observeAuthState(): Flow<AuthState>
@@ -53,6 +57,10 @@ interface ProfileRepository {
     suspend fun updateBudget(budget: GlobalBudget): AppResult<Unit>
 
     suspend fun setDailyReminder(enabled: Boolean): AppResult<Unit>
+
+    suspend fun updateCurrency(currency: Currency): AppResult<Unit>
+
+    suspend fun completeOnboarding(monthlyBudgetCents: Long): AppResult<Unit>
 
     suspend fun checkPseudo(pseudo: String): AppResult<PseudoAvailability>
 }
@@ -102,4 +110,16 @@ interface ExpenseReviewRepository {
     suspend fun recordCategoryOutcome(outcome: CategoryOutcome): AppResult<Unit>
 
     suspend fun logCorrection(correction: ClassificationCorrection): AppResult<Unit>
+}
+
+interface PreferencesRepository {
+    val preferences: StateFlow<AppPreferences?>
+
+    suspend fun load(): AppPreferences
+
+    suspend fun update(preferences: AppPreferences): AppResult<Unit>
+}
+
+fun interface DeviceLanguage {
+    fun current(): AppLanguage
 }

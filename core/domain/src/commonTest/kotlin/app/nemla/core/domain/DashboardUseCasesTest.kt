@@ -3,6 +3,7 @@ package app.nemla.core.domain
 import app.nemla.core.common.AppError
 import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.CategoryId
+import app.nemla.core.domain.model.DebitSettings
 import app.nemla.core.domain.model.DeferredDebit
 import app.nemla.core.domain.model.Expense
 import app.nemla.core.domain.model.ExpenseEdit
@@ -136,4 +137,11 @@ private class FixedDebits(
     private val result: AppResult<DeferredDebit>,
 ) : DeferredDebitRepository {
     override suspend fun current(): AppResult<DeferredDebit> = result
+
+    override suspend fun settings(): AppResult<DebitSettings> = AppResult.Failure(AppError.NotSupportedYet)
+
+    override suspend fun save(
+        bankId: String?,
+        rule: DeferredDebit,
+    ): AppResult<Int> = AppResult.Failure(AppError.NotSupportedYet)
 }
