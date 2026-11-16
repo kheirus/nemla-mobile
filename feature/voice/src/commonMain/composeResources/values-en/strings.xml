@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="voice_fab_label">Add</string>
+  <string name="voice_fab_description">Add an expense</string>
+  <string name="voice_menu_dictate">Dictate my expenses</string>
+  <string name="voice_menu_dictate_max">30 s max — </string>
+  <plurals name="voice_menu_dictations_left">
+    <item quantity="one">%1$d dictation left</item>
+    <item quantity="other">%1$d dictations left</item>
+  </plurals>
+  <string name="voice_menu_credits_exhausted">No credits left this month</string>
+  <string name="voice_menu_manual">Manual entry</string>
+  <string name="voice_menu_import">Import a statement</string>
+  <string name="voice_menu_coming_soon">Coming soon</string>
+  <string name="voice_menu_resume_review">Expenses to review</string>
+  <string name="voice_menu_resume_review_hint">Resume reviewing your last dictation</string>
+  <string name="voice_dialog_title">Dictate my expenses</string>
+  <string name="voice_dialog_description">30 seconds max. List your expenses freely: amount, place and date if needed.</string>
+  <string name="voice_start_recording">Start recording</string>
+  <string name="voice_stop_recording">Stop recording</string>
+  <string name="voice_status_idle">Tap to start recording.</string>
+  <string name="voice_status_recording">Listening — tap to stop.</string>
+  <string name="voice_status_processing">Transcribing and categorising…</string>
+  <string name="voice_elapsed">%1$ds / %2$ds</string>
+  <string name="voice_consent_title">Dictation and artificial intelligence</string>
+  <string name="voice_consent_body">To read your dictation, the recording of your voice and its transcript are sent to the nemla server, then to an artificial intelligence provider that transcribes them and categorises your expenses. Nothing is saved without your consent. You can withdraw it later in My space.</string>
+  <string name="voice_consent_accept">Accept</string>
+  <string name="voice_consent_decline">Decline</string>
+  <string name="voice_error_permission">Microphone access denied.</string>
+  <string name="voice_error_too_short">Recording too short or microphone muted. Try again.</string>
+  <string name="voice_error_microphone">Microphone unavailable. Make sure no other app is using it, then try again.</string>
+  <string name="voice_error_quota">Monthly dictation quota reached. Your dictations reset on the 1st of next month — manual entry stays unlimited.</string>
+  <string name="voice_error_no_speech">No speech detected in the recording.</string>
+  <string name="voice_error_no_expense">No expense detected.</string>
+  <string name="voice_error_too_large">Recording too large.</string>
+  <string name="voice_error_no_category">No category set up.</string>
+  <string name="voice_error_offline">You are offline. Check your connection and try again.</string>
+  <string name="voice_error_timeout">The server is taking too long to respond. Try again.</string>
+  <string name="voice_error_rate_limited">Too many requests. Wait a moment and try again.</string>
+  <string name="voice_error_generic">Processing failed</string>
+  <string name="voice_consent_declined">Dictation cancelled: nothing was sent.</string>
+  <string name="voice_interrupted">Recording interrupted: nothing was sent.</string>
+  <string name="voice_saved">Expenses saved</string>
+  <string name="voice_notice_dismiss">Dismiss message</string>
+  <plurals name="voice_detected">
+    <item quantity="one">%1$d expense detected</item>
+    <item quantity="other">%1$d expenses detected</item>
+  </plurals>
+  <string name="review_title">Check the detected expenses</string>
+  <string name="review_transcript">“%1$s”</string>
+  <string name="review_amount">Amount</string>
+  <string name="review_category">Category</string>
+  <string name="review_date">Date</string>
+  <string name="review_delete">Delete</string>
+  <string name="review_unclear_label">Unclear label: the AI could not guess the category, choose it below.</string>
+  <string name="review_create_category_hint">None fits? Create your category in My space, then come back to choose it here.</string>
+  <string name="review_learned">Category learned from your previous corrections</string>
+  <string name="review_loading">Loading expenses…</string>
+  <string name="review_empty">No expenses to review.</string>
+  <string name="review_confirm">Confirm</string>
+  <string name="review_later">Later</string>
+  <string name="review_save_failed">Save failed</string>
+  <string name="review_delete_failed">Deletion failed. Try again.</string>
+  <string name="review_categories_failed">Categories are unavailable right now.</string>
+  <string name="review_date_ok">OK</string>
+  <string name="review_date_cancel">Cancel</string>
+</resources>
