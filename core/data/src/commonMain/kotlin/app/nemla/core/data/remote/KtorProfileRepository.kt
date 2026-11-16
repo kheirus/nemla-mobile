@@ -20,6 +20,7 @@ import app.nemla.core.domain.model.UserProfile
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.network.safeRequest
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -139,6 +140,26 @@ internal class KtorProfileRepository(
 
     override suspend fun setDailyReminder(enabled: Boolean): AppResult<Unit> =
         patchProfile(buildJsonObject { put("daily_reminder", enabled) })
+
+    override suspend fun updateCurrency(currency: Currency): AppResult<Unit> =
+        patchProfile(buildJsonObject { put("devise", currency.code) })
+
+    override suspend fun completeOnboarding(monthlyBudgetCents: Long): AppResult<Unit> =
+        postgrest.withUser { userId ->
+            safeRequest<Unit> {
+                client.post(postgrest.table("profiles")) {
+                    parameter("on_conflict", "id")
+                    header(PREFER_HEADER, "resolution=merge-duplicates,return=minimal")
+                    jsonBody(
+                        buildJsonObject {
+                            put("id", userId)
+                            put("monthly_budget", centsToJson(monthlyBudgetCents))
+                            put("onboarding_done", true)
+                        },
+                    )
+                }
+            }
+        }
 
     override suspend fun checkPseudo(pseudo: String): AppResult<PseudoAvailability> {
         val trimmed = pseudo.trim()

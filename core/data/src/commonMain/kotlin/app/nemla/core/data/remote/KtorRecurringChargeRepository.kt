@@ -6,15 +6,21 @@ import app.nemla.core.common.map
 import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.ChargeFrequency
 import app.nemla.core.domain.model.RecurringCharge
+import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.RecurringChargeId
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
 import app.nemla.core.network.safeRequest
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Serializable
 internal class RecurringChargeDto(
@@ -39,6 +45,7 @@ internal class RecurringChargeDto(
 }
 
 internal const val FREQUENCY_YEARLY = "annuelle"
+internal const val FREQUENCY_MONTHLY = "mensuelle"
 private const val RECURRING_COLUMNS = "id,nom,montant,frequence,jour_prelevement,category_id"
 
 internal class KtorRecurringChargeRepository(
@@ -55,6 +62,40 @@ internal class KtorRecurringChargeRepository(
                     parameter("order", "created_at.asc")
                 }
             }.map { rows -> rows.map(RecurringChargeDto::toDomain) }
+        }
+
+    override suspend fun addAll(drafts: List<RecurringChargeDraft>): AppResult<Unit> {
+        if (drafts.isEmpty()) return AppResult.Success(Unit)
+        return postgrest.withUser { userId ->
+            safeRequest<Unit> {
+                client.post(postgrest.table("recurring_expenses")) {
+                    jsonBody(
+                        JsonArray(
+                            drafts.map { draft ->
+                                buildJsonObject {
+                                    put("user_id", userId)
+                                    put("category_id", draft.categoryId?.value)
+                                    put("nom", draft.name)
+                                    put("montant", centsToJson(draft.amountCents))
+                                    put("frequence", if (draft.frequency == ChargeFrequency.YEARLY) FREQUENCY_YEARLY else FREQUENCY_MONTHLY)
+                                    put("jour_prelevement", draft.dayOfMonth)
+                                }
+                            },
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    override suspend fun delete(id: RecurringChargeId): AppResult<Unit> =
+        postgrest.withUser { userId ->
+            safeRequest<Unit> {
+                client.delete(postgrest.table("recurring_expenses")) {
+                    parameter("id", eq(id.value))
+                    parameter("user_id", eq(userId))
+                }
+            }
         }
 }
 

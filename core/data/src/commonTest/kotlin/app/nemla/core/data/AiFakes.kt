@@ -112,6 +112,10 @@ internal class FakeProfileRepository(
 
     override suspend fun setDailyReminder(enabled: Boolean): AppResult<Unit> = AppResult.Success(Unit)
 
+    override suspend fun updateCurrency(currency: Currency): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun completeOnboarding(monthlyBudgetCents: Long): AppResult<Unit> = AppResult.Success(Unit)
+
     override suspend fun checkPseudo(pseudo: String): AppResult<PseudoAvailability> =
         AppResult.Success(PseudoAvailability(true, emptyList()))
 }

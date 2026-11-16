@@ -15,10 +15,12 @@ import app.nemla.core.data.ai.RepositoryAiContextSource
 import app.nemla.core.data.ai.RoutedBudgetAdvisor
 import app.nemla.core.data.ai.RoutedPeriodReviewer
 import app.nemla.core.data.ai.RoutedRecurringChargeParser
+import app.nemla.core.data.ai.RoutedSpeechTranscriber
 import app.nemla.core.data.ai.RoutedStatementImporter
 import app.nemla.core.data.ai.RoutedVoiceExpenseCapturer
 import app.nemla.core.data.ai.StatementTextExtractor
 import app.nemla.core.data.consent.SecureStoreAiConsentRepository
+import app.nemla.core.data.preferences.SecureStorePreferencesRepository
 import app.nemla.core.data.remote.KtorCategoryRepository
 import app.nemla.core.data.remote.KtorDeferredDebitRepository
 import app.nemla.core.data.remote.KtorExpenseRepository
@@ -41,11 +43,13 @@ import app.nemla.core.domain.port.DeferredDebitRepository
 import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
 import app.nemla.core.domain.port.PeriodReviewer
+import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeParser
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.core.network.SessionTokenStore
@@ -89,6 +93,7 @@ val coreDataModule: Module =
         single<RecurringChargeMaterializer> { UnsupportedRecurringChargeMaterializer }
         single<DeferredDebitRepository> { KtorDeferredDebitRepository(postgrest = get()) }
         single<AccountRepository> { UnsupportedAccountRepository }
+        single<PreferencesRepository> { SecureStorePreferencesRepository(store = get(), logger = get()) }
 
         single<ConnectivityMonitor> { AssumeOnlineConnectivityMonitor }
         single<AiContextSource> { RepositoryAiContextSource(connectivity = get(), quotas = get(), consents = get()) }
@@ -102,6 +107,7 @@ val coreDataModule: Module =
             RoutedStatementImporter(router = get(), extractor = get(), categories = get(), profiles = get())
         }
         single<RecurringChargeParser> { RoutedRecurringChargeParser(router = get()) }
+        single<SpeechTranscriber> { RoutedSpeechTranscriber(router = get()) }
         single<BudgetAdvisor> { RoutedBudgetAdvisor(router = get()) }
         single<PeriodReviewer> { RoutedPeriodReviewer(router = get()) }
     }

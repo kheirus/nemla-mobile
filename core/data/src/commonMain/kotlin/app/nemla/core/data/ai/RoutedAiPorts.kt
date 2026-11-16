@@ -17,6 +17,7 @@ import app.nemla.core.common.AppResult
 import app.nemla.core.common.ValidationCode
 import app.nemla.core.common.flatMap
 import app.nemla.core.common.getOrNull
+import app.nemla.core.common.map
 import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.BudgetEstimate
 import app.nemla.core.domain.model.PeriodReview
@@ -31,6 +32,7 @@ import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeParser
+import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import kotlinx.datetime.TimeZone
@@ -135,6 +137,16 @@ internal class RoutedStatementImporter(
     private companion object {
         const val MIN_READABLE_CHARS = 20
     }
+}
+
+internal class RoutedSpeechTranscriber(
+    private val router: AiRouter,
+) : SpeechTranscriber {
+    override suspend fun transcribe(
+        recording: VoiceRecording,
+        language: AppLanguage,
+    ): AppResult<String> =
+        router.runForApp(AiCapability.SpeechToText, SpeechRequest(recording.toAudioClip(), language.tag)).map { it.text.trim() }
 }
 
 internal class RoutedRecurringChargeParser(
