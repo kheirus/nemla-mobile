@@ -180,6 +180,10 @@ Extraction du texte sur l'appareil (PDF, CSV), anonymisation locale, envoi du te
 - ☑ `feature:import` (nouveau, paquet `app.nemla.feature.statementimport`) : dialogue §9 adapté, consentement `ANONYMIZED`, quota,
   nombre de masquages, erreurs fr/en, fermeture impossible pendant le traitement. 16 tests.
 - ☑ `shared` : modules Koin, dialogue ouvert depuis le menu « Ajouter », fiche de revue ouverte avec les dépenses importées.
+- ☑ Correctif (17/11/2026, constaté sur simulateur iOS) : avec `Accept: application/json`, `nemla.app` répond à la route inconnue
+  `500 {"error":"Only HTML requests are supported here"}` et non 404 ; la sonde laissait donc partir le texte anonymisé (refusé par le
+  serveur, « Import impossible » affiché). La sonde est désormais fermée par défaut (texte envoyé seulement sur une réponse JSON
+  400/401/413/422/429). 5 tests MockEngine ajoutés (404 HTML sur la sonde et sur l'appel, erreur de route, 5xx, hors ligne), 1 test de données.
 - Vérifié le 17/11/2026 : `spotlessApply`, `allTests` des modules touchés (JVM et simulateur iOS), `:androidApp:assembleDebug`,
   `:shared:linkDebugFrameworkIosSimulatorArm64`.
 - Reste à faire (reporté) :

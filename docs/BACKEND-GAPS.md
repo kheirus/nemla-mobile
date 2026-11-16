@@ -40,9 +40,12 @@ permise et sans effet sur un texte déjà masqué).
   - `kind` : **facultatif**, défaut `"texte"` ; sert seulement à `usage_logs.metadata`. Le mobile ne l'envoie pas aujourd'hui
     (`StatementParsingRequest` de `:ai:api` ne porte pas le format ; à arbitrer).
 - Contrôles, dans cet ordre, **avant tout appel IA** :
-  1. corps sans `text` (y compris la sonde `{}`), `text` non textuel : `400 {"error":"Texte manquant"}`, **sans** décompter le quota
-     ni appeler l'IA. Le mobile envoie `{}` avant chaque import pour savoir si l'endpoint existe : seules 404 et 405 signifient
-     « pas encore disponible » ;
+  1. corps sans `text` (y compris la sonde `{}`), `text` non textuel : `400 {"error":"Texte manquant"}` en JSON, **sans** décompter le
+     quota ni appeler l'IA. Le mobile envoie `{}` avant chaque import et n'envoie le texte que si la sonde reçoit une réponse JSON
+     400, 401, 413, 422 ou 429. Toute autre réponse garde le texte sur l'appareil : 404, 405, corps non JSON, et
+     `500 {"error":"Only HTML requests are supported here"}` (réponse actuelle de l'hébergeur web à une route inconnue quand le client
+     envoie `Accept: application/json`) valent « pas encore disponible » ; une autre 5xx, un délai dépassé ou l'absence de réseau
+     valent « import impossible » ;
   2. `text` de plus de 90 000 caractères ou corps de plus de 8 Mo : `413 {"error":"Texte trop volumineux"}` ;
   3. `text` trimé de moins de 20 caractères : `422 {"error":"Impossible de lire ce fichier (PDF scanné ou vide ?). Essayez un CSV."}` ;
   4. quota : `ensure_month_quota`, puis `429` avec le message actuel de `/import/file` (`"Quota d'import de relevé atteint pour ce mois…"`,

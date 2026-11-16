@@ -194,8 +194,10 @@ Budget/Bilan: BudgetSuggestion / PeriodReport (calcul serveur aujourd'hui ; calc
 
 `StatementParsing` (lot 5) : le mobile n'appelle **jamais** `/import/file`, même en repli, car cet endpoint reçoit le fichier brut.
 `NemlaStatementParsingEngine` envoie le seul texte anonymisé à l'endpoint **proposé** `POST /api/public/import/text`
-(contrat dans `docs/BACKEND-GAPS.md`). Son `availability()` sonde l'endpoint avec un corps vide `{}` : une réponse 404 ou 405 rend le
-moteur indisponible (`not_supported`) avant tout envoi du texte, et `core:data` traduit cet échec en `AppError.NotSupportedYet` (l'interface
+(contrat dans `docs/BACKEND-GAPS.md`). Son `availability()` sonde l'endpoint avec un corps vide `{}` et ne laisse partir le texte que sur
+une réponse JSON 400, 401, 413, 422 ou 429 (sonde « fermée par défaut ») : 404, 405, corps non JSON ou erreur de route de l'hébergeur web
+(`500 Only HTML requests are supported here`) rendent le moteur indisponible (`not_supported`) avant tout envoi du texte ; hors ligne,
+délai dépassé et autres 5xx le rendent aussi indisponible ; et `core:data` traduit cet échec en `AppError.NotSupportedYet` (l'interface
 affiche « … Rien n'a été envoyé. »). Le moteur coûte 0 crédit pour le routeur (les crédits du routeur sont ceux de la dictée) ; le quota
 d'import est contrôlé par `ImportStatement` avant l'extraction, puis par le serveur. `StatementParsingRequest` ne porte pas le format du
 fichier : le champ `kind` n'est donc pas envoyé (point à arbitrer, voir ROADMAP lot 5).
