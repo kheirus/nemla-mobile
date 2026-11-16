@@ -126,3 +126,64 @@ permission sont propres à chaque plateforme, dans `core:audio`) :
 15. **Dialogue de dictée** : coins arrondis 16 dp, largeur maximale 384 dp, marge 16 dp (plein écran à coins carrés sur le web mobile) ;
     bouton « Ajouter » en `ExtendedFloatingActionButton` Material 3 (pilule 56 dp, ombre M3). Aucune animation hors le spinner.
 16. **Arrière-plan** : l'enregistrement est annulé si l'application passe en arrière-plan (le web continue dans un onglet masqué).
+
+## Lot 3 — tableau de bord (16/11/2026)
+
+Écarts Android / iOS (tableau de bord, graphiques, fiche d'édition et logique 100 % Compose / `commonMain`, aucun code propre à
+une plateforme ajouté) :
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Graphiques (barres mois par mois, anneau) | `Canvas` Compose, aucune bibliothèque | Le même `Canvas` | Non |
+| Formatage des montants et des dates | Formateur commun en Kotlin (`MoneyFormat`, `DateLabels`), sans ICU | Idem, sans `NSNumberFormatter` | Non entre plateformes ; écart possible avec le navigateur (voir ci-dessous) |
+| Tirer pour rafraîchir | `PullToRefreshBox` Material 3 (indicateur M3) | Le même composant Compose (pas de `UIRefreshControl`) | Non entre plateformes ; non natif sur iOS |
+| Rafraîchissement au retour au premier plan | `ON_START` du cycle de vie de l'écran | Idem (cycle de vie Compose) | Non |
+| Sélecteur de date (recherche, édition) | `DatePickerDialog` Material 3 | Le même composant Compose | Non entre plateformes ; non natif sur iOS |
+| Menus (compte, filtre, météo), confirmation de suppression | `DropdownMenu`, `AlertDialog` Compose | Les mêmes composants | Non entre plateformes ; non natif sur iOS |
+| Vérification | Compilation, tests JVM ; non lancé sur émulateur | Compilation, tests sur simulateur (logique) ; non lancé | À vérifier sur appareil |
+
+Écarts web / mobile introduits au lot 3 (à valider par le propriétaire) :
+
+1. **Libellés** : `description_enc` n'est lisible que par `expenses_view(p_key)`. Les dépenses sont lues en PostgREST sans libellé :
+   lignes affichées « Dépense », groupes en attente « Dépense vocale… » (au lieu de « {description}… »), sous-lignes de « Où part
+   l'argent » « {date courte} · Dépense ». Dépend de `GET /api/public/expenses`.
+2. **Recherche** : par date exacte seulement (dépenses confirmées, 50 au plus, date puis création décroissantes). Pas de champ texte
+   (la recherche par mot-clé dépend du backend, port en `NotSupportedYet`) : carte « Chercher un jour précis » avec un bouton date
+   (pilule, libellé affiché même sur téléphone) qui ouvre directement le sélecteur de date (pas de popover), bouton « Effacer la
+   recherche » et la mention « La recherche par mot-clé arrivera bientôt. ». Erreur de recherche affichée (« Recherche impossible
+   pour le moment. »), absente du web.
+3. **Charges fixes** : `materializeRecurring` n'est pas appelable (port `NotSupportedYet`, ignoré comme un échec sur le web) ; les
+   occurrences ne sont donc créées que si le web est ouvert. « Charges fixes : x / mois » et les barres « prévu » viennent de
+   `recurring_expenses` lu en PostgREST, comme sur le web.
+4. **États** : indicateur discret « Chargement du tableau de bord… » au premier chargement (les blocs n'apparaissent qu'ensuite),
+   données précédentes conservées pendant un changement d'année (pas de retour à 0) avec une fine barre de progression dans le bloc
+   pilote, bannière d'erreur traduite (hors ligne, délai, générique) avec « Réessayer », tirer pour rafraîchir et rafraîchissement au
+   retour au premier plan et après la fiche de revue. Le web n'affiche ni chargement ni erreur. Un changement de mois dans la même
+   année ne refait aucune requête (l'année est chargée en une fois).
+5. **Météo** : ratio simple dépensé / budget, quatre états, seuils stricts, reproduit tel quel avec l'incohérence du web (mois : total
+   du mois sans filtre de catégories ; année : total filtré). Popover remplacé par un menu ancré sous la pastille.
+6. **Graphique** : dessiné en `Canvas` ; graduations de l'axe Y réparties régulièrement de 0 au maximum (max(données empilées, budget
+   mensuel) × 1,1) au lieu des graduations « arrondies » de Recharts ; graphique sans débord de 16 dp sur les côtés de la carte ;
+   info-bulle « {mois} {total} » au-dessus du graphique pendant l'appui ; initiales des mois sous 640 dp, mois courts au-delà. Sans
+   budget ni dépense, l'axe n'a qu'une graduation « 0 ». L'anneau n'a pas d'info-bulle (les montants sont dans la liste) et tourne
+   dans le sens antihoraire à partir de 3 h comme Recharts.
+7. **Filtre de catégories** : une sélection explicite de toutes les catégories laisse passer les dépenses sans catégorie (comme
+   « toutes »). Menu au lieu d'un popover ; lignes de 48 dp.
+8. **Groupe « Autre »** : traduit « Other » en anglais (non traduit sur le web).
+9. **Alertes de budget** : carte in-app seulement (notification système au lot 6) ; lien « Ajuster mes budgets par catégorie » omis
+   tant que Mon espace (lot 4) n'existe pas.
+10. **Édition d'une dépense** (version réduite, PostgREST) : montant (obligatoire, positif ou nul), date (au plus aujourd'hui),
+    catégorie (« Sans catégorie » possible), moyen de paiement, via `PATCH expenses` ; suppression après confirmation via `DELETE`.
+    Libellé en lecture seule avec une mention ; ni type Variable / Fixe, ni création manuelle, ni renommage groupé, ni apprentissage
+    de catégorie. Moyens de paiement traduits en anglais (non traduits sur le web). Date affichée en format long. Le trigger serveur
+    recalcule `date_prelevement`. « Dépense modifiée » / « Dépense supprimée » en bannière (4 s) au lieu d'un toast.
+11. **En-tête** : pastille avec avatar générique (`UserRound`, pas l'icône de situation familiale), pseudo ou « Mon espace », menu
+    avec le titre et « Se déconnecter » ; « Gérer mon compte » et le raccourci administrateur absents (lot 4).
+12. **Dépenses à valider** : un toucher ouvre la fiche de revue du lot 2 (écran dédié) avec ces lignes, sans libellé ni transcription ;
+    titre « Vérifiez les dépenses lues dans le fichier » pour le groupe d'import. Après Valider, Supprimer ou Plus tard, le tableau
+    de bord se recharge au retour.
+13. **Formatage** : montants mis en forme par un formateur commun (espace fine insécable U+202F pour les milliers en fr-FR,
+    `1.234,50 MAD` pour fr-MA, `F CFA` et décimales facultatives pour XOF, `$` après le montant pour CAD) ; mois courts anglais
+    « Sept » (CLDR en-GB). À comparer avec le navigateur.
+14. **Hors périmètre** : bannière d'astuces (§5.9), bandeau « bilan arrivé » (§5.10), notifications in-app et rappel quotidien
+    (§5.11, §5.12 → lot 6), dialogue « débit immédiat ou différé » `PaymentModeGate` et réglages du débit (§11.2, §11.3 → lot 4).
