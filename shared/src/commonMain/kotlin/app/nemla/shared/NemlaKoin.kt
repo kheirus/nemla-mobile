@@ -6,6 +6,7 @@ import app.nemla.core.audio.coreAudioModule
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.common.coreCommonModule
 import app.nemla.core.data.coreDataModule
+import app.nemla.core.documents.coreDocumentsModule
 import app.nemla.core.domain.port.DeviceLanguage
 import app.nemla.core.domain.usecase.LoadPreferences
 import app.nemla.core.domain.usecase.ObserveAuthState
@@ -18,6 +19,7 @@ import app.nemla.feature.auth.featureAuthModule
 import app.nemla.feature.dashboard.featureDashboardModule
 import app.nemla.feature.onboarding.featureOnboardingModule
 import app.nemla.feature.settings.featureSettingsModule
+import app.nemla.feature.statementimport.featureImportModule
 import app.nemla.feature.voice.featureVoiceModule
 import org.koin.core.Koin
 import org.koin.core.context.startKoin
@@ -52,6 +54,7 @@ internal fun nemlaModules(
         coreSecurityModule,
         coreNetworkModule,
         coreAudioModule,
+        coreDocumentsModule,
         aiLocalModule,
         aiRemoteNemlaModule,
         coreDataModule,
@@ -60,6 +63,7 @@ internal fun nemlaModules(
         featureVoiceModule,
         featureOnboardingModule,
         featureSettingsModule,
+        featureImportModule,
         appModule,
     )
 

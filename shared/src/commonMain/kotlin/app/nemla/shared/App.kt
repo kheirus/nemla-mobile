@@ -11,6 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -28,6 +31,7 @@ import app.nemla.core.designsystem.component.NemlaLoadingIndicator
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaScreenAlignment
 import app.nemla.core.designsystem.theme.NemlaTheme
+import app.nemla.core.domain.model.PendingReview
 import app.nemla.core.domain.model.ThemeMode
 import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.network.BackendConfig
@@ -44,6 +48,7 @@ import app.nemla.feature.onboarding.onboardingScreen
 import app.nemla.feature.settings.SettingsTab
 import app.nemla.feature.settings.navigateToSettings
 import app.nemla.feature.settings.settingsScreen
+import app.nemla.feature.statementimport.StatementImportDialog
 import app.nemla.feature.voice.capture.VoiceCaptureButton
 import app.nemla.feature.voice.dictation.DictationTextButton
 import app.nemla.feature.voice.navigation.closeVoiceReview
@@ -124,7 +129,15 @@ private fun NemlaNavHost(
             onOpenSettings = { categories ->
                 navController.navigateToSettings(if (categories) SettingsTab.CATEGORIES else SettingsTab.PROFILE)
             },
-            floatingAction = { VoiceCaptureButton(onOpenReview = { navController.navigateToVoiceReview() }) },
+            floatingAction = {
+                AddButtonWithImport(
+                    onOpenReview = { navController.navigateToVoiceReview() },
+                    onImported = { review ->
+                        reviewOpener.open(review)
+                        navController.navigateToVoiceReview()
+                    },
+                )
+            },
         )
         settingsScreen(
             onClose = { if (!navController.popBackStack()) navController.navigateToDashboard() },
@@ -132,6 +145,24 @@ private fun NemlaNavHost(
             dictation = dictation,
         )
         voiceGraph(onClose = { navController.closeVoiceReview() })
+    }
+}
+
+@Composable
+private fun AddButtonWithImport(
+    onOpenReview: () -> Unit,
+    onImported: (PendingReview) -> Unit,
+) {
+    var importOpen by rememberSaveable { mutableStateOf(false) }
+    VoiceCaptureButton(onOpenReview = onOpenReview, onImportStatement = { importOpen = true })
+    if (importOpen) {
+        StatementImportDialog(
+            onClose = { importOpen = false },
+            onImported = { review ->
+                importOpen = false
+                onImported(review)
+            },
+        )
     }
 }
 

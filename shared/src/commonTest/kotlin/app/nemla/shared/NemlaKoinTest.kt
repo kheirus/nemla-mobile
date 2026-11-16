@@ -9,6 +9,7 @@ import app.nemla.core.audio.VoiceRecorder
 import app.nemla.core.audio.VoiceRecorderFactory
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.common.AppResult
+import app.nemla.core.documents.DocumentTextReader
 import app.nemla.core.domain.model.AppPreferences
 import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.BudgetPeriod
@@ -43,6 +44,7 @@ import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
 import app.nemla.core.domain.port.SpeechTranscriber
+import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
 import app.nemla.core.domain.usecase.CaptureVoiceExpenses
@@ -53,6 +55,7 @@ import app.nemla.core.domain.usecase.FindLearnedExpenses
 import app.nemla.core.domain.usecase.GetDeferredDebit
 import app.nemla.core.domain.usecase.GetMonthlyQuota
 import app.nemla.core.domain.usecase.GrantAiConsent
+import app.nemla.core.domain.usecase.ImportStatement
 import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
 import app.nemla.core.domain.usecase.ListRecurringCharges
@@ -177,6 +180,10 @@ class NemlaKoinTest {
             val router = koin.get<AiRouter>()
             assertEquals(1, router.enginesFor(AiCapability.StatementAnonymization).size)
             assertEquals(1, router.enginesFor(AiCapability.VoiceExpenseCapture).size)
+            assertEquals(1, router.enginesFor(AiCapability.StatementParsing).size)
+            koin.get<StatementImporter>()
+            koin.get<ImportStatement>()
+            koin.get<DocumentTextReader>()
         }
 
     @Test
