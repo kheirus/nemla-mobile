@@ -3,11 +3,8 @@ package app.nemla.feature.dashboard.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -46,6 +43,8 @@ import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.component.NemlaTopBar
 import app.nemla.core.designsystem.component.NemlaTopBarBrand
 import app.nemla.core.designsystem.component.NemlaTopBarScrollBehavior
+import app.nemla.core.designsystem.component.bottomSafeDrawingPadding
+import app.nemla.core.designsystem.component.edgeToEdgeBody
 import app.nemla.core.designsystem.component.rememberNemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -83,7 +82,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Duration.Companion.seconds
 
-private val FloatingActionClearance = 96.dp
+private val FloatingActionClearance = 72.dp
 private val FloatingActionLabelDuration = 2.5.seconds
 
 @Composable
@@ -148,7 +147,7 @@ internal fun DashboardScreen(
         NemlaPullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = { onAction(DashboardAction.PullToRefresh) },
-            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+            modifier = Modifier.fillMaxSize().edgeToEdgeBody(padding),
         ) {
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
@@ -159,11 +158,16 @@ internal fun DashboardScreen(
                         Modifier
                             .widthIn(max = NemlaTheme.sizes.contentMaxWidth)
                             .fillMaxWidth()
-                            .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.pageVertical),
+                            .bottomSafeDrawingPadding()
+                            .padding(
+                                start = NemlaTheme.spacing.pageHorizontal,
+                                top = NemlaTheme.spacing.pageVertical,
+                                end = NemlaTheme.spacing.pageHorizontal,
+                                bottom = FloatingActionClearance,
+                            ),
                     verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
                 ) {
                     DashboardContent(state, format, onAction, reportNotice)
-                    Spacer(modifier = Modifier.height(FloatingActionClearance))
                 }
             }
         }
