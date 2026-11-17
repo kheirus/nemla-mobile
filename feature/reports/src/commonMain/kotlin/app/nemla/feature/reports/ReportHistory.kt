@@ -190,25 +190,29 @@ private fun PeriodRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
     ) {
-        Text(periodLabel(period, language), style = NemlaTheme.typography.bodyStrong, modifier = Modifier.weight(1f, fill = false))
-        if (period is ReviewPeriod.Year) {
-            Text(
-                stringResource(Res.string.reports_history_annual).uppercase(),
-                style = NemlaTheme.typography.caption.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold),
-                modifier =
-                    Modifier
-                        .background(colors.accent.copy(alpha = 0.2f), RoundedCornerShape(NemlaTheme.radius.sm))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-            )
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
+        ) {
+            Text(periodLabel(period, language), style = NemlaTheme.typography.bodyStrong, modifier = Modifier.weight(1f, fill = false))
+            if (period is ReviewPeriod.Year) {
+                Text(
+                    stringResource(Res.string.reports_history_annual).uppercase(),
+                    style = NemlaTheme.typography.caption.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold),
+                    modifier =
+                        Modifier
+                            .background(colors.accent.copy(alpha = 0.2f), RoundedCornerShape(NemlaTheme.radius.sm))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                )
+            }
         }
-        Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.End) {
-            Icon(
-                NemlaIcons.ChevronRight,
-                contentDescription = null,
-                tint = colors.mutedForeground,
-                modifier = Modifier.size(NemlaTheme.sizes.icon),
-            )
-        }
+        Icon(
+            NemlaIcons.ChevronRight,
+            contentDescription = null,
+            tint = colors.mutedForeground,
+            modifier = Modifier.size(NemlaTheme.sizes.icon),
+        )
     }
 }
 
