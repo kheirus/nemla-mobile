@@ -102,6 +102,7 @@ internal fun DashboardRoute(
     onReviewPending: (PendingReview) -> Unit,
     onOpenSettings: (Boolean) -> Unit,
     floatingAction: @Composable () -> Unit = {},
+    reportNotice: @Composable () -> Unit = {},
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -121,7 +122,7 @@ internal fun DashboardRoute(
             }
         }
     }
-    DashboardScreen(state = state, onAction = viewModel::onAction, floatingAction = floatingAction)
+    DashboardScreen(state = state, onAction = viewModel::onAction, floatingAction = floatingAction, reportNotice = reportNotice)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -130,6 +131,7 @@ internal fun DashboardScreen(
     state: DashboardUiState,
     onAction: (DashboardAction) -> Unit,
     floatingAction: @Composable () -> Unit = {},
+    reportNotice: @Composable () -> Unit = {},
 ) {
     val colors = NemlaTheme.colors
     val format = remember(state.language, state.currency) { DashboardFormat(state.language, state.currency) }
@@ -153,7 +155,7 @@ internal fun DashboardScreen(
                                 .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.pageVertical),
                         verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
                     ) {
-                        DashboardContent(state, format, onAction)
+                        DashboardContent(state, format, onAction, reportNotice)
                         Spacer(modifier = Modifier.height(FloatingActionClearance))
                     }
                 }
@@ -177,6 +179,7 @@ private fun DashboardContent(
     state: DashboardUiState,
     format: DashboardFormat,
     onAction: (DashboardAction) -> Unit,
+    reportNotice: @Composable () -> Unit,
 ) {
     state.notice?.let { notice ->
         LaunchedEffect(notice) {
@@ -216,6 +219,7 @@ private fun DashboardContent(
     }
     if (state.view.pending.isNotEmpty()) PendingCard(state.view.pending, format, onAction)
     if (state.view.alerts.isNotEmpty()) AlertsCard(state.view.alerts, format) { onAction(DashboardAction.AdjustBudgetsClicked) }
+    reportNotice()
     SearchCard(state, format, onAction)
     PilotCard(state, format, onAction)
     SpendingCard(state, format, onAction)
