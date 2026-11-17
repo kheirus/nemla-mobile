@@ -314,3 +314,10 @@ une plateforme ajouté) :
 Le libellé iOS n'est pas le titre de l'écran précédent (UIKit le fait) mais « Retour » : l'écran précédent n'est pas connu de
 `core:designsystem`. Le bord droit (`EndEdgePanGestureBehavior`) reste désactivé, valeur par défaut de CMP.
 
+
+## Lot 6b — étape 3, tableau de bord (17/11/2026)
+
+Écarts Android / iOS : aucun. Boutons segmentés, `HorizontalPager`, bouton flottant réductible, panneau « Ajouter », champ de
+recherche, `InputChip`, tirer pour rafraîchir et animations sont des composants Compose / Material 3 communs. Sur iOS, ils ne sont pas
+natifs UIKit (pas de `UISegmentedControl`, `UISearchBar` ni `UIRefreshControl`) ; le rebond de défilement iOS n'existe pas.
+Le menu « Ajouter » de la ligne « Menu « Ajouter », dialogues » du lot 2 est désormais un `ModalBottomSheet`.

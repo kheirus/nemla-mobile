@@ -256,7 +256,19 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
   (`TopBarWithAccountSheet` par défaut, ou `BottomNavigation`). Avatar à initiales + panneau « Compte » (pseudo, e-mail, Mon espace,
   Se déconnecter) sur le tableau de bord et l'onboarding ; « Se déconnecter » aussi dans Mon espace › Profil. En `BottomNavigation` :
   Accueil / Bilans / Mon espace, destination Bilans assemblée dans `shared` avec `ReportHistory`, onglet Bilans masqué dans Mon espace.
-- Restes : graphique et puces de légende encore trop sombres en mode sombre (étape 3) ; arbitrage de la structure après captures.
+- ☑ Étape 3. Tableau de bord : Mois / Année en `NemlaSegmentedButtons` (`SingleChoiceSegmentedButtonRow`, coche et
+  `secondaryContainer` sur l'option choisie). Bloc pilote en `HorizontalPager` (une page par période, de janvier 2000 à la
+  période du jour, `PeriodPages`) : glisser ou les chevrons (`IconButton`, désactivés aux bornes) changent la période, le libellé
+  glisse dans le sens du changement (`AnimatedContent`). Le graphique reste hors du pager (pas de conflit avec le toucher des barres).
+  **Écart web** (`specs/04` §5.3, `specs/02` : « aucune borne ») : navigation bornée à la période du jour, un mois futur touché dans le
+  graphique annuel ne fait rien. « Ajouter » : `ExtendedFloatingActionButton` réduit à « + » quand on descend, marge basse de 96 dp ;
+  menu en `NemlaSheet` (Dicter, Dépenses à valider, Importer, Saisie manuelle « bientôt »). Recherche : `NemlaSearchField`
+  (`OutlinedTextField`, icône loupe, bouton calendrier, date choisie en `InputChip`) ; « La recherche par mot-clé arrivera bientôt »
+  seulement pendant la saisie (texte non envoyé). `NemlaPullToRefreshBox` aux couleurs Nemla. Sombre : barres et puce « Dépensé » à
+  `primary` 72 %, mois choisi plein (clair inchangé). Animations : total qui compte (600 ms), anneau qui se dessine (900 ms), barres
+  qui montent (décalage 30 ms), jauges `NemlaProgressBar` qui se remplissent (toutes les jauges de l'app).
+- Restes : pages voisines du pager affichées « – » pendant le glissement (seule la période choisie est calculée) ; onglets
+  Répartition / Budgets encore en contrôle maison (étape 4) ; arbitrage de la structure après captures.
 
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
