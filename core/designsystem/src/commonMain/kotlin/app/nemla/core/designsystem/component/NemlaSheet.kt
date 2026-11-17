@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -14,8 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
@@ -23,6 +25,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -172,22 +175,38 @@ fun NemlaListItem(
     val colors = NemlaTheme.colors
     val clickModifier =
         if (onClick != null) Modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick) else Modifier
-    ListItem(
-        headlineContent = { Text(headline, style = NemlaTheme.typography.input) },
-        modifier = modifier.then(clickModifier).alpha(if (enabled) 1f else DISABLED_ALPHA),
-        supportingContent = supportingContent,
-        leadingContent = leadingContent,
-        trailingContent = trailingContent,
-        colors =
-            ListItemDefaults.colors(
-                containerColor = Color.Transparent,
-                headlineColor = contentColor,
-                supportingColor = colors.mutedForeground,
-                leadingIconColor = contentColor,
-                trailingIconColor = colors.mutedForeground,
-            ),
-    )
+    Row(
+        modifier =
+            modifier
+                .then(clickModifier)
+                .alpha(if (enabled) 1f else DISABLED_ALPHA)
+                .fillMaxWidth()
+                .heightIn(min = if (supportingContent != null) ListItemTwoLineMinHeight else ListItemOneLineMinHeight)
+                .padding(horizontal = NemlaTheme.spacing.md, vertical = ListItemVerticalPadding),
+        horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (leadingContent != null) {
+            CompositionLocalProvider(LocalContentColor provides contentColor) { leadingContent() }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(headline, style = NemlaTheme.typography.input, color = contentColor)
+            if (supportingContent != null) {
+                CompositionLocalProvider(
+                    LocalContentColor provides colors.mutedForeground,
+                    LocalTextStyle provides NemlaTheme.typography.caption,
+                ) { supportingContent() }
+            }
+        }
+        if (trailingContent != null) {
+            CompositionLocalProvider(LocalContentColor provides colors.mutedForeground) { trailingContent() }
+        }
+    }
 }
+
+private val ListItemOneLineMinHeight = 56.dp
+private val ListItemTwoLineMinHeight = 72.dp
+private val ListItemVerticalPadding = 12.dp
 
 @Composable
 fun NemlaListIcon(
