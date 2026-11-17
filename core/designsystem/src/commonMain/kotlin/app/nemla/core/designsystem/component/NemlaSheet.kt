@@ -2,16 +2,24 @@ package app.nemla.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -27,6 +35,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.nemla.core.designsystem.theme.NemlaTheme
 import kotlinx.coroutines.CoroutineScope
@@ -55,21 +65,75 @@ fun NemlaSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     skipPartiallyExpanded: Boolean = true,
+    dismissible: Boolean = true,
     content: @Composable ColumnScope.(NemlaSheetController) -> Unit,
 ) {
     val colors = NemlaTheme.colors
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+    val currentDismissible by rememberUpdatedState(dismissible)
+    val state =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = skipPartiallyExpanded,
+            confirmValueChange = { value -> currentDismissible || value != SheetValue.Hidden },
+        )
     val scope = rememberCoroutineScope()
     val currentOnDismiss by rememberUpdatedState(onDismissRequest)
     val controller = remember(scope, state) { NemlaSheetController(scope, state) { currentOnDismiss() } }
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { if (currentDismissible) onDismissRequest() },
         modifier = modifier,
         sheetState = state,
+        sheetGesturesEnabled = dismissible,
         containerColor = colors.popover,
         contentColor = colors.popoverForeground,
+        properties = ModalBottomSheetProperties(shouldDismissOnBackPress = dismissible, shouldDismissOnClickOutside = dismissible),
     ) {
         content(controller)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NemlaFormSheet(
+    title: String,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    dismissible: Boolean = true,
+    skipPartiallyExpanded: Boolean = true,
+    content: @Composable ColumnScope.(NemlaSheetController) -> Unit,
+) {
+    NemlaSheet(
+        onDismissRequest = onDismissRequest,
+        modifier = modifier,
+        skipPartiallyExpanded = skipPartiallyExpanded,
+        dismissible = dismissible,
+    ) { controller ->
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = NemlaTheme.spacing.lg)
+                    .padding(bottom = NemlaTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.md),
+        ) {
+            NemlaSheetHeader(title = title, description = description)
+            content(controller)
+        }
+    }
+}
+
+@Composable
+fun NemlaSheetHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs)) {
+        Text(title, style = NemlaTheme.typography.sectionTitle, modifier = Modifier.semantics { heading() })
+        if (description != null) {
+            Text(description, style = NemlaTheme.typography.body, color = NemlaTheme.colors.mutedForeground)
+        }
     }
 }
 
@@ -100,6 +164,7 @@ fun NemlaListItem(
     supportingContent: (@Composable () -> Unit)?,
     leadingContent: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
+    trailingContent: (@Composable () -> Unit)? = null,
     contentColor: Color = NemlaTheme.colors.foreground,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -112,12 +177,14 @@ fun NemlaListItem(
         modifier = modifier.then(clickModifier).alpha(if (enabled) 1f else DISABLED_ALPHA),
         supportingContent = supportingContent,
         leadingContent = leadingContent,
+        trailingContent = trailingContent,
         colors =
             ListItemDefaults.colors(
                 containerColor = Color.Transparent,
                 headlineColor = contentColor,
                 supportingColor = colors.mutedForeground,
                 leadingIconColor = contentColor,
+                trailingIconColor = colors.mutedForeground,
             ),
     )
 }

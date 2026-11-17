@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -57,38 +58,16 @@ fun NemlaTextArea(
     enabled: Boolean = true,
     maxLength: Int? = null,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val focused by interactionSource.collectIsFocusedAsState()
-    val colors = NemlaTheme.colors
-    val shape = RoundedCornerShape(NemlaTheme.radius.md)
-    BasicTextField(
+    OutlinedTextField(
         value = value,
         onValueChange = { next -> onValueChange(if (maxLength != null) next.take(maxLength) else next) },
         enabled = enabled,
         minLines = minLines,
-        textStyle = NemlaTheme.typography.input.copy(color = colors.foreground),
-        cursorBrush = SolidColor(colors.primary),
-        interactionSource = interactionSource,
+        textStyle = NemlaTheme.typography.input,
+        placeholder = placeholder?.let { text -> { Text(text, style = NemlaTheme.typography.input) } },
+        shape = RoundedCornerShape(NemlaTheme.radius.md),
+        colors = nemlaOutlinedFieldColors(),
         modifier = modifier.fillMaxWidth().semantics { contentDescription = label },
-        decorationBox = { inner ->
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .border(if (focused) 2.dp else 1.dp, if (focused) colors.ring else colors.input, shape)
-                        .padding(NemlaTheme.spacing.sm),
-            ) {
-                if (value.isEmpty() && placeholder != null) {
-                    Text(
-                        text = placeholder,
-                        style = NemlaTheme.typography.input,
-                        color = colors.mutedForeground,
-                        modifier = Modifier.clearAndSetSemantics { },
-                    )
-                }
-                inner()
-            }
-        },
     )
 }
 
