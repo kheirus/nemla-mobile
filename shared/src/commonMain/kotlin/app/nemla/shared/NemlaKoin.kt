@@ -18,6 +18,7 @@ import app.nemla.core.security.coreSecurityModule
 import app.nemla.feature.auth.featureAuthModule
 import app.nemla.feature.dashboard.featureDashboardModule
 import app.nemla.feature.onboarding.featureOnboardingModule
+import app.nemla.feature.reports.featureReportsModule
 import app.nemla.feature.settings.featureSettingsModule
 import app.nemla.feature.statementimport.featureImportModule
 import app.nemla.feature.voice.featureVoiceModule
@@ -64,6 +65,7 @@ internal fun nemlaModules(
         featureOnboardingModule,
         featureSettingsModule,
         featureImportModule,
+        featureReportsModule,
         appModule,
     )
 

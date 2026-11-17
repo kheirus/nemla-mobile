@@ -45,6 +45,8 @@ import app.nemla.feature.dashboard.navigateToDashboard
 import app.nemla.feature.onboarding.isOnboarding
 import app.nemla.feature.onboarding.navigateToOnboarding
 import app.nemla.feature.onboarding.onboardingScreen
+import app.nemla.feature.reports.ReportArrivalNotice
+import app.nemla.feature.reports.ReportHistory
 import app.nemla.feature.settings.SettingsTab
 import app.nemla.feature.settings.navigateToSettings
 import app.nemla.feature.settings.settingsScreen
@@ -138,11 +140,13 @@ private fun NemlaNavHost(
                     },
                 )
             },
+            reportNotice = { ReportArrivalNotice() },
         )
         settingsScreen(
             onClose = { if (!navController.popBackStack()) navController.navigateToDashboard() },
             onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
             dictation = dictation,
+            reportHistory = { ReportHistory() },
         )
         voiceGraph(onClose = { navController.closeVoiceReview() })
     }

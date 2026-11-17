@@ -43,6 +43,7 @@ import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.core.domain.port.ReportRepository
 import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
@@ -51,6 +52,7 @@ import app.nemla.core.domain.usecase.CaptureVoiceExpenses
 import app.nemla.core.domain.usecase.ConfirmReviewedExpenses
 import app.nemla.core.domain.usecase.DeleteExpense
 import app.nemla.core.domain.usecase.DeletePendingExpense
+import app.nemla.core.domain.usecase.FindArrivedReports
 import app.nemla.core.domain.usecase.FindLearnedExpenses
 import app.nemla.core.domain.usecase.GetDeferredDebit
 import app.nemla.core.domain.usecase.GetMonthlyQuota
@@ -59,6 +61,8 @@ import app.nemla.core.domain.usecase.ImportStatement
 import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
 import app.nemla.core.domain.usecase.ListRecurringCharges
+import app.nemla.core.domain.usecase.ListReportHistory
+import app.nemla.core.domain.usecase.LoadPeriodReport
 import app.nemla.core.domain.usecase.LoadPreferences
 import app.nemla.core.domain.usecase.MaterializeRecurringCharges
 import app.nemla.core.domain.usecase.ObserveAiConsents
@@ -163,6 +167,10 @@ class NemlaKoinTest {
             koin.get<RecurringChargeRepository>()
             koin.get<RecurringChargeMaterializer>()
             koin.get<DeferredDebitRepository>()
+            koin.get<ReportRepository>()
+            koin.get<LoadPeriodReport>()
+            koin.get<FindArrivedReports>()
+            koin.get<ListReportHistory>()
             koin.get<PendingReviewOpener>()
             koin.get<BootstrapAndLoadProfile>()
             koin.get<ListExpenses>()

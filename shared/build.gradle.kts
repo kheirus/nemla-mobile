@@ -31,6 +31,7 @@ kotlin {
             implementation(projects.feature.onboarding)
             implementation(projects.feature.settings)
             implementation(projects.feature.`import`)
+            implementation(projects.feature.reports)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.navigation.compose)
