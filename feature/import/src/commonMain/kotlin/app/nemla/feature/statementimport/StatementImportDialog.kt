@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,11 +25,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import app.nemla.core.designsystem.component.NemlaAlertDialog
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
-import app.nemla.core.designsystem.component.NemlaDialog
+import app.nemla.core.designsystem.component.NemlaFormSheet
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.documents.rememberDocumentPicker
@@ -95,7 +95,7 @@ internal fun StatementImportContent(
     onAction: (StatementImportAction) -> Unit,
     onPick: () -> Unit,
 ) {
-    NemlaDialog(
+    NemlaFormSheet(
         title = stringResource(Res.string.import_title),
         description = stringResource(Res.string.import_description),
         dismissible = state.isDismissible,
@@ -215,19 +215,14 @@ private fun ImportConsentDialog(
     onAccept: () -> Unit,
     onDecline: () -> Unit,
 ) {
-    val colors = NemlaTheme.colors
-    AlertDialog(
+    NemlaAlertDialog(
+        title = stringResource(Res.string.import_consent_title),
+        text = stringResource(Res.string.import_consent_body),
+        confirmLabel = stringResource(Res.string.import_consent_accept),
+        dismissLabel = stringResource(Res.string.import_consent_decline),
+        onConfirm = onAccept,
         onDismissRequest = onDecline,
-        containerColor = colors.background,
-        titleContentColor = colors.foreground,
-        textContentColor = colors.mutedForeground,
-        icon = { Icon(NemlaIcons.ShieldCheck, contentDescription = null, tint = colors.primary) },
-        title = { Text(stringResource(Res.string.import_consent_title), style = NemlaTheme.typography.cardTitle) },
-        text = { Text(stringResource(Res.string.import_consent_body), style = NemlaTheme.typography.body) },
-        confirmButton = { NemlaButton(text = stringResource(Res.string.import_consent_accept), onClick = onAccept) },
-        dismissButton = {
-            NemlaButton(text = stringResource(Res.string.import_consent_decline), onClick = onDecline, variant = NemlaButtonVariant.Ghost)
-        },
+        icon = NemlaIcons.ShieldCheck,
     )
 }
 
