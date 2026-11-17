@@ -12,6 +12,7 @@
     android:name=".NemlaApplication"
     android:allowBackup="false"
     android:dataExtractionRules="@xml/data_extraction_rules"
+    android:enableOnBackInvokedCallback="true"
     android:fullBackupContent="@xml/full_backup_content"
     android:label="@string/app_name"
     android:supportsRtl="true"
