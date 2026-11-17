@@ -22,6 +22,7 @@ import app.nemla.core.domain.port.QuotaRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeParser
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.core.domain.port.ReportRepository
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
 import app.nemla.core.network.SessionTokenStore
@@ -59,6 +60,7 @@ class CoreDataModuleTest {
             koin.get<RecurringChargeRepository>()
             koin.get<RecurringChargeMaterializer>()
             koin.get<DeferredDebitRepository>()
+            koin.get<ReportRepository>()
             koin.get<AiConsentRepository>()
             koin.get<AccountRepository>()
             koin.get<VoiceExpenseCapturer>()

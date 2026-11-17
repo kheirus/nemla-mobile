@@ -26,6 +26,7 @@ import app.nemla.core.data.remote.KtorExpenseReviewRepository
 import app.nemla.core.data.remote.KtorProfileRepository
 import app.nemla.core.data.remote.KtorQuotaRepository
 import app.nemla.core.data.remote.KtorRecurringChargeRepository
+import app.nemla.core.data.remote.KtorReportRepository
 import app.nemla.core.data.remote.Postgrest
 import app.nemla.core.data.remote.UnsupportedRecurringChargeMaterializer
 import app.nemla.core.data.session.GoTrueApi
@@ -47,6 +48,7 @@ import app.nemla.core.domain.port.QuotaRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeParser
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.core.domain.port.ReportRepository
 import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
@@ -90,6 +92,7 @@ val coreDataModule: Module =
         single<RecurringChargeRepository> { KtorRecurringChargeRepository(postgrest = get()) }
         single<RecurringChargeMaterializer> { UnsupportedRecurringChargeMaterializer }
         single<DeferredDebitRepository> { KtorDeferredDebitRepository(postgrest = get()) }
+        single<ReportRepository> { KtorReportRepository(postgrest = get()) }
         single<AccountRepository> { UnsupportedAccountRepository }
         single<PreferencesRepository> { SecureStorePreferencesRepository(store = get(), logger = get()) }
 
