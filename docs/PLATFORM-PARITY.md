@@ -302,3 +302,15 @@ une plateforme ajouté) :
 6. **Titres** : « Bilan de {période} » repris tel quel du web (« Bilan de Octobre 2026 », sans élision) ; anglais « Report for October 2026 »,
    « Report for the year 2025 ».
 7. **Hors périmètre** : notifications push, bannières `user_notifications` et rappel quotidien (lot 7, à concevoir).
+
+## Lot 6b — interface mobile, étapes 1 et 2 (17/11/2026)
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Bouton retour de la barre d'application (`NemlaBackButton`) | Icône flèche seule (`ArrowLeft`), libellé « Retour » / « Back » lu par TalkBack | Chevron `‹` suivi du libellé « Retour » / « Back », couleur `primary`, comme UIKit | Oui, volontaire |
+| Retour système | Retour prédictif : `android:enableOnBackInvokedCallback="true"` ; navigation-compose 2.10 joue `popExit` / `popEnter` pendant le geste | Balayage depuis le bord gauche : CMP 1.12 envoie toujours le geste de bord de départ comme évènement de retour (`navigationevent`), aucun réglage `ComposeUIViewController` nécessaire ; `NavHost` anime de même | Oui, geste natif de chaque OS |
+| Panneau du bas, barre d'application, barre de navigation | `ModalBottomSheet`, `TopAppBar`, `NavigationBar` Material 3 | Mêmes composants Material 3, pas d'équivalent UIKit | Non (identique) |
+
+Le libellé iOS n'est pas le titre de l'écran précédent (UIKit le fait) mais « Retour » : l'écran précédent n'est pas connu de
+`core:designsystem`. Le bord droit (`EndEdgePanGestureBehavior`) reste désactivé, valeur par défaut de CMP.
+

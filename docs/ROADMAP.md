@@ -243,6 +243,21 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
 6. Animations légères (montants, anneau, barres, jauges, listes).
 7. Identité : logo nemla, icônes d'application Android et iOS, écran de lancement, polices Outfit / DM Sans (fichiers à fournir).
 
+État (17/11/2026, branche `claude/lot-6b-mobile-ui`) :
+- ☑ Étape 1. Palette sombre de `UI-REVIEW.md` §5 (fond `#0F1712`, cartes `#18231C`, pistes `#223027`, bordures blanc 16 % / 22 %,
+  `mutedForeground` `#AEBDB1`, jeton `selectedContainer` plus clair que la piste) et `ColorScheme` Material 3 aligné (paliers
+  `surfaceContainer*`, `secondaryContainer`, `inverse*`). Enveloppes `core:designsystem` : `NemlaTopBar` (défilement épinglé),
+  `NemlaBackButton` (`expect/actual`), `NemlaSheet` + `NemlaListItem`, `NemlaTabs` (pas encore utilisé, étape 4), `NemlaSnackbarHost` /
+  `NemlaSnackbarEffect`, `NemlaScaffold` (sur lequel repose `NemlaScreen`), `NemlaAccountButton` / `NemlaAccountSheet`, `NemlaNavigationBar`.
+  `Scaffold` racine dans `shared`, transitions du `NavHost` (glissement d'un cinquième de largeur + fondu, 300 ms ; fondu seul depuis
+  le démarrage et entre onglets), retour prédictif Android (`enableOnBackInvokedCallback`), geste de bord iOS (natif dans CMP 1.12).
+  Mon espace : barre d'application et bouton retour natif à la place de « ← Retour ». Avis du tableau de bord en snackbar.
+- ☑ Étape 2. Deux structures au choix, une seule constante : `ActiveChromeStyle` dans `shared/.../AppChrome.kt`
+  (`TopBarWithAccountSheet` par défaut, ou `BottomNavigation`). Avatar à initiales + panneau « Compte » (pseudo, e-mail, Mon espace,
+  Se déconnecter) sur le tableau de bord et l'onboarding ; « Se déconnecter » aussi dans Mon espace › Profil. En `BottomNavigation` :
+  Accueil / Bilans / Mon espace, destination Bilans assemblée dans `shared` avec `ReportHistory`, onglet Bilans masqué dans Mon espace.
+- Restes : graphique et puces de légende encore trop sombres en mode sombre (étape 3) ; arbitrage de la structure après captures.
+
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
 - Push « Votre bilan est arrivé » (fin de mois, fin d'année), qui ouvrirait le dialogue de bilan de `feature:reports`.
