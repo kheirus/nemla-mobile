@@ -44,6 +44,6 @@ interface BudgetAdvisor {
     suspend fun suggest(): AppResult<BudgetEstimate>
 }
 
-interface PeriodReviewer {
+fun interface PeriodReviewer {
     suspend fun review(period: ReviewPeriod): AppResult<PeriodReview>
 }
