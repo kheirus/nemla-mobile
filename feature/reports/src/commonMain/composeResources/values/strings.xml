@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="reports_year_label">l'année %1$s</string>
+  <string name="reports_title">Bilan de %1$s</string>
+  <string name="reports_notice_title">Votre bilan de %1$s est arrivé</string>
+  <string name="reports_notice_month">Où est parti votre argent, et quoi améliorer ce mois-ci.</string>
+  <string name="reports_notice_year">Où est parti votre argent cette année, et quoi améliorer.</string>
+  <string name="reports_notice_view">Voir</string>
+  <string name="reports_loading_report">Calcul du bilan…</string>
+  <string name="reports_report_failed">Bilan indisponible pour le moment.</string>
+  <string name="reports_retry">Réessayer</string>
+  <string name="reports_total">Total dépensé</string>
+  <string name="reports_delta">%1$s vs période précédente</string>
+  <string name="reports_trend_up">En hausse</string>
+  <string name="reports_trend_down">En baisse</string>
+  <string name="reports_where">Où part l'argent</string>
+  <string name="reports_share">%1$s · %2$s</string>
+  <string name="reports_percent">%1$s %</string>
+  <string name="reports_highlights">Ce qu'il faut retenir</string>
+  <string name="reports_advice">Pistes d'amélioration</string>
+  <string name="reports_server_language">Ces notes sont rédigées en français pour le moment.</string>
+  <string name="reports_understood">J'ai compris</string>
+  <string name="reports_history_title">Historique des bilans</string>
+  <string name="reports_history_body">Retrouvez le bilan d'un mois ou d'une année passée à tout moment.</string>
+  <string name="reports_history_loading">Chargement…</string>
+  <string name="reports_history_empty">Aucun bilan disponible pour l'instant : vos bilans apparaîtront ici à la fin du premier mois rempli.</string>
+  <string name="reports_history_failed">Historique indisponible pour le moment.</string>
+  <string name="reports_history_annual">Année</string>
+</resources>

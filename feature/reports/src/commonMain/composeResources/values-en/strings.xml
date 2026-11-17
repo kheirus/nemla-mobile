@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="reports_year_label">the year %1$s</string>
+  <string name="reports_title">Report for %1$s</string>
+  <string name="reports_notice_title">Your report for %1$s is ready</string>
+  <string name="reports_notice_month">Where your money went, and what to improve this month.</string>
+  <string name="reports_notice_year">Where your money went this year, and what to improve.</string>
+  <string name="reports_notice_view">View</string>
+  <string name="reports_loading_report">Calculating your report…</string>
+  <string name="reports_report_failed">Report unavailable for now.</string>
+  <string name="reports_retry">Retry</string>
+  <string name="reports_total">Total spent</string>
+  <string name="reports_delta">%1$s vs previous period</string>
+  <string name="reports_trend_up">Up</string>
+  <string name="reports_trend_down">Down</string>
+  <string name="reports_where">Where the money goes</string>
+  <string name="reports_share">%1$s · %2$s</string>
+  <string name="reports_percent">%1$s%</string>
+  <string name="reports_highlights">Key takeaways</string>
+  <string name="reports_advice">Ways to improve</string>
+  <string name="reports_server_language">These notes are written in French for now.</string>
+  <string name="reports_understood">Got it</string>
+  <string name="reports_history_title">Report history</string>
+  <string name="reports_history_body">Find the report for any past month or year, at any time.</string>
+  <string name="reports_history_loading">Loading…</string>
+  <string name="reports_history_empty">No report available yet: your reports will appear here at the end of your first filled month.</string>
+  <string name="reports_history_failed">History unavailable for now.</string>
+  <string name="reports_history_annual">Year</string>
+</resources>
