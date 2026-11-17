@@ -60,4 +60,8 @@ Lot 4 terminé le 16/11/2026 : `feature:onboarding` (charges fixes saisies ou di
 lien « Passer pour l'instant ») et `feature:settings` (Mon espace : budget, charges fixes, profil, préférences, carte bancaire, crédits,
 catégories ; onglet Bilans au lot 6). Dictée en texte via l'emplacement `DictationTextButton` de `feature:voice`. Suppression de compte
 en `NotSupportedYet`, export et rappel quotidien reportés. Restes et écarts : `docs/ROADMAP.md` (lot 4) et `docs/PLATFORM-PARITY.md`.
-Prochaine étape : lot 5.
+
+Lot 5 terminé le 17/11/2026 : `core:documents` (sélecteur de fichier, extraction CSV/TXT/PDF en mémoire ; PDF Android 12+ selon
+l'extension SDK, Excel refusé) et `feature:import` (menu « Ajouter » → « Importer un relevé »). Aucun fichier brut ne quitte l'appareil :
+anonymisation locale puis `POST /api/public/import/text`, endpoint encore absent côté backend ; la sonde échoue fermée et l'app affiche
+« arrive bientôt… Rien n'a été envoyé ». Restes et écarts : `docs/ROADMAP.md` (lot 5) et `docs/PLATFORM-PARITY.md`. Prochaine étape : lot 6.
