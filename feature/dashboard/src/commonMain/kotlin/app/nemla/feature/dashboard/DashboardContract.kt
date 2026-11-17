@@ -12,6 +12,7 @@ import app.nemla.core.domain.model.PeriodCursor
 import app.nemla.core.domain.model.PeriodKind
 import app.nemla.feature.dashboard.logic.DashboardView
 import app.nemla.feature.dashboard.logic.ExpenseRow
+import app.nemla.feature.dashboard.logic.PeriodPages
 import kotlinx.datetime.LocalDate
 
 internal enum class DashboardError { OFFLINE, TIMEOUT, GENERIC }
@@ -85,6 +86,10 @@ internal data class DashboardUiState(
 ) {
     val effectiveSpendingTab: SpendingTab get() = if (view.spending.hasBudgets) spendingTab else SpendingTab.BREAKDOWN
 
+    val canGoPrevious: Boolean get() = PeriodPages.hasPrevious(cursor)
+
+    val canGoNext: Boolean get() = PeriodPages.hasNext(cursor, today)
+
     override fun toString(): String =
         "DashboardUiState(cursor=$cursor, isInitialLoading=$isInitialLoading, loadError=$loadError, editor=$editor)"
 }
@@ -103,6 +108,10 @@ internal sealed interface DashboardAction {
     data object PreviousPeriodClicked : DashboardAction
 
     data object NextPeriodClicked : DashboardAction
+
+    data class PeriodPageSelected(
+        val page: Int,
+    ) : DashboardAction
 
     data class ChartMonthTapped(
         val monthNumber: Int,

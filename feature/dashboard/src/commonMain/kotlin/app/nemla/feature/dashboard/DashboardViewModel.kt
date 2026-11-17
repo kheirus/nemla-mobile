@@ -34,6 +34,7 @@ import app.nemla.core.domain.usecase.UpdateExpense
 import app.nemla.feature.dashboard.logic.CategoryFilters
 import app.nemla.feature.dashboard.logic.DashboardCalculator
 import app.nemla.feature.dashboard.logic.DashboardInputs
+import app.nemla.feature.dashboard.logic.PeriodPages
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -129,7 +130,8 @@ internal class DashboardViewModel(
             is DashboardAction.PeriodKindSelected -> moveTo(mutableState.value.cursor.withKind(action.kind))
             DashboardAction.PreviousPeriodClicked -> moveTo(mutableState.value.cursor.previous())
             DashboardAction.NextPeriodClicked -> moveTo(mutableState.value.cursor.next())
-            is DashboardAction.ChartMonthTapped -> moveTo(mutableState.value.cursor.drillDown(action.monthNumber))
+            is DashboardAction.PeriodPageSelected -> moveTo(PeriodPages.cursorAt(action.page, mutableState.value.cursor, today))
+            is DashboardAction.ChartMonthTapped -> drillDown(action.monthNumber)
             is DashboardAction.FilterToggled -> changeFilter(CategoryFilters.toggle(filter, action.id, categoryIds()))
             DashboardAction.FilterAllToggled -> changeFilter(CategoryFilters.toggleAll(filter, categoryIds()))
             is DashboardAction.SpendingTabSelected -> mutableState.update { it.copy(spendingTab = action.tab) }
@@ -252,8 +254,15 @@ internal class DashboardViewModel(
     }
 
     private fun moveTo(cursor: PeriodCursor) {
-        mutableState.update { it.copy(cursor = cursor) }
+        val bounded = PeriodPages.clamp(cursor, today)
+        if (bounded == mutableState.value.cursor) return
+        mutableState.update { it.copy(cursor = bounded) }
         ensureYear()
+    }
+
+    private fun drillDown(monthNumber: Int) {
+        val target = mutableState.value.cursor.drillDown(monthNumber)
+        if (PeriodPages.isWithinBounds(target, today)) moveTo(target)
     }
 
     private fun ensureYear(afterLoad: Boolean = false) {
