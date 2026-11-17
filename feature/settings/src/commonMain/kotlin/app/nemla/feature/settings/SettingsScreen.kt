@@ -50,6 +50,8 @@ import app.nemla.core.designsystem.component.NemlaTopBar
 import app.nemla.core.designsystem.component.NemlaTopBarBrand
 import app.nemla.core.designsystem.component.NemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.component.NemlaTopBarTitle
+import app.nemla.core.designsystem.component.bottomSafeDrawingPadding
+import app.nemla.core.designsystem.component.edgeToEdgeBody
 import app.nemla.core.designsystem.component.rememberNemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -164,7 +166,7 @@ internal fun SettingsScreen(
             message = state.accountMessage?.let { stringResource(it.resource()) },
             onShown = { onAction(SettingsAction.AccountMessageDismissed) },
         )
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Column(modifier = Modifier.fillMaxSize().edgeToEdgeBody(padding)) {
             NemlaTabs(
                 options = tabs,
                 selected = tabs.getOrNull(pagerState.currentPage)?.value ?: state.tab,
@@ -206,6 +208,7 @@ private fun SettingsPage(content: @Composable ColumnScope.() -> Unit) {
                 Modifier
                     .widthIn(max = NemlaTheme.sizes.contentMaxWidth)
                     .fillMaxWidth()
+                    .bottomSafeDrawingPadding()
                     .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.pageVertical),
             verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.md),
             content = content,
