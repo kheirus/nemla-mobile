@@ -36,7 +36,6 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import app.nemla.core.designsystem.component.NemlaAppHeader
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
-import app.nemla.core.designsystem.component.NemlaEmptyState
 import app.nemla.core.designsystem.component.NemlaEntryButton
 import app.nemla.core.designsystem.component.NemlaMenuItem
 import app.nemla.core.designsystem.component.NemlaOption
@@ -77,8 +76,6 @@ import app.nemla.feature.settings.resources.settings_entry_profile
 import app.nemla.feature.settings.resources.settings_entry_profile_help
 import app.nemla.feature.settings.resources.settings_entry_recurring
 import app.nemla.feature.settings.resources.settings_entry_recurring_help
-import app.nemla.feature.settings.resources.settings_reports_soon
-import app.nemla.feature.settings.resources.settings_reports_soon_body
 import app.nemla.feature.settings.resources.settings_sign_out
 import app.nemla.feature.settings.resources.settings_sign_out_failed
 import app.nemla.feature.settings.resources.settings_tab_categories
@@ -99,6 +96,7 @@ internal fun SettingsRoute(
     onClose: () -> Unit,
     onSignedOut: () -> Unit,
     dictation: SettingsDictationSlot,
+    reportHistory: @Composable () -> Unit,
     viewModel: SettingsViewModel = koinViewModel { parametersOf(initialTab) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -120,7 +118,7 @@ internal fun SettingsRoute(
         isBackEnabled = state.panel != null,
         onBackCompleted = { viewModel.onAction(SettingsAction.BackClicked) },
     )
-    SettingsScreen(state = state, onAction = viewModel::onAction, dictation = dictation)
+    SettingsScreen(state = state, onAction = viewModel::onAction, dictation = dictation, reportHistory = reportHistory)
 }
 
 @Composable
@@ -128,6 +126,7 @@ internal fun SettingsScreen(
     state: SettingsUiState,
     onAction: (SettingsAction) -> Unit,
     dictation: SettingsDictationSlot,
+    reportHistory: @Composable () -> Unit,
 ) {
     NemlaScreen(topBar = { SettingsHeader(state, onAction) }) {
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.md)) {
@@ -164,7 +163,7 @@ internal fun SettingsScreen(
             }
             when (state.tab) {
                 SettingsTab.PROFILE -> ProfileTab(state, onAction, dictation)
-                SettingsTab.REPORTS -> ReportsTab()
+                SettingsTab.REPORTS -> reportHistory()
                 SettingsTab.CREDITS -> CreditsTabRoute()
                 SettingsTab.CATEGORIES -> CategoriesTabRoute()
             }
@@ -326,15 +325,6 @@ private fun DeleteDialog(onAction: (SettingsAction) -> Unit) {
                 variant = NemlaButtonVariant.Ghost,
             )
         },
-    )
-}
-
-@Composable
-private fun ReportsTab() {
-    NemlaEmptyState(
-        title = stringResource(Res.string.settings_reports_soon),
-        message = stringResource(Res.string.settings_reports_soon_body),
-        icon = NemlaIcons.BarChart,
     )
 }
 

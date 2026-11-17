@@ -29,8 +29,6 @@
   <string name="settings_cancel">Annuler</string>
   <string name="settings_delete_unavailable">La suppression du compte n'est pas encore disponible depuis l'application. Rien n'a été supprimé : utilisez nemla.app pour supprimer votre compte.</string>
   <string name="settings_delete_failed">Suppression impossible</string>
-  <string name="settings_reports_soon">Bilans bientôt disponibles</string>
-  <string name="settings_reports_soon_body">L'historique de vos bilans mensuels et annuels arrive dans une prochaine version.</string>
   <string name="budget_title">Gérer mon budget</string>
   <string name="budget_intro">Un seul montant à indiquer : ce que vous ne voulez pas dépasser, par mois ou par an.</string>
   <string name="budget_amount_label">Montant du budget (%1$s)</string>

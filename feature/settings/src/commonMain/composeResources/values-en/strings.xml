@@ -29,8 +29,6 @@
   <string name="settings_cancel">Cancel</string>
   <string name="settings_delete_unavailable">Account deletion is not available in the app yet. Nothing was deleted: use nemla.app to delete your account.</string>
   <string name="settings_delete_failed">Deletion failed</string>
-  <string name="settings_reports_soon">Reports coming soon</string>
-  <string name="settings_reports_soon_body">The history of your monthly and yearly reports arrives in an upcoming version.</string>
   <string name="budget_title">Manage my budget</string>
   <string name="budget_intro">Just one amount: what you don't want to exceed, per month or per year.</string>
   <string name="budget_amount_label">Budget amount (%1$s)</string>
