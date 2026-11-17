@@ -267,8 +267,32 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
   seulement pendant la saisie (texte non envoyé). `NemlaPullToRefreshBox` aux couleurs Nemla. Sombre : barres et puce « Dépensé » à
   `primary` 72 %, mois choisi plein (clair inchangé). Animations : total qui compte (600 ms), anneau qui se dessine (900 ms), barres
   qui montent (décalage 30 ms), jauges `NemlaProgressBar` qui se remplissent (toutes les jauges de l'app).
-- Restes : pages voisines du pager affichées « – » pendant le glissement (seule la période choisie est calculée) ; onglets
-  Répartition / Budgets encore en contrôle maison (étape 4) ; arbitrage de la structure après captures.
+- ☑ Étape 4. Mon espace : `NemlaTabs` (`SecondaryScrollableTabRow`, chaque onglet à la largeur de son texte, libellé « Profil &
+  budget » gardé) synchronisé avec un `HorizontalPager` : l'indicateur suit le doigt (`tabIndicatorLayout` sur
+  `currentPage + currentPageOffsetFraction`), toucher un onglet anime le pager. Chaque page défile seule. Budget, charges fixes,
+  profil, préférences et carte bancaire sont des destinations typées (`SettingsBudgetDestination`…) avec `NemlaTopBar` et
+  `NemlaBackButton` : retour système, retour prédictif et geste de bord iOS natifs. « Budgets par catégorie » revient à Mon espace
+  et ouvre l'onglet Catégories (`savedStateHandle`), le lien d'alerte du tableau de bord ouvre toujours Catégories. Entrées en
+  `NemlaListItem` séparés dans une seule carte. Répartition / Budgets (tableau de bord) et Mensuel / Annuel (budget) en
+  `NemlaSegmentedButtons` ; `NemlaSegmentedControl` et `NemlaEntryButton` supprimés. Confirmation de suppression du compte en
+  `NemlaAlertDialog` (`AlertDialog` natif). Profil rechargé au retour d'un panneau (`ON_RESUME`).
+- ☑ Étape 5. `NemlaDialog` supprimé : édition de dépense, dictée, import de relevé et bilan en `NemlaFormSheet` (`ModalBottomSheet`,
+  glisser vers le bas pour fermer, bloqué pendant un enregistrement ou une lecture ; bilan déplié d'office, défilement interne).
+  Consentements IA, suppression de dépense et de compte en `NemlaAlertDialog`. Avis de réussite et d'information (« Profil
+  enregistré », « Catégorie supprimée », avis du bouton « Ajouter », « Rien détecté » de l'onboarding, messages du compte) en
+  snackbar ; les erreurs restent en bandeau. Pas d'« Annuler » : les suppressions partent tout de suite au serveur, sans
+  restauration possible à bas coût. Champs en `OutlinedTextField` (`NemlaTextField`, `NemlaTextArea`), listes en
+  `ExposedDropdownMenuBox` (`NemlaSelectField`), dates en champ en lecture seule (`NemlaPickerField`) qui ouvre `DatePickerDialog`.
+  Connexion / inscription : actions clavier, types de clavier et `ContentType` (e-mail, mot de passe, nouveau mot de passe) déjà
+  en place ; onboarding : « Suivant » / « Terminé ». Roue de la dictée en `CircularProgressIndicator`.
+- ☑ Étape 6 (fin). Fiche de revue en `LazyColumn` : une ligne supprimée glisse et les autres remontent (`Modifier.animateItem`),
+  retour haptique sur suppression et validation (aussi à la suppression d'une dépense du tableau de bord). Dépenses du jour et
+  dépenses à valider du tableau de bord : `NemlaAnimatedColumn` (`AnimatedVisibility` par ligne, liste non paresseuse). Bandeau
+  « Votre bilan… est arrivé » entre par `expandVertically`. Animations de l'étape 3 inchangées, sans doublon.
+- **Écart à la demande** : la fiche de revue reste un écran (destination `VoiceReviewDestination`, ouverte depuis plusieurs
+  endroits) et non un panneau du bas ; elle gagne une barre d'application (retour = « Plus tard ») et des boutons en bas d'écran.
+- Restes : pages voisines du pager du tableau de bord affichées « – » pendant le glissement ; arbitrage de la structure après
+  captures ; en `BottomNavigation`, la barre du bas est masquée dans les panneaux de Mon espace ; étape 7 (identité).
 
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.

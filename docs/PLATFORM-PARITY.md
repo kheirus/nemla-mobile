@@ -321,3 +321,15 @@ Le libellé iOS n'est pas le titre de l'écran précédent (UIKit le fait) mais 
 recherche, `InputChip`, tirer pour rafraîchir et animations sont des composants Compose / Material 3 communs. Sur iOS, ils ne sont pas
 natifs UIKit (pas de `UISegmentedControl`, `UISearchBar` ni `UIRefreshControl`) ; le rebond de défilement iOS n'existe pas.
 Le menu « Ajouter » de la ligne « Menu « Ajouter », dialogues » du lot 2 est désormais un `ModalBottomSheet`.
+
+## Lot 6b — étapes 4 à 6, Mon espace, fenêtres, animations (17/11/2026)
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Panneaux du bas (`NemlaSheet`, `NemlaFormSheet`) | `ModalBottomSheet` Material 3 : poignée, glisser vers le bas, retour système ferme | Même composant Material 3 (pas de `UISheetPresentationController` ni de détente moyenne) ; pas de retour système, on ferme en glissant ou en touchant le voile | Oui, légèrement |
+| Retour haptique (suppression, validation) | `HapticFeedbackType.Confirm` → `HapticFeedbackConstants.CONFIRM` (léger) | `UINotificationFeedbackGenerator` succès (double impulsion, plus marquée) | Oui, au toucher |
+| Remplissage automatique (`ContentType`) | Service d'autoremplissage (Google, gestionnaire de mots de passe) | `textContentType` UIKit : trousseau iCloud | Oui, propre à chaque OS |
+| Onglets, pager, listes déroulantes, champs, `AlertDialog`, `DatePickerDialog`, snackbars | Material 3 | Mêmes composants Material 3, non natifs UIKit (`UISegmentedControl`, `UIAlertController`, `UIDatePicker` absents) | Non (identique) |
+
+Les panneaux de Mon espace sont des destinations du `NavHost` : la flèche Android et le chevron iOS de l'étape 1 s'y appliquent,
+ainsi que le retour prédictif et le geste de bord. Aucun autre écart.
