@@ -10,18 +10,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,10 +27,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -51,7 +48,10 @@ import app.nemla.core.audio.rememberMicrophonePermissionRequest
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaDialog
+import app.nemla.core.designsystem.component.NemlaListIcon
+import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaProgressBar
+import app.nemla.core.designsystem.component.NemlaSheet
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.feature.voice.common.AiConsentDialog
@@ -89,7 +89,6 @@ import org.koin.compose.viewmodel.koinViewModel
 
 private const val LOW_CREDIT_THRESHOLD = 3
 private const val NOTICE_DURATION_MILLIS = 6_000L
-private const val DISABLED_ALPHA = 0.5f
 private const val SPINNER_PERIOD_MILLIS = 1_000
 
 @Composable
@@ -97,8 +96,9 @@ fun VoiceCaptureButton(
     onOpenReview: () -> Unit,
     modifier: Modifier = Modifier,
     onImportStatement: (() -> Unit)? = null,
+    expanded: Boolean = true,
 ) {
-    VoiceCaptureRoute(onOpenReview = onOpenReview, onImportStatement = onImportStatement, modifier = modifier)
+    VoiceCaptureRoute(onOpenReview = onOpenReview, onImportStatement = onImportStatement, modifier = modifier, expanded = expanded)
 }
 
 @Composable
@@ -106,6 +106,7 @@ internal fun VoiceCaptureRoute(
     onOpenReview: () -> Unit,
     onImportStatement: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    expanded: Boolean = true,
     viewModel: VoiceCaptureViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -134,6 +135,7 @@ internal fun VoiceCaptureRoute(
         onAction = viewModel::onAction,
         modifier = modifier,
         importAvailable = onImportStatement != null,
+        expanded = expanded,
     )
 }
 
@@ -143,6 +145,7 @@ internal fun VoiceCaptureContent(
     onAction: (VoiceCaptureAction) -> Unit,
     modifier: Modifier = Modifier,
     importAvailable: Boolean = false,
+    expanded: Boolean = true,
 ) {
     Column(
         modifier = modifier,
@@ -169,21 +172,23 @@ internal fun VoiceCaptureContent(
                         .clickable(onClickLabel = dismissLabel) { onAction(VoiceCaptureAction.NoticeDismissed) },
             )
         }
-        Box {
-            AddFab(onClick = { onAction(VoiceCaptureAction.FabClicked) })
-            AddMenu(state = state, onAction = onAction, importAvailable = importAvailable)
-        }
+        AddFab(expanded = expanded, onClick = { onAction(VoiceCaptureAction.FabClicked) })
     }
+    if (state.isMenuOpen) AddSheet(state = state, onAction = onAction, importAvailable = importAvailable)
     if (state.isDialogOpen) DictationDialog(state = state, onAction = onAction)
     if (state.isConsentPromptVisible) ConsentDialog(onAction = onAction)
 }
 
 @Composable
-private fun AddFab(onClick: () -> Unit) {
+private fun AddFab(
+    expanded: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = NemlaTheme.colors
     val description = stringResource(Res.string.voice_fab_description)
     ExtendedFloatingActionButton(
         onClick = onClick,
+        expanded = expanded,
         shape = CircleShape,
         containerColor = colors.primary,
         contentColor = colors.primaryForeground,
@@ -194,24 +199,26 @@ private fun AddFab(onClick: () -> Unit) {
 }
 
 @Composable
-private fun AddMenu(
+private fun AddSheet(
     state: VoiceCaptureUiState,
     onAction: (VoiceCaptureAction) -> Unit,
     importAvailable: Boolean,
 ) {
-    val colors = NemlaTheme.colors
-    DropdownMenu(
-        expanded = state.isMenuOpen,
-        onDismissRequest = { onAction(VoiceCaptureAction.MenuDismissed) },
-        shape = RoundedCornerShape(NemlaTheme.radius.md),
-        containerColor = colors.popover,
-        modifier = Modifier.width(MENU_WIDTH),
-    ) {
+    NemlaSheet(onDismissRequest = { onAction(VoiceCaptureAction.MenuDismissed) }) { sheet ->
+        Text(
+            text = stringResource(Res.string.voice_fab_label),
+            style = NemlaTheme.typography.sectionTitle,
+            modifier =
+                Modifier
+                    .padding(horizontal = NemlaTheme.spacing.md)
+                    .padding(bottom = NemlaTheme.spacing.xs)
+                    .semantics { heading() },
+        )
         MenuEntry(
             icon = NemlaIcons.Mic,
             title = stringResource(Res.string.voice_menu_dictate),
             enabled = state.canDictate,
-            onClick = { onAction(VoiceCaptureAction.DictateClicked) },
+            onClick = { sheet.dismiss { onAction(VoiceCaptureAction.DictateClicked) } },
             subtitle = { DictationQuota(state.quota) },
         )
         if (state.hasPendingReview) {
@@ -219,10 +226,19 @@ private fun AddMenu(
                 icon = NemlaIcons.Check,
                 title = stringResource(Res.string.voice_menu_resume_review),
                 enabled = true,
-                onClick = { onAction(VoiceCaptureAction.ResumeReviewClicked) },
+                onClick = { sheet.dismiss { onAction(VoiceCaptureAction.ResumeReviewClicked) } },
                 subtitle = { MenuHint(stringResource(Res.string.voice_menu_resume_review_hint)) },
             )
         }
+        MenuEntry(
+            icon = NemlaIcons.FileUp,
+            title = stringResource(Res.string.voice_menu_import),
+            enabled = importAvailable && state.canImport,
+            onClick = { sheet.dismiss { onAction(VoiceCaptureAction.ImportClicked) } },
+            subtitle = {
+                if (importAvailable) ImportQuota(state.importQuota) else MenuHint(stringResource(Res.string.voice_menu_coming_soon))
+            },
+        )
         MenuEntry(
             icon = NemlaIcons.Pencil,
             title = stringResource(Res.string.voice_menu_manual),
@@ -230,19 +246,9 @@ private fun AddMenu(
             onClick = {},
             subtitle = { MenuHint(stringResource(Res.string.voice_menu_coming_soon)) },
         )
-        MenuEntry(
-            icon = NemlaIcons.FileUp,
-            title = stringResource(Res.string.voice_menu_import),
-            enabled = importAvailable && state.canImport,
-            onClick = { onAction(VoiceCaptureAction.ImportClicked) },
-            subtitle = {
-                if (importAvailable) ImportQuota(state.importQuota) else MenuHint(stringResource(Res.string.voice_menu_coming_soon))
-            },
-        )
+        Spacer(Modifier.height(NemlaTheme.spacing.md))
     }
 }
-
-private val MENU_WIDTH = 240.dp
 
 @Composable
 private fun MenuEntry(
@@ -252,25 +258,13 @@ private fun MenuEntry(
     onClick: () -> Unit,
     subtitle: @Composable () -> Unit,
 ) {
-    val colors = NemlaTheme.colors
-    DropdownMenuItem(
+    NemlaListItem(
+        headline = title,
+        supportingContent = subtitle,
+        leadingContent = { NemlaListIcon(icon) },
         enabled = enabled,
         onClick = onClick,
-        modifier = Modifier.alpha(if (enabled) 1f else DISABLED_ALPHA),
-        leadingIcon = { Icon(icon, contentDescription = null, tint = colors.primary, modifier = Modifier.size(NemlaTheme.sizes.icon)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = NemlaTheme.typography.bodyStrong, color = colors.popoverForeground)
-                subtitle()
-            }
-        },
-        colors =
-            MenuDefaults.itemColors(
-                textColor = colors.popoverForeground,
-                disabledTextColor = colors.popoverForeground,
-                leadingIconColor = colors.primary,
-                disabledLeadingIconColor = colors.primary,
-            ),
+        modifier = Modifier.padding(horizontal = NemlaTheme.spacing.xs),
     )
 }
 
