@@ -1,5 +1,8 @@
 package app.nemla.feature.dashboard.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -121,6 +126,8 @@ private fun Donut(groups: List<SpendingGroup>) {
     val description = stringResource(Res.string.spending_chart_description)
     val positive = groups.filter { it.totalCents > 0 }
     val total = positive.sumOf { it.totalCents }
+    val sweep = remember { Animatable(0f) }
+    LaunchedEffect(sweep) { sweep.animateTo(FULL_TURN, tween(DONUT_SWEEP_MILLIS, easing = FastOutSlowInEasing)) }
     Canvas(modifier = Modifier.fillMaxWidth().height(DonutHeight).semantics { contentDescription = description }) {
         if (total <= 0) return@Canvas
         val half = minOf(size.width, size.height) / 2f
@@ -129,19 +136,22 @@ private fun Donut(groups: List<SpendingGroup>) {
         val ringRadius = (outer + inner) / 2f
         val thickness = outer - inner
         val topLeft = Offset(center.x - ringRadius, center.y - ringRadius)
+        val limit = sweep.value
         var start = 0f
         positive.forEach { group ->
-            val sweep = -(group.totalCents.toDouble() / total.toDouble() * FULL_TURN).toFloat()
+            val full = (group.totalCents.toDouble() / total.toDouble() * FULL_TURN).toFloat()
+            val visible = minOf(full, limit + start).coerceAtLeast(0f)
+            if (visible <= 0f) return@forEach
             drawArc(
                 color = group.colorOrOther(),
                 startAngle = start,
-                sweepAngle = sweep,
+                sweepAngle = -visible,
                 useCenter = false,
                 topLeft = topLeft,
                 size = Size(ringRadius * 2, ringRadius * 2),
                 style = Stroke(width = thickness),
             )
-            start += sweep
+            start -= full
         }
     }
 }

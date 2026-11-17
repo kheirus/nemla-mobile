@@ -30,9 +30,8 @@
   </plurals>
   <string name="alerts_over">+%1$s / %2$s planned</string>
   <string name="alerts_planned">%1$s planned</string>
-  <string name="search_by_date">Search a specific day</string>
   <string name="search_pick_date">Search by date</string>
-  <string name="search_date">Date</string>
+  <string name="search_placeholder">Search expenses</string>
   <string name="search_clear">Clear search</string>
   <string name="search_text_soon">Keyword search is coming soon.</string>
   <string name="search_empty">No expenses found.</string>

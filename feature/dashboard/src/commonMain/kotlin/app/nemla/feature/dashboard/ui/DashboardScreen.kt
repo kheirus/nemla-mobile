@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,6 +40,7 @@ import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
+import app.nemla.core.designsystem.component.NemlaPullToRefreshBox
 import app.nemla.core.designsystem.component.NemlaScaffold
 import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.component.NemlaTopBar
@@ -80,14 +80,14 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-private val FloatingActionClearance = 88.dp
+private val FloatingActionClearance = 96.dp
 
 @Composable
 internal fun DashboardRoute(
     onSignedOut: () -> Unit,
     onReviewPending: (PendingReview) -> Unit,
     onOpenSettings: (Boolean) -> Unit,
-    floatingAction: @Composable () -> Unit = {},
+    floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
     showAccountMenu: Boolean = true,
     viewModel: DashboardViewModel = koinViewModel(),
@@ -118,29 +118,37 @@ internal fun DashboardRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DashboardScreen(
     state: DashboardUiState,
     onAction: (DashboardAction) -> Unit,
-    floatingAction: @Composable () -> Unit = {},
+    floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
     showAccountMenu: Boolean = true,
 ) {
     val format = remember(state.language, state.currency) { DashboardFormat(state.language, state.currency) }
     val scrollBehavior = rememberNemlaTopBarScrollBehavior()
+    val scrollState = rememberScrollState()
+    var fabExpanded by remember { mutableStateOf(true) }
+    LaunchedEffect(scrollState) {
+        var previous = scrollState.value
+        snapshotFlow { scrollState.value }.collect { value ->
+            fabExpanded = value == 0 || value < previous
+            previous = value
+        }
+    }
     NemlaScaffold(
         topBar = { DashboardTopBar(state, onAction, showAccountMenu, scrollBehavior) },
-        floatingActionButton = floatingAction,
+        floatingActionButton = { floatingAction(fabExpanded) },
         scrollBehavior = scrollBehavior,
     ) { padding ->
-        PullToRefreshBox(
+        NemlaPullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = { onAction(DashboardAction.PullToRefresh) },
             modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(

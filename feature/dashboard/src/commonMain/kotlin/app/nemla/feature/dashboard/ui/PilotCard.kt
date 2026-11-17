@@ -1,5 +1,12 @@
 package app.nemla.feature.dashboard.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +20,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,10 +35,14 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +53,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.nemla.core.designsystem.component.NemlaButton
@@ -48,16 +62,18 @@ import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaCategoryDot
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaProgressBar
-import app.nemla.core.designsystem.component.NemlaSegmentedControl
+import app.nemla.core.designsystem.component.NemlaSegmentedButtons
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.CategoryColors
 import app.nemla.core.designsystem.theme.NemlaColors
 import app.nemla.core.designsystem.theme.NemlaTheme
+import app.nemla.core.domain.model.PeriodCursor
 import app.nemla.core.domain.model.PeriodKind
 import app.nemla.feature.dashboard.DashboardAction
 import app.nemla.feature.dashboard.DashboardUiState
 import app.nemla.feature.dashboard.logic.FilterSummary
 import app.nemla.feature.dashboard.logic.FilterView
+import app.nemla.feature.dashboard.logic.PeriodPages
 import app.nemla.feature.dashboard.logic.Weather
 import app.nemla.feature.dashboard.logic.WeatherView
 import app.nemla.feature.dashboard.resources.Res
@@ -93,6 +109,8 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 private const val MUTED_PILL_ALPHA = 0.40f
+private const val DISABLED_ARROW_ALPHA = 0.5f
+private const val PLACEHOLDER_AMOUNT = "–"
 private const val SELECTED_OPTION_ALPHA = 0.10f
 private val PopoverWidth = 256.dp
 
@@ -107,31 +125,7 @@ internal fun PilotCard(
     NemlaCard(modifier = Modifier.fillMaxWidth(), contentPadding = NemlaTheme.spacing.md) {
         PeriodRow(state, format, onAction)
         SectionDivider()
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(if (pilot.kind == PeriodKind.YEAR) Res.string.spent_year else Res.string.spent_month).uppercase(),
-                    style = NemlaTheme.typography.overline,
-                    color = colors.mutedForeground,
-                )
-                Text(text = format.money(pilot.spentCents), style = NemlaTheme.typography.amount)
-            }
-            pilot.weather?.let { WeatherPill(it, state, format) }
-        }
-        if (state.isPeriodLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth().padding(top = NemlaTheme.spacing.xs).heightIn(max = 2.dp),
-                color = colors.primary,
-                trackColor = Color.Transparent,
-            )
-        }
-        pilot.progress?.let { NemlaProgressBar(progress = it, modifier = Modifier.padding(top = NemlaTheme.spacing.sm)) }
-        if (pilot.monthlyRecurringCents > 0) {
-            MutedCaption(
-                text = stringResource(Res.string.recurring_per_month, format.money(pilot.monthlyRecurringCents)),
-                modifier = Modifier.padding(top = NemlaTheme.spacing.xs),
-            )
-        }
+        PeriodSummaryPager(state, format, onAction)
         SectionDivider()
         MonthlyChartSection(
             chart = pilot.chart,
@@ -155,9 +149,91 @@ internal fun PilotCard(
 }
 
 @Composable
+private fun PeriodSummaryPager(
+    state: DashboardUiState,
+    format: DashboardFormat,
+    onAction: (DashboardAction) -> Unit,
+) {
+    val cursor = state.cursor
+    val targetPage = PeriodPages.pageOf(cursor)
+    val pageCount = PeriodPages.count(cursor.kind, state.today)
+    val currentTarget by rememberUpdatedState(targetPage)
+    val currentOnAction by rememberUpdatedState(onAction)
+    key(cursor.kind) {
+        val pagerState = rememberPagerState(initialPage = targetPage) { pageCount }
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.settledPage }.collect { page ->
+                if (page != currentTarget) currentOnAction(DashboardAction.PeriodPageSelected(page))
+            }
+        }
+        LaunchedEffect(pagerState, targetPage) {
+            if (pagerState.currentPage != targetPage && !pagerState.isScrollInProgress) pagerState.animateScrollToPage(targetPage)
+        }
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            key = { it },
+        ) { page ->
+            if (page == targetPage) PilotSummary(state, format) else PilotSummaryPlaceholder(cursor.kind)
+        }
+    }
+}
+
+@Composable
+private fun PilotSummary(
+    state: DashboardUiState,
+    format: DashboardFormat,
+) {
+    val pilot = state.view.pilot
+    val colors = NemlaTheme.colors
+    val spent = animatedCents(pilot.spentCents)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
+            Column(modifier = Modifier.weight(1f)) {
+                SpentOverline(pilot.kind)
+                Text(text = format.money(spent), style = NemlaTheme.typography.amount.tabular())
+            }
+            pilot.weather?.let { WeatherPill(it, state, format) }
+        }
+        if (state.isPeriodLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth().padding(top = NemlaTheme.spacing.xs).heightIn(max = 2.dp),
+                color = colors.primary,
+                trackColor = Color.Transparent,
+            )
+        }
+        pilot.progress?.let { NemlaProgressBar(progress = it, modifier = Modifier.padding(top = NemlaTheme.spacing.sm)) }
+        if (pilot.monthlyRecurringCents > 0) {
+            MutedCaption(
+                text = stringResource(Res.string.recurring_per_month, format.money(pilot.monthlyRecurringCents)),
+                modifier = Modifier.padding(top = NemlaTheme.spacing.xs),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PilotSummaryPlaceholder(kind: PeriodKind) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SpentOverline(kind)
+        Text(text = PLACEHOLDER_AMOUNT, style = NemlaTheme.typography.amount, color = NemlaTheme.colors.mutedForeground)
+    }
+}
+
+@Composable
+private fun SpentOverline(kind: PeriodKind) {
+    Text(
+        text = stringResource(if (kind == PeriodKind.YEAR) Res.string.spent_year else Res.string.spent_month).uppercase(),
+        style = NemlaTheme.typography.overline,
+        color = NemlaTheme.colors.mutedForeground,
+    )
+}
+
+@Composable
 private fun SectionDivider(
-    top: androidx.compose.ui.unit.Dp = NemlaTheme.spacing.md,
-    bottom: androidx.compose.ui.unit.Dp = NemlaTheme.spacing.md,
+    top: Dp = NemlaTheme.spacing.md,
+    bottom: Dp = NemlaTheme.spacing.md,
 ) {
     HorizontalDivider(
         modifier = Modifier.padding(top = top, bottom = bottom),
@@ -173,9 +249,8 @@ private fun PeriodRow(
 ) {
     val cursor = state.cursor
     val isYear = cursor.kind == PeriodKind.YEAR
-    val colors = NemlaTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
-        NemlaSegmentedControl(
+    Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
+        NemlaSegmentedButtons(
             options =
                 listOf(
                     NemlaOption(PeriodKind.MONTH, stringResource(Res.string.period_month)),
@@ -185,48 +260,64 @@ private fun PeriodRow(
             onSelect = { onAction(DashboardAction.PeriodKindSelected(it)) },
             modifier = Modifier.fillMaxWidth(),
         )
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .clip(CircleShape)
-                    .background(colors.muted.copy(alpha = MUTED_PILL_ALPHA))
-                    .padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            RoundArrow(
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            PeriodArrow(
                 icon = NemlaIcons.ChevronLeft,
                 description = stringResource(if (isYear) Res.string.period_previous_year else Res.string.period_previous_month),
+                enabled = state.canGoPrevious,
                 onClick = { onAction(DashboardAction.PreviousPeriodClicked) },
             )
-            Text(
-                text = if (isYear) cursor.year.toString() else format.monthTitle(cursor.month),
-                style = NemlaTheme.typography.bodyEmphasis.tabular(),
-                textAlign = TextAlign.Center,
-                maxLines = 1,
+            AnimatedContent(
+                targetState = cursor,
+                transitionSpec = { periodTransition(initialState, targetState) },
+                contentAlignment = Alignment.Center,
                 modifier = Modifier.weight(1f),
-            )
-            RoundArrow(
+            ) { shown ->
+                Text(
+                    text = if (shown.kind == PeriodKind.YEAR) shown.year.toString() else format.monthTitle(shown.month),
+                    style = NemlaTheme.typography.bodyEmphasis.tabular(),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            PeriodArrow(
                 icon = NemlaIcons.ChevronRight,
                 description = stringResource(if (isYear) Res.string.period_next_year else Res.string.period_next_month),
+                enabled = state.canGoNext,
                 onClick = { onAction(DashboardAction.NextPeriodClicked) },
             )
         }
     }
 }
 
+private fun periodTransition(
+    from: PeriodCursor,
+    to: PeriodCursor,
+): ContentTransform {
+    if (from.kind != to.kind) return fadeIn() togetherWith fadeOut()
+    val forward = if (to.kind == PeriodKind.YEAR) to.year > from.year else to.month > from.month
+    val direction = if (forward) 1 else -1
+    return (slideInHorizontally { width -> direction * width / 2 } + fadeIn()) togetherWith
+        (slideOutHorizontally { width -> -direction * width / 2 } + fadeOut())
+}
+
 @Composable
-private fun RoundArrow(
+private fun PeriodArrow(
     icon: ImageVector,
     description: String,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     val colors = NemlaTheme.colors
     IconButton(
         onClick = onClick,
-        modifier = Modifier.size(36.dp),
-        colors = IconButtonDefaults.iconButtonColors(containerColor = colors.secondary, contentColor = colors.secondaryForeground),
+        enabled = enabled,
+        colors =
+            IconButtonDefaults.iconButtonColors(
+                contentColor = colors.foreground,
+                disabledContentColor = colors.mutedForeground.copy(alpha = DISABLED_ARROW_ALPHA),
+            ),
     ) {
         Icon(icon, contentDescription = description, modifier = Modifier.size(20.dp))
     }

@@ -17,7 +17,7 @@ fun NavGraphBuilder.dashboardScreen(
     onSignedOut: () -> Unit,
     onReviewPending: (PendingReview) -> Unit,
     onOpenSettings: (categories: Boolean) -> Unit,
-    floatingAction: @Composable () -> Unit = {},
+    floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
     showAccountMenu: Boolean = true,
 ) {
