@@ -79,15 +79,18 @@ internal fun BudgetSuggestionDto.toEstimate(): BudgetEstimate =
 internal fun PeriodReportDto.toReview(
     requestedPeriod: String,
     requestedKind: ReviewPeriodKind,
-): PeriodReview =
-    PeriodReview(
-        period = month ?: requestedPeriod,
-        kind =
-            when (kind) {
-                "annee" -> ReviewPeriodKind.YEAR
-                "mois" -> ReviewPeriodKind.MONTH
-                else -> requestedKind
-            },
+): PeriodReview {
+    val period = month?.trim() ?: requestedPeriod
+    val reportedKind =
+        when (kind) {
+            "annee" -> ReviewPeriodKind.YEAR
+            "mois" -> ReviewPeriodKind.MONTH
+            else -> requestedKind
+        }
+    if (period != requestedPeriod || reportedKind != requestedKind) invalidResponse()
+    return PeriodReview(
+        period = period,
+        kind = reportedKind,
         previousPeriod = previousMonth ?: invalidResponse(),
         totalCents = total.toCents() ?: invalidResponse(),
         previousTotalCents = previousTotal.toCents() ?: 0,
@@ -102,9 +105,10 @@ internal fun PeriodReportDto.toReview(
                     variation = category.variation.toDecimal() ?: 0.0,
                 )
             },
-        highlights = highlights,
-        advice = advice,
+        highlights = highlights.map(String::trim).filter(String::isNotEmpty),
+        advice = advice.map(String::trim).filter(String::isNotEmpty),
     )
+}
 
 private fun String?.toLocalDate(): LocalDate? =
     this?.let {

@@ -385,6 +385,75 @@ class NemlaEnginesTest {
         }
 
     @Test
+    fun reportParsesTheFullSpecifiedShape() =
+        runTest {
+            val harness =
+                RemoteHarness {
+                    json(
+                        """
+                        {"month":"2026-08","kind":"mois","previous_month":"2026-07","total":"1520.4","previous_total":980.123,
+                         "budget":null,"expense_count":7,
+                         "categories":[{"nom":"Courses","montant":600,"part":39,"variation":120.55},
+                                       {"nom":"Sans catégorie","montant":"20.10","part":"1","variation":null}],
+                         "highlights":["  Courses concentre 39 % de vos dépenses (600 €). ",""],
+                         "advice":["Renseignez un budget global pour obtenir une météo fiable."],"extra":true}
+                        """.trimIndent(),
+                    )
+                }
+            val review = NemlaPeriodReportEngine(harness.api).execute(PeriodReportRequest("2026-08", ReviewPeriodKind.MONTH))
+            assertEquals(152_040, review.totalCents)
+            assertEquals(98_012, review.previousTotalCents)
+            assertEquals(0, review.budgetCents)
+            assertEquals(7, review.expenseCount)
+            assertEquals(
+                listOf(CategoryReview("Courses", 60_000, 39.0, 120.55), CategoryReview("Sans catégorie", 2_010, 1.0, 0.0)),
+                review.categories,
+            )
+            assertEquals(listOf("Courses concentre 39 % de vos dépenses (600 €)."), review.highlights)
+            assertEquals(1, review.advice.size)
+        }
+
+    @Test
+    fun reportForAnotherPeriodIsRejected() =
+        runTest {
+            val harness = RemoteHarness { json(reportResponse) }
+            val engine = NemlaPeriodReportEngine(harness.api)
+            assertEquals(
+                AiError.EngineFailure("invalid_response"),
+                expectAiError { engine.execute(PeriodReportRequest("2026-11", ReviewPeriodKind.MONTH)) },
+            )
+            val yearly = RemoteHarness { json(reportResponse) }
+            assertEquals(
+                AiError.EngineFailure("invalid_response"),
+                expectAiError { NemlaPeriodReportEngine(yearly.api).execute(PeriodReportRequest("2026", ReviewPeriodKind.YEAR)) },
+            )
+        }
+
+    @Test
+    fun reportWithoutTotalOrPreviousPeriodIsInvalid() =
+        runTest {
+            val harness = RemoteHarness { json("""{"month":"2026-10","kind":"mois","previous_month":"2026-09"}""") }
+            assertEquals(
+                AiError.EngineFailure("invalid_response"),
+                expectAiError { NemlaPeriodReportEngine(harness.api).execute(PeriodReportRequest("2026-10", ReviewPeriodKind.MONTH)) },
+            )
+            val noPrevious = RemoteHarness { json("""{"month":"2026-10","kind":"mois","total":1}""") }
+            assertEquals(
+                AiError.EngineFailure("invalid_response"),
+                expectAiError { NemlaPeriodReportEngine(noPrevious.api).execute(PeriodReportRequest("2026-10", ReviewPeriodKind.MONTH)) },
+            )
+        }
+
+    @Test
+    fun reportHtmlErrorPageIsAnEngineFailure() =
+        runTest {
+            val harness = RemoteHarness { html(HttpStatusCode.InternalServerError) }
+            val error =
+                expectAiError { NemlaPeriodReportEngine(harness.api).execute(PeriodReportRequest("2026-10", ReviewPeriodKind.MONTH)) }
+            assertTrue(error is AiError.EngineFailure)
+        }
+
+    @Test
     fun reportOfflineIsOffline() =
         runTest {
             val harness = RemoteHarness { throw IOException("down") }
