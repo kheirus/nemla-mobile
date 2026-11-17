@@ -4,4 +4,7 @@
   <string name="app_missing_config_body">Set SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and API_BASE_URL (https addresses) in local.properties for Android or in iosApp/Config.xcconfig for iOS, then rebuild the app.</string>
   <string name="app_unavailable_title">App unavailable</string>
   <string name="app_unavailable_body">This version of the app cannot connect to the service. Update it or try again later.</string>
+  <string name="app_tab_home">Home</string>
+  <string name="app_tab_reports">Reports</string>
+  <string name="app_tab_settings">My space</string>
 </resources>
