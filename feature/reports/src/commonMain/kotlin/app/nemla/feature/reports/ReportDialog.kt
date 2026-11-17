@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
-import app.nemla.core.designsystem.component.NemlaDialog
+import app.nemla.core.designsystem.component.NemlaFormSheet
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -80,11 +78,11 @@ internal fun ReportDialogContent(
     onAction: (ReportDialogAction) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    NemlaDialog(
+    NemlaFormSheet(
         title = stringResource(Res.string.reports_title, periodLabel(state.period, state.language)),
         onDismissRequest = onDismiss,
-        maxWidth = ReportDialogMaxWidth,
-    ) {
+        skipPartiallyExpanded = true,
+    ) { sheet ->
         when (val content = state.content) {
             ReportContent.Loading -> {
                 Row(
@@ -117,15 +115,10 @@ internal fun ReportDialogContent(
             }
 
             is ReportContent.Loaded -> {
-                Column(
-                    modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.md),
-                ) {
-                    ReportBody(content.sheet, state.language)
-                }
+                ReportBody(content.sheet, state.language)
                 NemlaButton(
                     text = stringResource(Res.string.reports_understood),
-                    onClick = onDismiss,
+                    onClick = { sheet.dismiss() },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -264,7 +257,6 @@ internal fun periodLabel(
         is ReviewPeriod.Year -> stringResource(Res.string.reports_year_label, period.year.toString())
     }
 
-private val ReportDialogMaxWidth = 448.dp
 private val BulletSize = 4.dp
 private val BulletTopOffset = 8.dp
 
