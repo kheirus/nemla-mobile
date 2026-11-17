@@ -20,7 +20,7 @@ L'interface reprend fidèlement le web (cartes, menus déroulants, boîtes de di
 1. **Composant Material 3 d'abord** (Compose Multiplatform, `material3` 1.9.0 du catalogue), habillé par `NemlaTheme`. Un composant maison
    seulement si Material 3 n'a pas d'équivalent (graphique, anneau, carte météo).
 2. **Pas d'API « Expressive »** ni de version non stable. Certaines API Material 3 stables dans leur version restent marquées
-   `@ExperimentalMaterial3Api` (`ModalBottomSheet`, `TopAppBar`, `DatePicker`, déjà utilisé). **[à arbitrer]** : autoriser cet opt-in,
+   `@ExperimentalMaterial3Api` (`ModalBottomSheet`, `TopAppBar`, `DatePicker`, déjà utilisé). **Décidé le 17/11/2026** : opt-in autorisé par le propriétaire,
    comme pour `DatePicker`.
 3. **`core:designsystem` garde la main** : les écrans n'appellent pas Material 3 directement, ils passent par des enveloppes `Nemla*`
    minces (`NemlaTopBar`, `NemlaSheet`, `NemlaTabs`…) qui fixent couleurs, formes et typographie.
