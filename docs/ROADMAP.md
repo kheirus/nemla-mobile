@@ -113,7 +113,7 @@ Météo du budget, graphique mensuel, « Où part l'argent », dépenses du jour
   - libellés des dépenses et recherche texte : dépendent de `GET /api/public/expenses` (`NotSupportedYet`) ;
   - matérialisation des charges fixes : dépend de `POST /api/public/recurring/materialize` (`NotSupportedYet`) ;
   - lot 4 : `PaymentModeGate`, réglages du débit, lien vers les budgets, « Gérer mon compte », création manuelle et type Fixe ;
-  - lot 6 : astuces, bandeau de bilan, notifications, rappel quotidien ;
+  - astuces : non faites ; bandeau de bilan : lot 6 ; notifications et rappel quotidien : lot 7 ;
   - à trancher : incohérence de la météo du web (mois sans filtre, année avec filtre), graduations de l'axe Y, formatage monétaire
     à comparer au navigateur ;
   - essai complet sur Android (édition, suppression, revue en attente) : non fait.
@@ -152,8 +152,8 @@ Budget, charges fixes, profil, préférences, catégories, crédits, suppression
     pas d'une autre ; à trancher (formulaire dans `core:designsystem` sous forme générique, ou emplacement rempli par `shared`) ;
   - suppression du compte : dépend de `DELETE /api/public/account` (port en `NotSupportedYet`, message affiché) ;
   - export des données : reporté, absent du web et du backend (endpoint à créer, `BACKEND-GAPS.md`) ;
-  - rappel quotidien (Préférences) : lot 6 avec les notifications ;
-  - onglet « Bilans » : historique au lot 6 ;
+  - rappel quotidien (Préférences) : lot 7 avec les notifications ;
+  - onglet « Bilans » : historique fait au lot 6 ;
   - « Créez votre catégorie dans Mon espace » depuis la fiche de revue, création manuelle de dépense et type Fixe : non faits.
 
 ## Lot 5 — Import de relevés ☑
@@ -197,8 +197,48 @@ Extraction du texte sur l'appareil (PDF, CSV), anonymisation locale, envoi du te
   - essais sur appareil Android (sélecteur, PDF selon la version, Drive) et simulateur iOS (sélecteur, iCloud, PDFKit) : non faits ;
   - partage « Ouvrir avec nemla » depuis une autre application : non construit.
 
-## Lot 6 — Bilans, notifications, publication ☐
-Bilans, notifications (FCM / APNs, à construire côté serveur), fiches des stores, politique de confidentialité.
+## Lot 6 — Bilans et préparation de la publication ☑
+Bilans (calcul serveur, bandeau du tableau de bord, historique dans Mon espace), dossier de publication et brouillon de politique de
+confidentialité. Les notifications sont sorties du lot (décision du propriétaire) : voir lot 7.
+- ☑ `ai:remote-nemla` (17/11/2026) : `NemlaPeriodReportEngine` (déjà présent depuis le lot 1) refuse une réponse dont la période ou le type
+  diffère de la demande, ignore les lignes vides de `highlights` / `advice`. 4 nouveaux tests (forme complète de `specs/01` §2.6,
+  nombres en chaîne, période différente, champs obligatoires, page HTML).
+- ☑ `core:domain` : `ReportCalendar` (bandeau : jour > dernier jour − 3, plus l'année en décembre ; candidats M−1…M−24 et A−1…A−3 ;
+  fenêtre de lecture ; regroupement par année décroissante, bilan annuel en tête ; clés `AAAA-MM` / `AAAA`), `ReportSheet` (bilan + devise
+  du profil + écart), port `ReportRepository`, cas d'usage `LoadPeriodReport`, `FindArrivedReports`, `MarkReportViewed`,
+  `ListReportHistory`. `PeriodReviewer` devient `fun interface`. 10 tests (mois de 30 et 31 jours, février, février bissextile, décembre).
+- ☑ `core:data` : `KtorReportRepository` en PostgREST direct : lecture de `report_views.mois`, insertion `on_conflict=user_id,mois` avec
+  `resolution=ignore-duplicates` (un 409 vaut succès), mois ayant une dépense confirmée lus par dates seules (`select=date`), en sautant au
+  mois précédent dès qu'une page de 1 000 est pleine. 6 tests.
+- ☑ `core:designsystem` : icônes `BellRing`, `TrendingUp`, `TrendingDown`, `History`.
+- ☑ `feature:reports` (nouveau) : `ReportDialog` (§10.1 : « Calcul du bilan… », erreur + « Réessayer », total, écart avec icône de tendance,
+  « Où part l'argent », points clés et pistes du serveur, « J'ai compris »), `ReportArrivalNotice` (§5.10 : un bandeau par période,
+  enregistre la vue puis ouvre le bilan), `ReportHistory` (§10.2). Chaînes fr/en. 9 tests de ViewModel.
+- ☑ `feature:dashboard` : emplacement `reportNotice` (après les alertes de budget). `feature:settings` : emplacement `reportHistory`
+  pour l'onglet « Bilans » (l'état « bientôt disponibles » du lot 4 est supprimé).
+- ☑ `shared` : `featureReportsModule`, emplacements remplis.
+- ☑ Documents : `docs/PUBLICATION.md` (liste de contrôle Google Play / App Store, bloquants, fiches fr/en), `docs/PRIVACY-POLICY-DRAFT.md`
+  (brouillon à faire relire par un juriste).
+- Vérifié le 17/11/2026 : `spotlessApply`, `allTests` (JVM et simulateur iOS), `:androidApp:assembleDebug`,
+  `:shared:linkDebugFrameworkIosSimulatorArm64`.
+- Reste à faire (reporté) :
+  - textes des points clés et des pistes : français seulement, montants en « € » arrondis quelle que soit la devise (`BACKEND-GAPS.md`) ;
+    affichés tels quels, avec une mention en anglais « These notes are written in French for now. » ;
+  - essais sur appareil Android et simulateur iOS (bandeau les 3 derniers jours, historique, dialogue, devise autre que l'euro) : non faits ;
+  - bandeau : calculé à l'affichage du tableau de bord (pas de rafraîchissement à minuit si l'application reste ouverte) ;
+  - historique : la liste suit le défilement de Mon espace (pas de zone de 420 px à en-têtes collants, voir `PLATFORM-PARITY.md`) ;
+  - astuces du tableau de bord (§5.9) : non faites ;
+  - publication : bloquants listés dans `PUBLICATION.md` (suppression de compte, URL de politique de confidentialité, liens de
+    réinitialisation, sécurité backend), signature et numéros de version à mettre en place.
+
+## Lot 7 — Notifications ☐ (à concevoir)
+Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
+- Push « Votre bilan est arrivé » (fin de mois, fin d'année), qui ouvrirait le dialogue de bilan de `feature:reports`.
+- Rappel quotidien de 20 h (« Bilan de la journée… », `profiles.daily_reminder`) et son interrupteur dans Préférences.
+- Alertes de budget de catégorie (« Budget atteint »).
+- Bannières in-app de `user_notifications` (`specs/04` §5.11).
+- Côté backend : table de jetons d'appareil, émetteur planifié (`BACKEND-GAPS.md`, ligne Notifications).
+- Aucun code de notification, permission, FCM / APNs ni rappel local n'existe dans l'application à ce jour.
 
 ## Plus tard
 Transcription locale (whisper.cpp), modèle local (LiteRT-LM), cache chiffré hors ligne, autre fournisseur d'IA.

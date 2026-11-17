@@ -48,9 +48,10 @@ feature/onboarding         « Vos charges fixes » après la première connexion
 feature/settings           Mon espace : profil & budget (5 panneaux), bilans, crédits, catégories, zone dangereuse (lot 4)
 feature/import             dialogue « Importer un relevé de compte » (lot 5 ; paquet `app.nemla.feature.statementimport`,
                            `import` étant un mot réservé de Kotlin et de Java)
+feature/reports            bilans (lot 6) : dialogue de bilan, bandeau « Votre bilan de … est arrivé », historique des bilans
 ```
 
-Lots suivants : `feature/reports`, `ai/remote-<autre fournisseur>`.
+Lots suivants : notifications (lot 7, à concevoir), `ai/remote-<autre fournisseur>`.
 
 ### Règles de dépendance (vérifiées en revue)
 
@@ -79,6 +80,11 @@ du menu « Ajouter » appelle le rappel `onImportStatement` de `VoiceCaptureButt
 `voiceGraph`, comme pour les dépenses en attente. Pour rouvrir des dépenses
 en attente depuis le tableau de bord, `feature:dashboard` émet un `PendingReview` (`core:domain`) par le rappel `onReviewPending` ;
 `shared` le confie au port `PendingReviewOpener` (implémenté par `feature:voice` au-dessus de `VoiceReviewStore`) puis ouvre `voiceGraph`.
+
+Les bilans (lot 6) suivent le même principe : `feature:dashboard` expose l'emplacement `reportNotice` (rendu juste après les alertes
+de budget, position 4 de `specs/04` §5.2) que `shared` remplit avec `ReportArrivalNotice`, et `feature:settings` expose `reportHistory`
+(onglet « Bilans ») que `shared` remplit avec `ReportHistory`. Les deux ouvrent `ReportDialog` de `feature:reports`, qui ne connaît que
+des cas d'usage (`LoadPeriodReport`, `FindArrivedReports`, `MarkReportViewed`, `ListReportHistory`).
 
 La dictée de texte libre (onboarding, panneau « Mes charges fixes ») suit le même principe : `feature:onboarding` et
 `feature:settings` exposent un emplacement composable (`OnboardingDictationSlot`, `SettingsDictationSlot`, de signature
@@ -180,6 +186,14 @@ Charges     : RecurringParsing
 Budget/Bilan: BudgetSuggestion / PeriodReport (calcul serveur aujourd'hui ; calcul local possible plus tard)
 ```
 
+Bilans (lot 6, arbitrage) : le calcul passe par la capacité `PeriodReport` (`PeriodReviewer` → `RoutedPeriodReviewer` → `AiRouter` →
+`NemlaPeriodReportEngine`, `GET /api/public/report/monthly`), bien qu'il n'y ait pas d'IA côté serveur : cela garde la porte ouverte à
+un calcul sur l'appareil sans toucher aux écrans. Sensibilité `NONE` (aucun consentement), 0 crédit. La période est **toujours**
+explicite (`?month=AAAA-MM` ou `?year=AAAA`), calculée sur la date **locale** de l'appareil ; le moteur refuse une réponse dont la période
+ou le type diffère de la demande (`invalid_response`). Les vues (`report_views`) et les mois ayant au moins une dépense confirmée
+(historique) ne sont pas de l'IA : port `ReportRepository`, implémenté en PostgREST direct (`KtorReportRepository`). Les règles de
+calendrier (bandeau des 3 derniers jours, décembre, candidats M−1…M−24 et A−1…A−3) sont dans `ReportCalendar` (`core:domain`).
+
 ### Moteurs présents au lot 1
 
 | Module | Moteur | Capacité | Lieu |
@@ -217,7 +231,7 @@ fichier : le champ `kind` n'est donc pas envoyé (point à arbitrer, voir ROADMA
 | Transport | HTTPS uniquement (`usesCleartextTraffic=false`, ATS par défaut). Épinglage de certificat prévu quand le domaine d'API sera figé. |
 | Journaux | `AppLogger` n'accepte que des messages constants et des identifiants techniques. Le journal HTTP est désactivé en release et n'affiche jamais corps ni en-têtes. Les types sensibles redéfinissent `toString()`. |
 | Écran | `FLAG_SECURE` sur Android en release (pas de capture ni d'aperçu dans les applications récentes) ; voile sur iOS quand l'application passe en arrière-plan. |
-| Minimisation | Aucune donnée financière au repos (lots 1 à 3 : le tableau de bord garde ses données en mémoire, dans le ViewModel). Audio en mémoire uniquement : jamais écrit sur disque ni téléversé dans le bucket `voice-notes` (le WAV part directement en multipart vers `voice/process`), tampons remis à zéro après envoi, refus ou annulation. Enregistrement annulé quand l'application passe en arrière-plan. La dictée en attente de revue reste en mémoire et est oubliée à la déconnexion ou au changement de compte. Relevés (lot 5) : le fichier n'est ni copié ni mis en cache (lecture du flux du sélecteur, iOS en mode ouverture sans copie), les octets lus sont remis à zéro après décodage, le texte extrait vit dans le ViewModel le temps de l'import ; seul le texte anonymisé quitte l'appareil ; ni nom de fichier, ni contenu, ni texte anonymisé dans les journaux (type d'erreur, format et longueur seulement). |
+| Minimisation | Aucune donnée financière au repos (lots 1 à 3 : le tableau de bord garde ses données en mémoire, dans le ViewModel). Audio en mémoire uniquement : jamais écrit sur disque ni téléversé dans le bucket `voice-notes` (le WAV part directement en multipart vers `voice/process`), tampons remis à zéro après envoi, refus ou annulation. Enregistrement annulé quand l'application passe en arrière-plan. La dictée en attente de revue reste en mémoire et est oubliée à la déconnexion ou au changement de compte. Relevés (lot 5) : le fichier n'est ni copié ni mis en cache (lecture du flux du sélecteur, iOS en mode ouverture sans copie), les octets lus sont remis à zéro après décodage, le texte extrait vit dans le ViewModel le temps de l'import ; seul le texte anonymisé quitte l'appareil ; ni nom de fichier, ni contenu, ni texte anonymisé dans les journaux (type d'erreur, format et longueur seulement). Bilans (lot 6) : calculés par le serveur à chaque ouverture et gardés dans le ViewModel du dialogue ; seules les dates des dépenses confirmées sont lues pour l'historique, sans montant ni libellé. |
 | Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans Mon espace › Préférences (lot 4 : « Retirer mon accord » retire tous les niveaux). La dictée (FAB et bouton « Dicter ») exige le niveau `PERSONAL` : dialogue avant la première dictée et à chaque `ConsentRequired` du routeur ; refus = rien n'est enregistré ni envoyé. L'import de relevé exige `ANONYMIZED` (couvert aussi par `PERSONAL`) : dialogue propre à l'import avant la première lecture et sur `ConsentRequired` ; refus = rien n'est lu ni envoyé. |
 | Apprentissage | `record_category_correction` reçoit la clé marchand normalisée et un `p_label` vide (le RPC l'ignore) : le libellé ne quitte pas l'appareil pour l'apprentissage. |
 | Droits | Suppression de compte : bouton et confirmation dans Mon espace, port `AccountRepository.deleteAccount` en `NotSupportedYet` (message explicite, rien n'est supprimé) tant que `DELETE /api/public/account` n'existe pas. Export des données : absent du web et du backend, non construit (voir `BACKEND-GAPS.md`). |

@@ -170,7 +170,7 @@ une plateforme ajouté) :
 7. **Filtre de catégories** : une sélection explicite de toutes les catégories laisse passer les dépenses sans catégorie (comme
    « toutes »). Menu au lieu d'un popover ; lignes de 48 dp.
 8. **Groupe « Autre »** : traduit « Other » en anglais (non traduit sur le web).
-9. **Alertes de budget** : carte in-app seulement (notification système au lot 6) ; lien « Ajuster mes budgets par catégorie » omis
+9. **Alertes de budget** : carte in-app seulement (notification système au lot 7) ; lien « Ajuster mes budgets par catégorie » omis
    tant que Mon espace (lot 4) n'existe pas.
 10. **Édition d'une dépense** (version réduite, PostgREST) : montant (obligatoire, positif ou nul), date (au plus aujourd'hui),
     catégorie (« Sans catégorie » possible), moyen de paiement, via `PATCH expenses` ; suppression après confirmation via `DELETE`.
@@ -186,7 +186,7 @@ une plateforme ajouté) :
     `1.234,50 MAD` pour fr-MA, `F CFA` et décimales facultatives pour XOF, `$` après le montant pour CAD) ; mois courts anglais
     « Sept » (CLDR en-GB). À comparer avec le navigateur.
 14. **Hors périmètre** : bannière d'astuces (§5.9), bandeau « bilan arrivé » (§5.10), notifications in-app et rappel quotidien
-    (§5.11, §5.12 → lot 6), dialogue « débit immédiat ou différé » `PaymentModeGate` et réglages du débit (§11.2, §11.3 → lot 4).
+    (§5.11, §5.12 → lot 7 ; §5.10 fait au lot 6), dialogue « débit immédiat ou différé » `PaymentModeGate` et réglages du débit (§11.2, §11.3 → lot 4).
 15. **Ligne période** : contrôle « Mois | Année » en pleine largeur, navigateur de période dessous, au lieu d'une seule ligne
     `[1fr, auto]` : sur 393 pt de large, les libellés se tronquaient (« M… | Y… »), vu sur simulateur iOS.
 
@@ -222,11 +222,11 @@ une plateforme ajouté) :
 4. **Toasts** : bannières en haut du panneau ouvert (4 s, touchables pour fermer), comme aux lots 2 et 3.
 5. **En-têtes** : avatar selon la situation familiale (aussi sur le tableau de bord) ; menu du tableau de bord : « Gérer mon compte »
    puis « Se déconnecter » ; Mon espace et onboarding : « Se déconnecter » seul. Raccourci administrateur absent (back-office web).
-6. **Onglets** : contrôle segmenté pleine largeur, libellés sur deux lignes au besoin. Onglet « Bilans » : état « Bilans bientôt
-   disponibles » (historique au lot 6).
+6. **Onglets** : contrôle segmenté pleine largeur, libellés sur deux lignes au besoin. Onglet « Bilans » : historique des bilans
+   depuis le lot 6.
 7. **Textes non traduits sur le web** (sous-titres des entrées, « Crédits », « / mois », noms de pays des devises) : traduits en
    anglais. Sous-titre des Préférences : « Devise, langue, thème et accord IA. » (pas de rappel, voir 8).
-8. **Préférences** : rappel quotidien absent (notifications au lot 6) ; encadré « installez nemla sur votre écran d'accueil » supprimé
+8. **Préférences** : rappel quotidien absent (notifications au lot 7) ; encadré « installez nemla sur votre écran d'accueil » supprimé
    (propre au web) ; **ajout** d'un bloc « Dictée et intelligence artificielle » avec « Retirer mon accord » (promis par le texte de
    consentement du lot 2, absent du web) ; devise enregistrée dans le profil et appliquée sans rechargement (le tableau de bord la relit
    au retour) ; langue de l'application appliquée à chaud sans rechargement, langue de dictée annoncée dans la langue de l'interface
@@ -248,7 +248,7 @@ une plateforme ajouté) :
 15. **Crédits** : « Crédits indisponibles pour le moment. » en cas d'erreur (le web n'affiche rien).
 16. **Zone dangereuse** : confirmation dans un `AlertDialog`, puis message « La suppression du compte n'est pas encore disponible depuis
     l'application… » (`DELETE /api/public/account` manquant). Export des données : non construit (absent du web et du backend).
-17. **Hors périmètre** : dialogue `PaymentModeGate` du tableau de bord (§11.2, voir ROADMAP), rappel quotidien et bilans (lot 6).
+17. **Hors périmètre** : dialogue `PaymentModeGate` du tableau de bord (§11.2, voir ROADMAP), rappel quotidien (lot 7, notifications) ; bilans faits au lot 6.
 
 ## Lot 5 — import de relevés (17/11/2026)
 
@@ -279,3 +279,26 @@ une plateforme ajouté) :
 7. **Succès** : bannière de la fiche de revue « {n} dépenses lues — vérifiez et validez leur catégorie » (traduite ; non traduite sur le web).
 8. **Anonymisation plus stricte que le serveur** : IBAN compact et téléphone français sans `+33` masqués ; la règle d'adresse s'arrête avant
    un montant (« PARKING PLACE DE LA GARE 12,50 » devient « PARKING [ADRESSE] 12,50 » au lieu de « PARKING [ADRESSE],50 »).
+
+## Lot 6 — bilans (17/11/2026)
+
+Écarts Android / iOS : aucun. Bandeau, dialogue et historique sont 100 % Compose ; aucun composant système (pas de notification).
+
+Écarts avec le web (§5.10, §10.1, §10.2 de `specs/04`), à valider :
+
+1. **Période envoyée** : toujours explicite (`?month=AAAA-MM` ou `?year=AAAA`) et calculée sur la date **locale** ; le web laisse parfois le
+   serveur prendre le mois UTC. Une réponse pour une autre période est refusée (« Bilan indisponible pour le moment. »).
+2. **Montants** : total, écart et lignes « Où part l'argent » formatés sur l'appareil dans la devise du profil (formateur commun) ; les
+   points clés et pistes restent ceux du serveur, en français avec « € » arrondi (voir `BACKEND-GAPS.md`). En anglais, une ligne
+   « These notes are written in French for now. » est ajoutée sous ces textes.
+3. **Erreur du dialogue** : « Bilan indisponible pour le moment. » plus un bouton « Réessayer » (absent du web). « J'ai compris » n'apparaît
+   qu'une fois le bilan chargé ; la croix ferme dans tous les états.
+4. **Historique** : erreur « Historique indisponible pour le moment. » avec « Réessayer » (le web n'affiche rien) ; la liste suit le
+   défilement de Mon espace au lieu d'une zone défilante de 420 px à en-têtes d'année collants (pas de liste défilante imbriquée).
+   Lignes de 48 dp minimum.
+5. **Bandeau** : un bandeau par période (mois, puis année en décembre) ; il disparaît dès le toucher, avant la confirmation de
+   l'insertion dans `report_views` (si l'insertion échoue, il revient à la prochaine ouverture du tableau de bord). Recalculé à chaque
+   retour au premier plan du tableau de bord.
+6. **Titres** : « Bilan de {période} » repris tel quel du web (« Bilan de Octobre 2026 », sans élision) ; anglais « Report for October 2026 »,
+   « Report for the year 2025 ».
+7. **Hors périmètre** : notifications push, bannières `user_notifications` et rappel quotidien (lot 7, à concevoir).

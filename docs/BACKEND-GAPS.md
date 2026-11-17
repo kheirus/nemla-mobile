@@ -17,7 +17,9 @@ Détail et références de code : `specs/01-api-contracts.md` (§3.3, §5) et `s
 | Exporter ses données (droit à la portabilité, RGPD art. 20) | absent du web et du backend | `GET /api/public/account/export` (JSON ou CSV : profil, catégories, dépenses avec libellés déchiffrés, charges fixes, quotas) ; lot 4 : rien n'est construit côté mobile |
 | Lire un relevé déjà anonymisé sur l'appareil | `/import/file` ne prend que le fichier brut | `POST /api/public/import/text` (texte anonymisé), contrat ci-dessous ; lot 5 : tant qu'il répond 404/405, l'application affiche « L'import de relevé depuis l'application arrive bientôt… Rien n'a été envoyé. » |
 | Extraire des dépenses d'un texte (pour la transcription locale) | absent | `POST /api/public/expenses/extract` |
-| Notifications | aucune notification serveur | table de jetons, envoi FCM / APNs planifié |
+| Bilans dans la langue et la devise de l'utilisateur | `report/monthly` rédige `highlights` et `advice` en français, avec des montants en « € » arrondis à l'euro (formateur `fr-FR` codé en dur), quels que soient `lang` et `profiles.devise` | version structurée : codes et valeurs (`{"code":"top_category","category":"Courses","share":32,"amount":400.25}`…) que l'application rédige elle-même en fr/en, ou au minimum un paramètre `lang` et la devise du profil ; lot 6 : textes affichés tels quels, mention « These notes are written in French for now. » en anglais |
+| Valider le paramètre `month` de `report/monthly` | non validé (bornes `NaN`, 500 ou résultat vide) ; défaut = mois UTC | `400` sur un mois malformé ; lot 6 : le mobile envoie toujours une période explicite calculée sur la date locale et la vérifie dans la réponse |
+| Notifications | aucune notification serveur | table de jetons, envoi FCM / APNs planifié (lot 7, à concevoir : push serveur ou Firebase) |
 | Lien de réinitialisation du mot de passe | redirection web | App Links / Universal Links déclarés dans Supabase |
 | URL de l'API, URL et clé publishable Supabase | absentes du dépôt | à fournir |
 
