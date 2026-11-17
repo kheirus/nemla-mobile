@@ -6,6 +6,7 @@ import app.nemla.core.common.AppError
 import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AmountInput
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.BudgetPeriod
 import app.nemla.core.domain.model.Category
 import app.nemla.core.domain.model.CategoryId
@@ -26,6 +27,7 @@ import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
 import app.nemla.core.domain.usecase.ListRecurringCharges
 import app.nemla.core.domain.usecase.MaterializeRecurringCharges
+import app.nemla.core.domain.usecase.ObserveAuthState
 import app.nemla.core.domain.usecase.SearchExpensesByDate
 import app.nemla.core.domain.usecase.SignOut
 import app.nemla.core.domain.usecase.UpdateExpense
@@ -73,6 +75,7 @@ internal class DashboardViewModel(
     private val updateExpense: UpdateExpense,
     private val deleteExpense: DeleteExpense,
     private val signOut: SignOut,
+    private val observeAuthState: ObserveAuthState,
     private val clock: DashboardClock,
     private val language: UiLanguage,
 ) : ViewModel() {
@@ -110,6 +113,12 @@ internal class DashboardViewModel(
 
     init {
         load(LoadMode.INITIAL)
+        viewModelScope.launch {
+            observeAuthState().collect { auth ->
+                val email = (auth as? AuthState.SignedIn)?.session?.email?.value
+                mutableState.update { it.copy(email = email) }
+            }
+        }
     }
 
     fun onAction(action: DashboardAction) {

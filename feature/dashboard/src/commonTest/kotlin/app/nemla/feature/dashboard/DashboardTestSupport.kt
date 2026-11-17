@@ -50,6 +50,7 @@ import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
 import app.nemla.core.domain.usecase.ListRecurringCharges
 import app.nemla.core.domain.usecase.MaterializeRecurringCharges
+import app.nemla.core.domain.usecase.ObserveAuthState
 import app.nemla.core.domain.usecase.SearchExpensesByDate
 import app.nemla.core.domain.usecase.SignOut
 import app.nemla.core.domain.usecase.UpdateExpense
@@ -324,6 +325,7 @@ internal class DashboardHarness {
             updateExpense = UpdateExpense(expenses),
             deleteExpense = DeleteExpense(expenses),
             signOut = SignOut(auth),
+            observeAuthState = ObserveAuthState(auth),
             clock = { today },
             language = { language },
         )

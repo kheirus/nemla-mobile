@@ -1,32 +1,19 @@
 package app.nemla.feature.dashboard.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,31 +21,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import app.nemla.core.designsystem.brand.NemlaLogo
-import app.nemla.core.designsystem.brand.NemlaLogoSize
-import app.nemla.core.designsystem.component.NemlaAppHeader
+import app.nemla.core.designsystem.component.NemlaAccountButton
+import app.nemla.core.designsystem.component.NemlaAccountSheet
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
+import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
-import app.nemla.core.designsystem.component.NemlaMenuItem
+import app.nemla.core.designsystem.component.NemlaScaffold
+import app.nemla.core.designsystem.component.NemlaSnackbarEffect
+import app.nemla.core.designsystem.component.NemlaTopBar
+import app.nemla.core.designsystem.component.NemlaTopBarBrand
+import app.nemla.core.designsystem.component.NemlaTopBarScrollBehavior
+import app.nemla.core.designsystem.component.rememberNemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.AppLanguage
@@ -78,8 +66,8 @@ import app.nemla.feature.dashboard.resources.dashboard_account_menu
 import app.nemla.feature.dashboard.resources.dashboard_error_generic
 import app.nemla.feature.dashboard.resources.dashboard_error_offline
 import app.nemla.feature.dashboard.resources.dashboard_error_timeout
+import app.nemla.feature.dashboard.resources.dashboard_home_title
 import app.nemla.feature.dashboard.resources.dashboard_loading
-import app.nemla.feature.dashboard.resources.dashboard_manage_account
 import app.nemla.feature.dashboard.resources.dashboard_my_space
 import app.nemla.feature.dashboard.resources.dashboard_notice_deleted
 import app.nemla.feature.dashboard.resources.dashboard_notice_updated
@@ -87,14 +75,12 @@ import app.nemla.feature.dashboard.resources.dashboard_retry
 import app.nemla.feature.dashboard.resources.dashboard_sign_out
 import app.nemla.feature.dashboard.resources.dashboard_sign_out_failed
 import app.nemla.feature.dashboard.resources.dashboard_signing_out
-import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 private val FloatingActionClearance = 88.dp
-private const val NOTICE_DURATION_MS = 4_000L
 
 @Composable
 internal fun DashboardRoute(
@@ -103,6 +89,7 @@ internal fun DashboardRoute(
     onOpenSettings: (Boolean) -> Unit,
     floatingAction: @Composable () -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
+    showAccountMenu: Boolean = true,
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -122,7 +109,13 @@ internal fun DashboardRoute(
             }
         }
     }
-    DashboardScreen(state = state, onAction = viewModel::onAction, floatingAction = floatingAction, reportNotice = reportNotice)
+    DashboardScreen(
+        state = state,
+        onAction = viewModel::onAction,
+        floatingAction = floatingAction,
+        reportNotice = reportNotice,
+        showAccountMenu = showAccountMenu,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -132,43 +125,36 @@ internal fun DashboardScreen(
     onAction: (DashboardAction) -> Unit,
     floatingAction: @Composable () -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
+    showAccountMenu: Boolean = true,
 ) {
-    val colors = NemlaTheme.colors
     val format = remember(state.language, state.currency) { DashboardFormat(state.language, state.currency) }
-    Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-            DashboardHeader(state, onAction)
-            PullToRefreshBox(
-                isRefreshing = state.isRefreshing,
-                onRefresh = { onAction(DashboardAction.PullToRefresh) },
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+    val scrollBehavior = rememberNemlaTopBarScrollBehavior()
+    NemlaScaffold(
+        topBar = { DashboardTopBar(state, onAction, showAccountMenu, scrollBehavior) },
+        floatingActionButton = floatingAction,
+        scrollBehavior = scrollBehavior,
+    ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { onAction(DashboardAction.PullToRefresh) },
+            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier =
+                        Modifier
+                            .widthIn(max = NemlaTheme.sizes.contentMaxWidth)
+                            .fillMaxWidth()
+                            .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.pageVertical),
+                    verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
                 ) {
-                    Column(
-                        modifier =
-                            Modifier
-                                .widthIn(max = NemlaTheme.sizes.contentMaxWidth)
-                                .fillMaxWidth()
-                                .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.pageVertical),
-                        verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
-                    ) {
-                        DashboardContent(state, format, onAction, reportNotice)
-                        Spacer(modifier = Modifier.height(FloatingActionClearance))
-                    }
+                    DashboardContent(state, format, onAction, reportNotice)
+                    Spacer(modifier = Modifier.height(FloatingActionClearance))
                 }
             }
-        }
-        Box(
-            modifier =
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(start = NemlaTheme.spacing.lg, end = NemlaTheme.spacing.lg, bottom = NemlaTheme.spacing.lg),
-        ) {
-            floatingAction()
         }
         state.editor?.let { ExpenseEditorDialog(it, state, format, onAction) }
     }
@@ -181,17 +167,10 @@ private fun DashboardContent(
     onAction: (DashboardAction) -> Unit,
     reportNotice: @Composable () -> Unit,
 ) {
-    state.notice?.let { notice ->
-        LaunchedEffect(notice) {
-            delay(NOTICE_DURATION_MS)
-            onAction(DashboardAction.NoticeDismissed)
-        }
-        NemlaBanner(
-            message = stringResource(notice.resource()),
-            kind = NemlaBannerKind.Success,
-            modifier = Modifier.clickable { onAction(DashboardAction.NoticeDismissed) },
-        )
-    }
+    NemlaSnackbarEffect(
+        message = state.notice?.let { stringResource(it.resource()) },
+        onShown = { onAction(DashboardAction.NoticeDismissed) },
+    )
     state.loadError?.let { error ->
         Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
             NemlaBanner(message = stringResource(error.resource()), kind = NemlaBannerKind.Error)
@@ -227,31 +206,56 @@ private fun DashboardContent(
 }
 
 @Composable
-private fun DashboardHeader(
+private fun DashboardTopBar(
     state: DashboardUiState,
     onAction: (DashboardAction) -> Unit,
+    showAccountMenu: Boolean,
+    scrollBehavior: NemlaTopBarScrollBehavior,
 ) {
-    NemlaAppHeader(
-        accountLabel = state.pseudo ?: stringResource(Res.string.dashboard_my_space),
-        avatar = householdIcon(state.household),
-        menuDescription = stringResource(Res.string.dashboard_account_menu),
-    ) { dismiss ->
-        NemlaMenuItem(
-            text = stringResource(Res.string.dashboard_manage_account),
-            icon = NemlaIcons.Settings,
-            onClick = {
-                dismiss()
-                onAction(DashboardAction.ManageAccountClicked)
-            },
+    var accountOpen by rememberSaveable { mutableStateOf(false) }
+    NemlaTopBar(
+        title = { NemlaTopBarBrand(if (showAccountMenu) null else stringResource(Res.string.dashboard_home_title)) },
+        actions = {
+            if (showAccountMenu) {
+                NemlaAccountButton(
+                    name = state.pseudo,
+                    contentDescription = stringResource(Res.string.dashboard_account_menu),
+                    onClick = { accountOpen = true },
+                    fallbackIcon = householdIcon(state.household),
+                )
+            }
+        },
+        scrollBehavior = scrollBehavior,
+    )
+    if (showAccountMenu && accountOpen) {
+        DashboardAccountSheet(state, onAction, onDismiss = { accountOpen = false })
+    }
+}
+
+@Composable
+private fun DashboardAccountSheet(
+    state: DashboardUiState,
+    onAction: (DashboardAction) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val title = state.pseudo ?: state.email ?: stringResource(Res.string.dashboard_my_space)
+    NemlaAccountSheet(
+        title = title,
+        detail = state.email?.takeIf { state.pseudo != null },
+        avatarName = state.pseudo,
+        fallbackIcon = householdIcon(state.household),
+        onDismissRequest = onDismiss,
+    ) { sheet ->
+        NemlaListItem(
+            headline = stringResource(Res.string.dashboard_my_space),
+            leadingIcon = NemlaIcons.Settings,
+            onClick = { sheet.dismiss { onAction(DashboardAction.ManageAccountClicked) } },
         )
-        NemlaMenuItem(
-            text = stringResource(if (state.isSigningOut) Res.string.dashboard_signing_out else Res.string.dashboard_sign_out),
-            icon = NemlaIcons.LogOut,
+        NemlaListItem(
+            headline = stringResource(if (state.isSigningOut) Res.string.dashboard_signing_out else Res.string.dashboard_sign_out),
+            leadingIcon = NemlaIcons.LogOut,
             enabled = !state.isSigningOut,
-            onClick = {
-                dismiss()
-                onAction(DashboardAction.SignOutClicked)
-            },
+            onClick = { sheet.dismiss { onAction(DashboardAction.SignOutClicked) } },
         )
     }
 }

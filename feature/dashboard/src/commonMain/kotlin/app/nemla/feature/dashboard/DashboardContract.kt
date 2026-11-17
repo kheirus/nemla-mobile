@@ -68,6 +68,7 @@ internal data class DashboardUiState(
     val view: DashboardView,
     val currency: Currency = Currency.Default,
     val pseudo: String? = null,
+    val email: String? = null,
     val household: Household? = null,
     val isInitialLoading: Boolean = true,
     val isRefreshing: Boolean = false,
