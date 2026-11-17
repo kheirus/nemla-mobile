@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,8 +18,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +42,7 @@ import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaSelectField
+import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.component.NemlaTextArea
 import app.nemla.core.designsystem.component.NemlaTextButton
 import app.nemla.core.designsystem.component.NemlaTextField
@@ -165,15 +170,19 @@ private fun NoticeBanner(
     notice: OnboardingNotice,
     onAction: (OnboardingAction) -> Unit,
 ) {
-    LaunchedEffect(notice) {
-        delay(NOTICE_DURATION_MS)
-        onAction(OnboardingAction.NoticeDismissed)
-    }
     val (text, kind) =
         when (notice) {
             is OnboardingNotice.Dictation -> notice.text to NemlaBannerKind.Error
             is OnboardingNotice.Known -> stringResource(notice.message.resource()) to notice.message.kind()
         }
+    if (kind != NemlaBannerKind.Error) {
+        NemlaSnackbarEffect(message = text, onShown = { onAction(OnboardingAction.NoticeDismissed) })
+        return
+    }
+    LaunchedEffect(notice) {
+        delay(NOTICE_DURATION_MS)
+        onAction(OnboardingAction.NoticeDismissed)
+    }
     val dismiss = stringResource(Res.string.onboarding_dismiss)
     NemlaBanner(
         message = text,
@@ -235,6 +244,7 @@ private fun ReviewCard(
                 style = NemlaTheme.typography.cardTitle,
                 modifier = Modifier.semantics { heading() },
             )
+            val focusManager = LocalFocusManager.current
             state.rows.forEach { row ->
                 NemlaCard(modifier = Modifier.fillMaxWidth(), contentPadding = NemlaTheme.spacing.sm) {
                     Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
@@ -245,6 +255,8 @@ private fun ReviewCard(
                                 label = stringResource(Res.string.onboarding_name),
                                 labelVisible = false,
                                 placeholder = stringResource(Res.string.onboarding_name),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
                                 modifier = Modifier.weight(1f),
                             )
                             NemlaTextField(
@@ -252,7 +264,8 @@ private fun ReviewCard(
                                 onValueChange = { onAction(OnboardingAction.RowAmountChanged(row.key, it)) },
                                 label = stringResource(Res.string.onboarding_amount),
                                 labelVisible = false,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                                 modifier = Modifier.width(AMOUNT_WIDTH),
                             )
                         }
@@ -296,6 +309,7 @@ private fun BudgetCard(
     state: OnboardingUiState,
     onAction: (OnboardingAction) -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     NemlaCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
             NemlaTextField(
@@ -303,7 +317,8 @@ private fun BudgetCard(
                 onValueChange = { onAction(OnboardingAction.BudgetChanged(it)) },
                 label = stringResource(Res.string.onboarding_budget_label, state.currency.symbol),
                 placeholder = stringResource(Res.string.onboarding_budget_placeholder),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             )
             NemlaButton(
                 text = stringResource(Res.string.onboarding_save),
