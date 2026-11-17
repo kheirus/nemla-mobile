@@ -52,7 +52,7 @@ fun NemlaCard(
                 spotColor = colors.shadow.copy(alpha = 0.06f),
             ),
         shape = shape,
-        color = containerColor,
+        color = containerColor.compositeOver(colors.background),
         contentColor = colors.cardForeground,
         border = BorderStroke(1.dp, borderColor),
         tonalElevation = 0.dp,
