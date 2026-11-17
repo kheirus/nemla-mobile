@@ -62,7 +62,7 @@ private fun <T> RowScope.Segment(
                 .heightIn(min = SEGMENT_HEIGHT)
                 .then(if (isSelected) Modifier.shadow(1.dp, shape) else Modifier)
                 .clip(shape)
-                .background(if (isSelected) colors.background else Color.Transparent)
+                .background(if (isSelected) colors.selectedContainer else Color.Transparent)
                 .selectable(selected = isSelected, role = Role.Tab, onClick = { onSelect(option.value) })
                 .padding(horizontal = NemlaTheme.spacing.sm),
         contentAlignment = Alignment.Center,
@@ -70,7 +70,7 @@ private fun <T> RowScope.Segment(
         Text(
             text = option.label,
             style = NemlaTheme.typography.button,
-            color = if (isSelected) colors.foreground else colors.mutedForeground,
+            color = if (isSelected) colors.onSelectedContainer else colors.mutedForeground,
             maxLines = labelMaxLines,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
