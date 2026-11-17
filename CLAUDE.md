@@ -64,4 +64,10 @@ en `NotSupportedYet`, export et rappel quotidien reportés. Restes et écarts : 
 Lot 5 terminé le 17/11/2026 : `core:documents` (sélecteur de fichier, extraction CSV/TXT/PDF en mémoire ; PDF Android 12+ selon
 l'extension SDK, Excel refusé) et `feature:import` (menu « Ajouter » → « Importer un relevé »). Aucun fichier brut ne quitte l'appareil :
 anonymisation locale puis `POST /api/public/import/text`, endpoint encore absent côté backend ; la sonde échoue fermée et l'app affiche
-« arrive bientôt… Rien n'a été envoyé ». Restes et écarts : `docs/ROADMAP.md` (lot 5) et `docs/PLATFORM-PARITY.md`. Prochaine étape : lot 6.
+« arrive bientôt… Rien n'a été envoyé ». Restes et écarts : `docs/ROADMAP.md` (lot 5) et `docs/PLATFORM-PARITY.md`.
+
+Lot 6 terminé le 17/11/2026 : `feature:reports` (bilan via `PeriodReport` → `GET /api/public/report/monthly` sur la période locale,
+bandeau « Votre bilan de … est arrivé » les 3 derniers jours du mois, historique dans l'onglet Bilans de Mon espace, vues dans
+`report_views`). Textes des bilans en français seulement (serveur). Notifications reportées au lot 7 (push serveur ou Firebase, à concevoir).
+Publication : `docs/PUBLICATION.md` (liste de contrôle, blocages, fiches des stores) et `docs/PRIVACY-POLICY-DRAFT.md` (brouillon à faire
+relire). Restes et écarts : `docs/ROADMAP.md` (lot 6) et `docs/PLATFORM-PARITY.md`. Prochaine étape : lot 7 (notifications), à concevoir.
