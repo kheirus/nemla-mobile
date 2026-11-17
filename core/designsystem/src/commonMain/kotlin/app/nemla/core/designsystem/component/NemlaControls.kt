@@ -1,11 +1,8 @@
 package app.nemla.core.designsystem.component
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -25,23 +21,18 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 
 private const val SELECTED_ALPHA = 0.10f
@@ -186,55 +177,6 @@ fun NemlaChip(
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = NemlaTheme.spacing.sm, vertical = 4.dp)) {
             Text(text, style = NemlaTheme.typography.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    }
-}
-
-@Composable
-fun NemlaEntryButton(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    detail: String? = null,
-) {
-    val colors = NemlaTheme.colors
-    val shape = RoundedCornerShape(NemlaTheme.radius.xl)
-    Surface(
-        onClick = onClick,
-        shape = shape,
-        color = colors.card,
-        contentColor = colors.cardForeground,
-        border = BorderStroke(1.dp, colors.border),
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier.padding(NemlaTheme.spacing.md),
-            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier =
-                    Modifier
-                        .background(colors.primary.copy(alpha = SELECTED_ALPHA).compositeOver(colors.card), CircleShape)
-                        .padding(NemlaTheme.spacing.xs),
-            ) {
-                Icon(icon, contentDescription = null, tint = colors.primary, modifier = Modifier.size(NemlaTheme.sizes.iconLarge))
-            }
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = NemlaTheme.typography.bodyStrong)
-                Text(subtitle, style = NemlaTheme.typography.caption, color = colors.mutedForeground)
-                if (detail != null) {
-                    Text(detail, style = NemlaTheme.typography.caption.copy(fontFeatureSettings = "tnum"), color = colors.foreground)
-                }
-            }
-            Icon(
-                NemlaIcons.ChevronRight,
-                contentDescription = null,
-                tint = colors.mutedForeground,
-                modifier = Modifier.size(NemlaTheme.sizes.iconLarge),
-            )
         }
     }
 }

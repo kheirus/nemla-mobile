@@ -4,7 +4,6 @@
   <string name="ds_password_show">Show password</string>
   <string name="ds_password_hide">Hide password</string>
   <string name="ds_loading">Loading</string>
-  <string name="ds_close">Close</string>
   <string name="ds_back">Back</string>
   <string name="ds_clear_text">Clear text</string>
 </resources>

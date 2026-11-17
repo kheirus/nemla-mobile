@@ -1,7 +1,9 @@
 package app.nemla.core.designsystem.component
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -16,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -163,4 +167,12 @@ fun NemlaEmptyState(
         Text(text = title, style = NemlaTheme.typography.cardTitle, color = colors.foreground, textAlign = TextAlign.Center)
         Text(text = message, style = NemlaTheme.typography.body, color = colors.mutedForeground, textAlign = TextAlign.Center)
     }
+}
+
+@Composable
+fun NemlaCategoryDot(
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.clip(CircleShape).background(color))
 }
