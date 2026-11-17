@@ -163,8 +163,9 @@ private fun NemlaNavHost(
                     val tab = if (categories) SettingsTab.CATEGORIES else SettingsTab.PROFILE
                     if (bottomNavigation) navController.navigateToTab(AppTab.SETTINGS, tab) else navController.navigateToSettings(tab)
                 },
-                floatingAction = {
+                floatingAction = { expanded ->
                     AddButtonWithImport(
+                        expanded = expanded,
                         onOpenReview = { navController.navigateToVoiceReview() },
                         onImported = { review ->
                             reviewOpener.open(review)
@@ -208,11 +209,12 @@ private fun ReportsTabScreen() {
 
 @Composable
 private fun AddButtonWithImport(
+    expanded: Boolean,
     onOpenReview: () -> Unit,
     onImported: (PendingReview) -> Unit,
 ) {
     var importOpen by rememberSaveable { mutableStateOf(false) }
-    VoiceCaptureButton(onOpenReview = onOpenReview, onImportStatement = { importOpen = true })
+    VoiceCaptureButton(onOpenReview = onOpenReview, onImportStatement = { importOpen = true }, expanded = expanded)
     if (importOpen) {
         StatementImportDialog(
             onClose = { importOpen = false },
