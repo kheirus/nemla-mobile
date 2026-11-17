@@ -261,7 +261,7 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
   période du jour, `PeriodPages`) : glisser ou les chevrons (`IconButton`, désactivés aux bornes) changent la période, le libellé
   glisse dans le sens du changement (`AnimatedContent`). Le graphique reste hors du pager (pas de conflit avec le toucher des barres).
   **Écart web** (`specs/04` §5.3, `specs/02` : « aucune borne ») : navigation bornée à la période du jour, un mois futur touché dans le
-  graphique annuel ne fait rien. « Ajouter » : `ExtendedFloatingActionButton` réduit à « + » quand on descend, marge basse de 96 dp ;
+  graphique annuel ne fait rien. « Ajouter » : `ExtendedFloatingActionButton` réduit à « + » quand on descend (revu après captures, voir plus bas) ;
   menu en `NemlaSheet` (Dicter, Dépenses à valider, Importer, Saisie manuelle « bientôt »). Recherche : `NemlaSearchField`
   (`OutlinedTextField`, icône loupe, bouton calendrier, date choisie en `InputChip`) ; « La recherche par mot-clé arrivera bientôt »
   seulement pendant la saisie (texte non envoyé). `NemlaPullToRefreshBox` aux couleurs Nemla. Sombre : barres et puce « Dépensé » à
@@ -289,6 +289,12 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
   retour haptique sur suppression et validation (aussi à la suppression d'une dépense du tableau de bord). Dépenses du jour et
   dépenses à valider du tableau de bord : `NemlaAnimatedColumn` (`AnimatedVisibility` par ligne, liste non paresseuse). Bandeau
   « Votre bilan… est arrivé » entre par `expandVertically`. Animations de l'étape 3 inchangées, sans doublon.
+- ☑ Finitions après captures : contenu des écrans à défilement (tableau de bord, Mon espace, panneaux, `NemlaScreen`) dessiné sous la
+  barre système du bas (`edgeToEdgeBody` + `bottomSafeDrawingPadding` : la marge basse est dans le contenu, le clavier reste géré
+  par `imePadding`). « Ajouter » déplié à l'arrivée, réduit à « + » au premier défilement ou après 2,5 s, sans se redéplier ; marge
+  basse du tableau de bord = 56 + 16 dp + barre système. `NemlaListItem` en `Row` centrée verticalement (fin du mode trois lignes
+  de `ListItem` : chevron en haut et vide sous le texte). `NemlaCard` toujours opaque (fond translucide composé sur `background`) :
+  l'ombre ne transparaît plus dans « Zone dangereuse ».
 - **Écart à la demande** : la fiche de revue reste un écran (destination `VoiceReviewDestination`, ouverte depuis plusieurs
   endroits) et non un panneau du bas ; elle gagne une barre d'application (retour = « Plus tard ») et des boutons en bas d'écran.
 - Restes : pages voisines du pager du tableau de bord affichées « – » pendant le glissement ; arbitrage de la structure après
