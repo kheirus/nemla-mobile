@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,11 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -33,14 +29,18 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import app.nemla.core.designsystem.component.NemlaAppHeader
+import app.nemla.core.designsystem.component.NemlaBackButton
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaEntryButton
-import app.nemla.core.designsystem.component.NemlaMenuItem
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaSegmentedControl
+import app.nemla.core.designsystem.component.NemlaTopBar
+import app.nemla.core.designsystem.component.NemlaTopBarBrand
+import app.nemla.core.designsystem.component.NemlaTopBarScrollBehavior
+import app.nemla.core.designsystem.component.NemlaTopBarTitle
+import app.nemla.core.designsystem.component.rememberNemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.Household
@@ -55,8 +55,6 @@ import app.nemla.feature.settings.preferences.PreferencesPanelRoute
 import app.nemla.feature.settings.profile.ProfilePanelRoute
 import app.nemla.feature.settings.recurring.RecurringPanelRoute
 import app.nemla.feature.settings.resources.Res
-import app.nemla.feature.settings.resources.settings_account_menu
-import app.nemla.feature.settings.resources.settings_back
 import app.nemla.feature.settings.resources.settings_cancel
 import app.nemla.feature.settings.resources.settings_danger_body
 import app.nemla.feature.settings.resources.settings_danger_title
@@ -97,6 +95,7 @@ internal fun SettingsRoute(
     onSignedOut: () -> Unit,
     dictation: SettingsDictationSlot,
     reportHistory: @Composable () -> Unit,
+    topLevel: Boolean = false,
     viewModel: SettingsViewModel = koinViewModel { parametersOf(initialTab) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -118,7 +117,13 @@ internal fun SettingsRoute(
         isBackEnabled = state.panel != null,
         onBackCompleted = { viewModel.onAction(SettingsAction.BackClicked) },
     )
-    SettingsScreen(state = state, onAction = viewModel::onAction, dictation = dictation, reportHistory = reportHistory)
+    SettingsScreen(
+        state = state,
+        onAction = viewModel::onAction,
+        dictation = dictation,
+        reportHistory = reportHistory,
+        topLevel = topLevel,
+    )
 }
 
 @Composable
@@ -127,30 +132,13 @@ internal fun SettingsScreen(
     onAction: (SettingsAction) -> Unit,
     dictation: SettingsDictationSlot,
     reportHistory: @Composable () -> Unit,
+    topLevel: Boolean = false,
 ) {
-    NemlaScreen(topBar = { SettingsHeader(state, onAction) }) {
+    val scrollBehavior = rememberNemlaTopBarScrollBehavior()
+    NemlaScreen(topBar = { SettingsTopBar(state, onAction, topLevel, scrollBehavior) }, scrollBehavior = scrollBehavior) {
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.md)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
-                NemlaButton(
-                    text = stringResource(Res.string.settings_back),
-                    onClick = { onAction(SettingsAction.BackClicked) },
-                    variant = NemlaButtonVariant.Ghost,
-                    leadingIcon = NemlaIcons.ArrowLeft,
-                )
-                Text(
-                    stringResource(Res.string.settings_title),
-                    style = NemlaTheme.typography.sectionTitle,
-                    modifier = Modifier.semantics { heading() },
-                )
-            }
             NemlaSegmentedControl(
-                options =
-                    listOf(
-                        NemlaOption(SettingsTab.PROFILE, stringResource(Res.string.settings_tab_profile)),
-                        NemlaOption(SettingsTab.REPORTS, stringResource(Res.string.settings_tab_reports)),
-                        NemlaOption(SettingsTab.CREDITS, stringResource(Res.string.settings_tab_credits)),
-                        NemlaOption(SettingsTab.CATEGORIES, stringResource(Res.string.settings_tab_categories)),
-                    ),
+                options = settingsTabs(topLevel),
                 selected = state.tab,
                 onSelect = { onAction(SettingsAction.TabSelected(it)) },
                 labelMaxLines = 2,
@@ -173,25 +161,30 @@ internal fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsHeader(
+private fun settingsTabs(topLevel: Boolean): List<NemlaOption<SettingsTab>> =
+    listOfNotNull(
+        NemlaOption(SettingsTab.PROFILE, stringResource(Res.string.settings_tab_profile)),
+        if (topLevel) null else NemlaOption(SettingsTab.REPORTS, stringResource(Res.string.settings_tab_reports)),
+        NemlaOption(SettingsTab.CREDITS, stringResource(Res.string.settings_tab_credits)),
+        NemlaOption(SettingsTab.CATEGORIES, stringResource(Res.string.settings_tab_categories)),
+    )
+
+@Composable
+private fun SettingsTopBar(
     state: SettingsUiState,
     onAction: (SettingsAction) -> Unit,
+    topLevel: Boolean,
+    scrollBehavior: NemlaTopBarScrollBehavior,
 ) {
-    NemlaAppHeader(
-        accountLabel = state.pseudo ?: stringResource(Res.string.settings_title),
-        avatar = householdIcon(state.household),
-        menuDescription = stringResource(Res.string.settings_account_menu),
-    ) { dismiss ->
-        NemlaMenuItem(
-            text = stringResource(Res.string.settings_sign_out),
-            icon = NemlaIcons.LogOut,
-            enabled = !state.isSigningOut,
-            onClick = {
-                dismiss()
-                onAction(SettingsAction.SignOutClicked)
-            },
-        )
-    }
+    val showBack = !topLevel || state.panel != null
+    val title = stringResource(Res.string.settings_title)
+    NemlaTopBar(
+        title = { if (showBack) NemlaTopBarTitle(title) else NemlaTopBarBrand(title) },
+        navigationIcon = {
+            if (showBack) NemlaBackButton(onClick = { onAction(SettingsAction.BackClicked) })
+        },
+        scrollBehavior = scrollBehavior,
+    )
 }
 
 @Composable
@@ -246,6 +239,14 @@ private fun EntryList(
             onAction,
         )
         Entry(Res.string.settings_entry_card, Res.string.settings_entry_card_help, NemlaIcons.CreditCard, SettingsPanel.CARD, onAction)
+        NemlaButton(
+            text = stringResource(Res.string.settings_sign_out),
+            onClick = { onAction(SettingsAction.SignOutClicked) },
+            variant = NemlaButtonVariant.Outline,
+            leadingIcon = NemlaIcons.LogOut,
+            loading = state.isSigningOut,
+            modifier = Modifier.fillMaxWidth().padding(top = NemlaTheme.spacing.xs),
+        )
         DangerZone(state, onAction)
     }
 }

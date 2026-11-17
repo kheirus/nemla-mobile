@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="settings_title">Mon espace</string>
-  <string name="settings_back">Retour</string>
-  <string name="settings_account_menu">Ouvrir le menu du compte</string>
   <string name="settings_sign_out">Se déconnecter</string>
   <string name="settings_sign_out_failed">Déconnexion impossible. Réessayez.</string>
   <string name="settings_dismiss">Masquer le message</string>

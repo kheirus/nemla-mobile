@@ -17,6 +17,7 @@ fun NavGraphBuilder.settingsScreen(
     onSignedOut: () -> Unit,
     dictation: SettingsDictationSlot,
     reportHistory: @Composable () -> Unit,
+    topLevel: Boolean = false,
 ) {
     composable<SettingsDestination> { entry ->
         val tab = SettingsTab.entries.getOrElse(entry.toRoute<SettingsDestination>().tab) { SettingsTab.PROFILE }
@@ -26,6 +27,7 @@ fun NavGraphBuilder.settingsScreen(
             onSignedOut = onSignedOut,
             dictation = dictation,
             reportHistory = reportHistory,
+            topLevel = topLevel,
         )
     }
 }
