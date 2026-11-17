@@ -41,7 +41,7 @@ import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaCategoryDot
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaProgressBar
-import app.nemla.core.designsystem.component.NemlaSegmentedControl
+import app.nemla.core.designsystem.component.NemlaSegmentedButtons
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.CategoryColors
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -78,22 +78,18 @@ internal fun SpendingCard(
     val spending = state.view.spending
     val tab = state.effectiveSpendingTab
     NemlaCard(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
-            Box(modifier = Modifier.weight(1f)) {
-                CardTitle(stringResource(if (tab == SpendingTab.BUDGETS) Res.string.budgets_title else Res.string.spending_title))
-            }
-            if (spending.hasBudgets) {
-                NemlaSegmentedControl(
-                    options =
-                        listOf(
-                            NemlaOption(SpendingTab.BREAKDOWN, stringResource(Res.string.tab_breakdown)),
-                            NemlaOption(SpendingTab.BUDGETS, stringResource(Res.string.tab_budgets)),
-                        ),
-                    selected = tab,
-                    onSelect = { onAction(DashboardAction.SpendingTabSelected(it)) },
-                    modifier = Modifier.widthIn(max = 220.dp),
-                )
-            }
+        CardTitle(stringResource(if (tab == SpendingTab.BUDGETS) Res.string.budgets_title else Res.string.spending_title))
+        if (spending.hasBudgets) {
+            NemlaSegmentedButtons(
+                options =
+                    listOf(
+                        NemlaOption(SpendingTab.BREAKDOWN, stringResource(Res.string.tab_breakdown)),
+                        NemlaOption(SpendingTab.BUDGETS, stringResource(Res.string.tab_budgets)),
+                    ),
+                selected = tab,
+                onSelect = { onAction(DashboardAction.SpendingTabSelected(it)) },
+                modifier = Modifier.fillMaxWidth().padding(top = NemlaTheme.spacing.sm),
+            )
         }
         Column(
             modifier = Modifier.padding(top = NemlaTheme.spacing.sm),
