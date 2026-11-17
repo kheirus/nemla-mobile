@@ -1,19 +1,16 @@
 package app.nemla.core.designsystem.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,17 +35,17 @@ fun NemlaScreen(
     horizontalPadding: Dp = NemlaTheme.spacing.pageHorizontal,
     verticalPadding: Dp = NemlaTheme.spacing.pageVertical,
     topBar: (@Composable () -> Unit)? = null,
+    scrollBehavior: NemlaTopBarScrollBehavior? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(NemlaTheme.colors.background)
-                .windowInsetsPadding(WindowInsets.safeDrawing),
-    ) {
-        topBar?.invoke()
-        BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
+    NemlaScaffold(modifier = modifier, topBar = topBar ?: {}, scrollBehavior = scrollBehavior) { padding ->
+        BoxWithConstraints(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .consumeWindowInsets(padding),
+        ) {
             val viewportHeight = maxHeight
             Box(
                 modifier =
