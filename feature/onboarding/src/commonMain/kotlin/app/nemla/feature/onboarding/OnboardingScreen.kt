@@ -11,7 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -23,20 +26,23 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import app.nemla.core.designsystem.component.NemlaAppHeader
+import app.nemla.core.designsystem.component.NemlaAccountButton
+import app.nemla.core.designsystem.component.NemlaAccountSheet
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaIconButton
 import app.nemla.core.designsystem.component.NemlaLinkTone
-import app.nemla.core.designsystem.component.NemlaMenuItem
+import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaSelectField
 import app.nemla.core.designsystem.component.NemlaTextArea
 import app.nemla.core.designsystem.component.NemlaTextButton
 import app.nemla.core.designsystem.component.NemlaTextField
+import app.nemla.core.designsystem.component.NemlaTopBar
+import app.nemla.core.designsystem.component.NemlaTopBarBrand
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.ChargeFrequency
@@ -125,20 +131,32 @@ private fun OnboardingHeader(
     state: OnboardingUiState,
     onAction: (OnboardingAction) -> Unit,
 ) {
-    NemlaAppHeader(
-        accountLabel = state.pseudo ?: stringResource(Res.string.onboarding_my_space),
-        avatar = householdIcon(state.household),
-        menuDescription = stringResource(Res.string.onboarding_account_menu),
-    ) { dismiss ->
-        NemlaMenuItem(
-            text = stringResource(Res.string.onboarding_sign_out),
-            icon = NemlaIcons.LogOut,
-            enabled = !state.isSigningOut,
-            onClick = {
-                dismiss()
-                onAction(OnboardingAction.SignOutClicked)
-            },
-        )
+    var accountOpen by rememberSaveable { mutableStateOf(false) }
+    NemlaTopBar(
+        title = { NemlaTopBarBrand() },
+        actions = {
+            NemlaAccountButton(
+                name = state.pseudo,
+                contentDescription = stringResource(Res.string.onboarding_account_menu),
+                onClick = { accountOpen = true },
+                fallbackIcon = householdIcon(state.household),
+            )
+        },
+    )
+    if (accountOpen) {
+        NemlaAccountSheet(
+            title = state.pseudo ?: stringResource(Res.string.onboarding_my_space),
+            avatarName = state.pseudo,
+            fallbackIcon = householdIcon(state.household),
+            onDismissRequest = { accountOpen = false },
+        ) { sheet ->
+            NemlaListItem(
+                headline = stringResource(Res.string.onboarding_sign_out),
+                leadingIcon = NemlaIcons.LogOut,
+                enabled = !state.isSigningOut,
+                onClick = { sheet.dismiss { onAction(OnboardingAction.SignOutClicked) } },
+            )
+        }
     }
 }
 

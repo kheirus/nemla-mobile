@@ -21,7 +21,7 @@
   <string name="onboarding_offline">No internet connection. Try again.</string>
   <string name="onboarding_nothing_detected">No fixed expense detected</string>
   <string name="onboarding_my_space">My space</string>
-  <string name="onboarding_account_menu">Open the account menu</string>
+  <string name="onboarding_account_menu">Account</string>
   <string name="onboarding_sign_out">Sign out</string>
   <string name="onboarding_dismiss">Hide the message</string>
   <string name="onboarding_skip">Skip for now</string>
