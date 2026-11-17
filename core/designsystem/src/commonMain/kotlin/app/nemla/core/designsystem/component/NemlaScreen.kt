@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -43,8 +42,7 @@ fun NemlaScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .consumeWindowInsets(padding),
+                    .edgeToEdgeBody(padding),
         ) {
             val viewportHeight = maxHeight
             Box(
@@ -60,6 +58,7 @@ fun NemlaScreen(
                         Modifier
                             .widthIn(max = maxContentWidth)
                             .fillMaxWidth()
+                            .bottomSafeDrawingPadding()
                             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
