@@ -326,7 +326,7 @@ Le menu « Ajouter » de la ligne « Menu « Ajouter », dialogues » du lot 2 e
 
 | Sujet | Android | iOS | Visible ? |
 |---|---|---|---|
-| Panneaux du bas (`NemlaSheet`, `NemlaFormSheet`) | `ModalBottomSheet` Material 3 : poignée, glisser vers le bas, retour système ferme | Même composant Material 3 (pas de `UISheetPresentationController` ni de détente moyenne) ; pas de retour système, on ferme en glissant ou en touchant le voile | Oui, légèrement |
+| Panneaux du bas (`NemlaSheet`, `NemlaFormSheet`) | `ModalBottomSheet` Material 3 : poignée, glisser vers le bas, retour système ferme | Même composant Material 3 (pas de `UISheetPresentationController` ni de détente moyenne) ; on ferme en glissant ou en touchant le voile ; le geste de bord (évènement de retour CMP) devrait aussi fermer, à vérifier sur simulateur | Oui, légèrement |
 | Retour haptique (suppression, validation) | `HapticFeedbackType.Confirm` → `HapticFeedbackConstants.CONFIRM` (léger) | `UINotificationFeedbackGenerator` succès (double impulsion, plus marquée) | Oui, au toucher |
 | Remplissage automatique (`ContentType`) | Service d'autoremplissage (Google, gestionnaire de mots de passe) | `textContentType` UIKit : trousseau iCloud | Oui, propre à chaque OS |
 | Onglets, pager, listes déroulantes, champs, `AlertDialog`, `DatePickerDialog`, snackbars | Material 3 | Mêmes composants Material 3, non natifs UIKit (`UISegmentedControl`, `UIAlertController`, `UIDatePicker` absents) | Non (identique) |
