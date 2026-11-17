@@ -231,6 +231,18 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
   - publication : bloquants listés dans `PUBLICATION.md` (suppression de compte, URL de politique de confidentialité, liens de
     réinitialisation, sécurité backend), signature et numéros de version à mettre en place.
 
+## Lot 6b — Interface mobile ☐ (avant le lot 7)
+Rendre l'application « mobile d'abord » : composants Material 3 natifs avant tout composant maison, gestes et animations.
+Rapport et découpage détaillé : `UI-REVIEW.md`.
+1. Fondations : mode sombre plus contrasté, barre d'application, bouton retour propre à chaque plateforme (flèche Android, chevron iOS),
+   panneaux du bas, onglets, snackbars, retour prédictif Android et geste de bord iOS, transitions entre écrans.
+2. Structure : avatar et panneau « Compte » à la place du menu déroulant « Kheireddine ▾ » (ou barre de navigation en bas, à arbitrer).
+3. Tableau de bord : boutons segmentés Mois / Année, glissement entre les mois, bouton « Ajouter » réductible.
+4. Mon espace : onglets défilants avec glissement et indicateur animé, panneaux en vraies destinations.
+5. Fenêtres en panneaux du bas, confirmations en snackbars.
+6. Animations légères (montants, anneau, barres, jauges, listes).
+7. Identité : logo nemla, icônes d'application Android et iOS, écran de lancement, polices Outfit / DM Sans (fichiers à fournir).
+
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
 - Push « Votre bilan est arrivé » (fin de mois, fin d'année), qui ouvrirait le dialogue de bilan de `feature:reports`.
@@ -239,6 +251,15 @@ Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou 
 - Bannières in-app de `user_notifications` (`specs/04` §5.11).
 - Côté backend : table de jetons d'appareil, émetteur planifié (`BACKEND-GAPS.md`, ligne Notifications).
 - Aucun code de notification, permission, FCM / APNs ni rappel local n'existe dans l'application à ce jour.
+
+## Lot 8 — Accessibilité ☐ (plus tard)
+Mise en conformité de toute l'application (référentiel visé à arbitrer : WCAG 2.2 niveau AA, base du RGAA et de l'EAA) :
+- libellés TalkBack / VoiceOver sur tous les éléments interactifs et graphiques (graphique, anneau, jauges, météo) ;
+- tailles de texte système jusqu'à 200 % sans troncature, cibles tactiles de 48 dp minimum ;
+- contrastes ≥ 4,5:1 (texte) et 3:1 (éléments graphiques) en clair et en sombre ; information jamais portée par la seule couleur ;
+- ordre de lecture et focus logiques, titres de section annoncés ;
+- respect du réglage « réduire les animations » ;
+- vérification avec Accessibility Scanner (Android) et Accessibility Inspector (iOS), et tests Compose sur la sémantique.
 
 ## Plus tard
 Transcription locale (whisper.cpp), modèle local (LiteRT-LM), cache chiffré hors ligne, autre fournisseur d'IA.
