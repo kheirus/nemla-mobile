@@ -2,6 +2,7 @@ package app.nemla.feature.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
@@ -59,7 +60,11 @@ fun NavGraphBuilder.settingsScreen(
             initialTab = tab,
             requestedTab = requested?.let { SettingsTab.entries.getOrNull(it) },
             onRequestedTabShown = { entry.savedStateHandle.remove<Int>(REQUESTED_TAB_KEY) },
-            onOpenPanel = { panel -> navController.navigate(panel.destination()) },
+            onOpenPanel = { panel ->
+                if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    navController.navigate(panel.destination()) { launchSingleTop = true }
+                }
+            },
             onClose = onClose,
             onSignedOut = onSignedOut,
             reportHistory = reportHistory,
