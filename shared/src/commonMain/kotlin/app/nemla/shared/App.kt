@@ -180,6 +180,7 @@ private fun NemlaNavHost(
                 composable<ReportsDestination> { ReportsTabScreen() }
             }
             settingsScreen(
+                navController = navController,
                 onClose = { if (!navController.popBackStack()) navController.navigateToDashboard() },
                 onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
                 dictation = dictation,

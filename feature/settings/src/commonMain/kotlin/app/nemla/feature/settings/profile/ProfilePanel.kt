@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -64,20 +63,9 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-internal fun ProfilePanelRoute(
-    onProfileSaved: () -> Unit,
-    viewModel: ProfileViewModel = koinViewModel(),
-) {
+internal fun ProfilePanelRoute(viewModel: ProfileViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val currentOnSaved by rememberUpdatedState(onProfileSaved)
-    LaunchedEffect(viewModel) {
-        viewModel.onAction(ProfileAction.Opened)
-        viewModel.effects.collect { effect ->
-            when (effect) {
-                ProfileEffect.Saved -> currentOnSaved()
-            }
-        }
-    }
+    LaunchedEffect(viewModel) { viewModel.onAction(ProfileAction.Opened) }
     ProfilePanel(state = state, onAction = viewModel::onAction)
 }
 

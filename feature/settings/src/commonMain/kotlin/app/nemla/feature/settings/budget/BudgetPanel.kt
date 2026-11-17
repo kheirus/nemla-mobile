@@ -24,7 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaOption
-import app.nemla.core.designsystem.component.NemlaSegmentedControl
+import app.nemla.core.designsystem.component.NemlaSegmentedButtons
 import app.nemla.core.designsystem.component.NemlaTextField
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -92,7 +92,7 @@ internal fun BudgetPanel(
                     },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             )
-            NemlaSegmentedControl(
+            NemlaSegmentedButtons(
                 options =
                     listOf(
                         NemlaOption(BudgetPeriod.MONTH, stringResource(Res.string.budget_per_month)),

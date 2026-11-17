@@ -16,6 +16,7 @@ import app.nemla.core.common.AppError
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaCard
+import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.format.MoneyFormat
 import app.nemla.core.domain.model.AppLanguage
@@ -55,6 +56,10 @@ internal fun NoticeBanner(
     kind: NoticeKind,
     onDismiss: () -> Unit,
 ) {
+    if (kind != NoticeKind.ERROR) {
+        NemlaSnackbarEffect(message = text, onShown = onDismiss)
+        return
+    }
     LaunchedEffect(text, kind) {
         delay(NOTICE_DURATION_MS)
         onDismiss()
@@ -62,12 +67,7 @@ internal fun NoticeBanner(
     val label = stringResource(Res.string.settings_dismiss)
     NemlaBanner(
         message = text,
-        kind =
-            when (kind) {
-                NoticeKind.SUCCESS -> NemlaBannerKind.Success
-                NoticeKind.INFO -> NemlaBannerKind.Info
-                NoticeKind.ERROR -> NemlaBannerKind.Error
-            },
+        kind = NemlaBannerKind.Error,
         modifier = Modifier.clickable(onClickLabel = label, onClick = onDismiss),
     )
 }
