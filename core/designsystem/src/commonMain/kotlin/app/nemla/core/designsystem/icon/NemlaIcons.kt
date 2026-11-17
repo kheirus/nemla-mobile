@@ -318,6 +318,29 @@ object NemlaIcons {
         lucide("BarChart", "M3 3v16a2 2 0 0 0 2 2h16", "M18 17V9", "M13 17V5", "M8 17v-3")
     }
 
+    val BellRing: ImageVector by lazy {
+        lucide(
+            "BellRing",
+            "M10.268 21a2 2 0 0 0 3.464 0",
+            "M22 8c0-2.3-.8-4.3-2-6",
+            "M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8" +
+                "c0 4.499-1.411 5.956-2.738 7.326",
+            "M4 2C2.8 3.7 2 5.7 2 8",
+        )
+    }
+
+    val TrendingUp: ImageVector by lazy {
+        lucide("TrendingUp", "M16 7h6v6", "M22 7l-8.5 8.5-5-5L2 17")
+    }
+
+    val TrendingDown: ImageVector by lazy {
+        lucide("TrendingDown", "M16 17h6v-6", "M22 17l-8.5-8.5-5 5L2 7")
+    }
+
+    val History: ImageVector by lazy {
+        lucide("History", "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", "M3 3v5h5", "M12 7v5l4 2")
+    }
+
     private fun circle(
         cx: Float,
         cy: Float,
