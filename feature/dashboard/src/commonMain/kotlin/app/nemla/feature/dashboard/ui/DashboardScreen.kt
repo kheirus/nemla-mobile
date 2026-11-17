@@ -75,12 +75,16 @@ import app.nemla.feature.dashboard.resources.dashboard_retry
 import app.nemla.feature.dashboard.resources.dashboard_sign_out
 import app.nemla.feature.dashboard.resources.dashboard_sign_out_failed
 import app.nemla.feature.dashboard.resources.dashboard_signing_out
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Duration.Companion.seconds
 
 private val FloatingActionClearance = 96.dp
+private val FloatingActionLabelDuration = 2.5.seconds
 
 @Composable
 internal fun DashboardRoute(
@@ -129,12 +133,11 @@ internal fun DashboardScreen(
     val format = remember(state.language, state.currency) { DashboardFormat(state.language, state.currency) }
     val scrollBehavior = rememberNemlaTopBarScrollBehavior()
     val scrollState = rememberScrollState()
-    var fabExpanded by remember { mutableStateOf(true) }
+    var fabExpanded by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(scrollState) {
-        var previous = scrollState.value
-        snapshotFlow { scrollState.value }.collect { value ->
-            fabExpanded = value == 0 || value < previous
-            previous = value
+        if (fabExpanded) {
+            withTimeoutOrNull(FloatingActionLabelDuration) { snapshotFlow { scrollState.value }.first { it > 0 } }
+            fabExpanded = false
         }
     }
     NemlaScaffold(
