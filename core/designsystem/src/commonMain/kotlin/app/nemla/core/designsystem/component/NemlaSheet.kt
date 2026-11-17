@@ -1,8 +1,11 @@
 package app.nemla.core.designsystem.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -17,8 +20,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -78,14 +83,35 @@ fun NemlaListItem(
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
 ) {
+    NemlaListItem(
+        headline = headline,
+        modifier = modifier,
+        supportingContent = supporting?.let { text -> { Text(text, style = NemlaTheme.typography.body) } },
+        leadingContent = leadingIcon?.let { icon -> { Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp)) } },
+        contentColor = contentColor,
+        enabled = enabled,
+        onClick = onClick,
+    )
+}
+
+@Composable
+fun NemlaListItem(
+    headline: String,
+    supportingContent: (@Composable () -> Unit)?,
+    leadingContent: (@Composable () -> Unit)?,
+    modifier: Modifier = Modifier,
+    contentColor: Color = NemlaTheme.colors.foreground,
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null,
+) {
     val colors = NemlaTheme.colors
     val clickModifier =
         if (onClick != null) Modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick) else Modifier
     ListItem(
         headlineContent = { Text(headline, style = NemlaTheme.typography.input) },
         modifier = modifier.then(clickModifier).alpha(if (enabled) 1f else DISABLED_ALPHA),
-        supportingContent = supporting?.let { text -> { Text(text, style = NemlaTheme.typography.body) } },
-        leadingContent = leadingIcon?.let { icon -> { Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp)) } },
+        supportingContent = supportingContent,
+        leadingContent = leadingContent,
         colors =
             ListItemDefaults.colors(
                 containerColor = Color.Transparent,
@@ -95,3 +121,20 @@ fun NemlaListItem(
             ),
     )
 }
+
+@Composable
+fun NemlaListIcon(
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+) {
+    val colors = NemlaTheme.colors
+    Box(
+        modifier = modifier.size(ListIconContainer).clip(CircleShape).background(colors.primary.copy(alpha = LIST_ICON_ALPHA)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = colors.primary, modifier = Modifier.size(22.dp))
+    }
+}
+
+private val ListIconContainer = 44.dp
+private const val LIST_ICON_ALPHA = 0.12f
