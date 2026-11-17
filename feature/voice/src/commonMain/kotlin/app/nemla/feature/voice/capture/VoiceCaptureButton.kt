@@ -1,12 +1,5 @@
 package app.nemla.feature.voice.capture
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -27,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -45,17 +37,15 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.nemla.core.audio.rememberMicrophonePermissionRequest
-import app.nemla.core.designsystem.component.NemlaBanner
-import app.nemla.core.designsystem.component.NemlaBannerKind
-import app.nemla.core.designsystem.component.NemlaDialog
+import app.nemla.core.designsystem.component.NemlaFormSheet
 import app.nemla.core.designsystem.component.NemlaListIcon
 import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaProgressBar
 import app.nemla.core.designsystem.component.NemlaSheet
+import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.feature.voice.common.AiConsentDialog
-import app.nemla.feature.voice.common.NoticeKind
 import app.nemla.feature.voice.common.text
 import app.nemla.feature.voice.resources.Res
 import app.nemla.feature.voice.resources.voice_dialog_description
@@ -76,20 +66,16 @@ import app.nemla.feature.voice.resources.voice_menu_imports_left
 import app.nemla.feature.voice.resources.voice_menu_manual
 import app.nemla.feature.voice.resources.voice_menu_resume_review
 import app.nemla.feature.voice.resources.voice_menu_resume_review_hint
-import app.nemla.feature.voice.resources.voice_notice_dismiss
 import app.nemla.feature.voice.resources.voice_start_recording
 import app.nemla.feature.voice.resources.voice_status_idle
 import app.nemla.feature.voice.resources.voice_status_processing
 import app.nemla.feature.voice.resources.voice_status_recording
 import app.nemla.feature.voice.resources.voice_stop_recording
-import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 private const val LOW_CREDIT_THRESHOLD = 3
-private const val NOTICE_DURATION_MILLIS = 6_000L
-private const val SPINNER_PERIOD_MILLIS = 1_000
 
 @Composable
 fun VoiceCaptureButton(
@@ -152,26 +138,10 @@ internal fun VoiceCaptureContent(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
     ) {
-        state.notice?.let { notice ->
-            LaunchedEffect(notice) {
-                delay(NOTICE_DURATION_MILLIS)
-                onAction(VoiceCaptureAction.NoticeDismissed)
-            }
-            val dismissLabel = stringResource(Res.string.voice_notice_dismiss)
-            NemlaBanner(
-                message = notice.message.text(),
-                kind =
-                    when (notice.kind) {
-                        NoticeKind.Error -> NemlaBannerKind.Error
-                        NoticeKind.Info -> NemlaBannerKind.Info
-                        NoticeKind.Success -> NemlaBannerKind.Success
-                    },
-                modifier =
-                    Modifier
-                        .widthIn(max = NemlaTheme.sizes.authCardMaxWidth)
-                        .clickable(onClickLabel = dismissLabel) { onAction(VoiceCaptureAction.NoticeDismissed) },
-            )
-        }
+        NemlaSnackbarEffect(
+            message = state.notice?.message?.text(),
+            onShown = { onAction(VoiceCaptureAction.NoticeDismissed) },
+        )
         AddFab(expanded = expanded, onClick = { onAction(VoiceCaptureAction.FabClicked) })
     }
     if (state.isMenuOpen) AddSheet(state = state, onAction = onAction, importAvailable = importAvailable)
@@ -341,7 +311,7 @@ private fun DictationDialog(
     state: VoiceCaptureUiState,
     onAction: (VoiceCaptureAction) -> Unit,
 ) {
-    NemlaDialog(
+    NemlaFormSheet(
         title = stringResource(Res.string.voice_dialog_title),
         description = stringResource(Res.string.voice_dialog_description),
         dismissible = state.isDialogDismissible,
@@ -424,13 +394,11 @@ private val RECORD_BUTTON_SIZE = 80.dp
 
 @Composable
 private fun Spinner() {
-    val transition = rememberInfiniteTransition()
-    val angle by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(SPINNER_PERIOD_MILLIS, easing = LinearEasing), RepeatMode.Restart),
+    CircularProgressIndicator(
+        color = NemlaTheme.colors.primaryForeground,
+        strokeWidth = 3.dp,
+        modifier = Modifier.size(28.dp),
     )
-    Icon(NemlaIcons.Loader, contentDescription = null, modifier = Modifier.size(28.dp).rotate(angle))
 }
 
 @Composable

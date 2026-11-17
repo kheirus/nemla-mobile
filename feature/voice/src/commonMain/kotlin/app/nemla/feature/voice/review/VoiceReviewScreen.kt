@@ -2,15 +2,23 @@ package app.nemla.feature.voice.review
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DatePicker
@@ -32,13 +40,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,16 +52,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import app.nemla.core.designsystem.component.NemlaBackButton
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
-import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
 import app.nemla.core.designsystem.component.NemlaOption
-import app.nemla.core.designsystem.component.NemlaScreen
+import app.nemla.core.designsystem.component.NemlaPickerField
+import app.nemla.core.designsystem.component.NemlaScaffold
 import app.nemla.core.designsystem.component.NemlaSelectField
 import app.nemla.core.designsystem.component.NemlaTextField
+import app.nemla.core.designsystem.component.NemlaTopBar
+import app.nemla.core.designsystem.component.NemlaTopBarTitle
+import app.nemla.core.designsystem.component.rememberNemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.CategoryId
@@ -123,68 +131,114 @@ internal fun VoiceReviewScreen(
     state: VoiceReviewUiState,
     onAction: (VoiceReviewAction) -> Unit,
 ) {
-    NemlaScreen {
-        state.detectedCount?.let { count ->
-            NemlaBanner(
-                message =
-                    pluralStringResource(
-                        if (state.origin == ReviewOrigin.IMPORT) Res.plurals.voice_imported else Res.plurals.voice_detected,
-                        count,
-                        count,
-                    ),
-                kind = NemlaBannerKind.Success,
+    val haptics = LocalHapticFeedback.current
+    val scrollBehavior = rememberNemlaTopBarScrollBehavior()
+    val title = stringResource(if (state.origin == ReviewOrigin.IMPORT) Res.string.review_title_import else Res.string.review_title)
+    NemlaScaffold(
+        topBar = {
+            NemlaTopBar(
+                title = { NemlaTopBarTitle(title) },
+                navigationIcon = { NemlaBackButton(onClick = { onAction(VoiceReviewAction.LaterClicked) }) },
+                scrollBehavior = scrollBehavior,
             )
-        }
-        state.message?.let { message ->
-            NemlaBanner(message = stringResource(message.resource()), kind = NemlaBannerKind.Error)
-        }
-        NemlaCard(modifier = Modifier.fillMaxWidth()) {
-            Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
-                Text(
-                    text =
-                        stringResource(
-                            if (state.origin ==
-                                ReviewOrigin.IMPORT
-                            ) {
-                                Res.string.review_title_import
-                            } else {
-                                Res.string.review_title
-                            },
-                        ),
-                    style = NemlaTheme.typography.cardTitle,
-                    modifier = Modifier.semantics { heading() },
-                )
-                state.transcript?.let { transcript ->
+        },
+        bottomBar = { ReviewActions(state, onAction) { haptics.performHapticFeedback(HapticFeedbackType.Confirm) } },
+        scrollBehavior = scrollBehavior,
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+            contentPadding = PaddingValues(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
+        ) {
+            state.detectedCount?.let { count ->
+                item(key = "detected") {
+                    NemlaBanner(
+                        message =
+                            pluralStringResource(
+                                if (state.origin == ReviewOrigin.IMPORT) Res.plurals.voice_imported else Res.plurals.voice_detected,
+                                count,
+                                count,
+                            ),
+                        kind = NemlaBannerKind.Success,
+                        modifier = Modifier.animateItem(),
+                    )
+                }
+            }
+            state.message?.let { message ->
+                item(key = "message") {
+                    NemlaBanner(
+                        message = stringResource(message.resource()),
+                        kind = NemlaBannerKind.Error,
+                        modifier = Modifier.animateItem(),
+                    )
+                }
+            }
+            state.transcript?.let { transcript ->
+                item(key = "transcript") {
                     Text(
                         text = stringResource(Res.string.review_transcript, transcript),
                         style = NemlaTheme.typography.body.copy(fontStyle = FontStyle.Italic),
                         color = NemlaTheme.colors.mutedForeground,
                     )
                 }
-                when {
-                    state.isLoading -> LoadingRow()
-                    state.lines.isEmpty() -> EmptyRow()
-                    else -> state.lines.forEach { line -> ReviewLineTile(line, state, onAction) }
+            }
+            when {
+                state.isLoading -> {
+                    item(key = "loading") { LoadingRow() }
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = NemlaTheme.spacing.xs),
-                    horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-                ) {
-                    NemlaButton(
-                        text = stringResource(Res.string.review_confirm),
-                        onClick = { onAction(VoiceReviewAction.ConfirmClicked) },
-                        enabled = state.canConfirm,
-                        loading = state.isSaving,
-                        leadingIcon = NemlaIcons.Check,
-                    )
-                    NemlaButton(
-                        text = stringResource(Res.string.review_later),
-                        onClick = { onAction(VoiceReviewAction.LaterClicked) },
-                        enabled = !state.isSaving,
-                        variant = NemlaButtonVariant.Ghost,
-                    )
+
+                state.lines.isEmpty() -> {
+                    item(key = "empty") { EmptyRow() }
+                }
+
+                else -> {
+                    items(state.lines, key = { it.id.value }) { line ->
+                        ReviewLineTile(
+                            line = line,
+                            state = state,
+                            onAction = onAction,
+                            onDelete = { haptics.performHapticFeedback(HapticFeedbackType.Confirm) },
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ReviewActions(
+    state: VoiceReviewUiState,
+    onAction: (VoiceReviewAction) -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Surface(color = NemlaTheme.colors.background, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
+                    .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
+        ) {
+            NemlaButton(
+                text = stringResource(Res.string.review_later),
+                onClick = { onAction(VoiceReviewAction.LaterClicked) },
+                enabled = !state.isSaving,
+                variant = NemlaButtonVariant.Ghost,
+            )
+            NemlaButton(
+                text = stringResource(Res.string.review_confirm),
+                onClick = {
+                    onConfirm()
+                    onAction(VoiceReviewAction.ConfirmClicked)
+                },
+                enabled = state.canConfirm,
+                loading = state.isSaving,
+                leadingIcon = NemlaIcons.Check,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -216,6 +270,8 @@ private fun ReviewLineTile(
     line: ReviewLine,
     state: VoiceReviewUiState,
     onAction: (VoiceReviewAction) -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = NemlaTheme.colors
     val editable = !state.isSaving && !line.isDeleting
@@ -223,7 +279,7 @@ private fun ReviewLineTile(
         shape = RoundedCornerShape(NemlaTheme.radius.md),
         color = colors.card,
         border = BorderStroke(1.dp, colors.border),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Column(
             modifier = Modifier.padding(NemlaTheme.spacing.sm),
@@ -264,7 +320,7 @@ private fun ReviewLineTile(
                 onSelect = { id: CategoryId -> onAction(VoiceReviewAction.CategorySelected(line.id, id)) },
                 enabled = editable,
             )
-            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
                 DateField(
                     date = line.date,
                     today = state.today,
@@ -272,7 +328,10 @@ private fun ReviewLineTile(
                     onPicked = { onAction(VoiceReviewAction.DateSelected(line.id, it)) },
                     modifier = Modifier.weight(1f),
                 )
-                DeleteButton(id = line.id, enabled = editable, onAction = onAction)
+                DeleteButton(enabled = editable) {
+                    onDelete()
+                    onAction(VoiceReviewAction.DeleteClicked(line.id))
+                }
             }
         }
     }
@@ -311,11 +370,10 @@ private fun LearnedText() {
 
 @Composable
 private fun DeleteButton(
-    id: ExpenseId,
     enabled: Boolean,
-    onAction: (VoiceReviewAction) -> Unit,
+    onClick: () -> Unit,
 ) {
-    IconButton(onClick = { onAction(VoiceReviewAction.DeleteClicked(id)) }, enabled = enabled) {
+    IconButton(onClick = onClick, enabled = enabled) {
         Icon(
             NemlaIcons.Trash2,
             contentDescription = stringResource(Res.string.review_delete),
@@ -334,35 +392,13 @@ private fun DateField(
     modifier: Modifier = Modifier,
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
-    val colors = NemlaTheme.colors
-    val shape = RoundedCornerShape(NemlaTheme.radius.md)
-    val label = stringResource(Res.string.review_date)
-    val shown = date.display()
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.labelGap)) {
-        Text(label, style = NemlaTheme.typography.label, modifier = Modifier.clearAndSetSemantics { })
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = NemlaTheme.sizes.controlHeight)
-                    .clip(shape)
-                    .border(1.dp, colors.input, shape)
-                    .clickable(enabled = enabled, role = Role.Button) { open = true }
-                    .semantics {
-                        contentDescription = label
-                        stateDescription = shown
-                    }.padding(horizontal = NemlaTheme.spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-        ) {
-            Text(
-                shown,
-                style = NemlaTheme.typography.input.copy(fontFeatureSettings = "tnum"),
-                modifier = Modifier.weight(1f).clearAndSetSemantics { },
-            )
-            Icon(NemlaIcons.Calendar, contentDescription = null, modifier = Modifier.size(NemlaTheme.sizes.icon))
-        }
-    }
+    NemlaPickerField(
+        label = stringResource(Res.string.review_date),
+        value = date.display(),
+        onClick = { open = true },
+        enabled = enabled,
+        modifier = modifier,
+    )
     if (open) {
         val todayMillis = today.toUtcMillis()
         val pickerState =
