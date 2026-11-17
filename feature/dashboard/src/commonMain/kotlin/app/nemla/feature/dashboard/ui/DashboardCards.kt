@@ -25,6 +25,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.nemla.core.designsystem.component.NemlaAnimatedColumn
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaCard
@@ -107,15 +109,21 @@ internal fun PendingCard(
             color = colors.mutedForeground,
             modifier = Modifier.padding(top = NemlaTheme.spacing.xxs),
         )
-        Column(modifier = Modifier.padding(top = NemlaTheme.spacing.sm)) {
-            pending.forEachIndexed { index, group ->
-                if (index > 0) HorizontalDivider(color = colors.border)
+        NemlaAnimatedColumn(
+            items = pending,
+            key = { it.review },
+            modifier = Modifier.padding(top = NemlaTheme.spacing.sm),
+        ) { _, group, first ->
+            Column {
+                if (!first) HorizontalDivider(color = colors.border)
                 Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable(role = Role.Button) { onAction(DashboardAction.PendingGroupClicked(index)) }
-                            .padding(vertical = NemlaTheme.spacing.sm),
+                            .clickable(role = Role.Button) {
+                                val index = pending.indexOf(group)
+                                if (index >= 0) onAction(DashboardAction.PendingGroupClicked(index))
+                            }.padding(vertical = NemlaTheme.spacing.sm),
                     horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -364,9 +372,13 @@ internal fun TodayCard(
             if (today.rows.isEmpty()) {
                 MutedCaption(stringResource(Res.string.today_empty))
             } else {
-                today.pageRows.forEachIndexed { index, row ->
-                    if (index > 0) HorizontalDivider(color = colors.border)
-                    ExpenseRowItem(row, format, onAction)
+                key(today.currentPage) {
+                    NemlaAnimatedColumn(items = today.pageRows, key = { it.id }) { _, row, first ->
+                        Column {
+                            if (!first) HorizontalDivider(color = colors.border)
+                            ExpenseRowItem(row, format, onAction)
+                        }
+                    }
                 }
             }
         }

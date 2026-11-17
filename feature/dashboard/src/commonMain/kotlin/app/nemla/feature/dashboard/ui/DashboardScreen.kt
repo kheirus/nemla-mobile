@@ -164,7 +164,7 @@ internal fun DashboardScreen(
                 }
             }
         }
-        state.editor?.let { ExpenseEditorDialog(it, state, format, onAction) }
+        state.editor?.let { ExpenseEditorSheet(it, state, format, onAction) }
     }
 }
 

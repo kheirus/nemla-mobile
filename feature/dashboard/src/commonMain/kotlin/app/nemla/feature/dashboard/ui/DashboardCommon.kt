@@ -1,12 +1,10 @@
 package app.nemla.feature.dashboard.ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,11 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -152,39 +148,6 @@ internal fun ExpenseRowItem(
                     .copy(fontWeight = FontWeight.SemiBold)
                     .tabular(),
         )
-    }
-}
-
-@Composable
-internal fun DateFieldButton(
-    label: String,
-    shown: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = NemlaTheme.colors
-    val shape = RoundedCornerShape(NemlaTheme.radius.md)
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.labelGap)) {
-        Text(label, style = NemlaTheme.typography.label, modifier = Modifier.clearAndSetSemantics { })
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = NemlaTheme.sizes.controlHeight)
-                    .clip(shape)
-                    .border(1.dp, colors.input, shape)
-                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-                    .semantics {
-                        contentDescription = label
-                        stateDescription = shown
-                    }.padding(horizontal = NemlaTheme.spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-        ) {
-            Text(shown, style = NemlaTheme.typography.input.tabular(), modifier = Modifier.weight(1f).clearAndSetSemantics { })
-            Icon(NemlaIcons.Calendar, contentDescription = null, modifier = Modifier.size(NemlaTheme.sizes.icon))
-        }
     }
 }
 
