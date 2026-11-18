@@ -236,7 +236,7 @@ Rendre l'application « mobile d'abord » : composants Material 3 natifs avant t
 Rapport et découpage détaillé : `UI-REVIEW.md`.
 1. Fondations : mode sombre plus contrasté, barre d'application, bouton retour propre à chaque plateforme (flèche Android, chevron iOS),
    panneaux du bas, onglets, snackbars, retour prédictif Android et geste de bord iOS, transitions entre écrans.
-2. Structure : avatar et panneau « Compte » à la place du menu déroulant « Kheireddine ▾ » (ou barre de navigation en bas, à arbitrer).
+2. Structure : avatar et panneau « Compte » à la place du menu déroulant « Kheireddine ▾ » (arrêté le 18/11/2026, pas de barre de navigation en bas).
 3. Tableau de bord : boutons segmentés Mois / Année, glissement entre les mois, bouton « Ajouter » réductible.
 4. Mon espace : onglets défilants avec glissement et indicateur animé, panneaux en vraies destinations.
 5. Fenêtres en panneaux du bas, confirmations en snackbars.
@@ -248,14 +248,14 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
   `mutedForeground` `#AEBDB1`, jeton `selectedContainer` plus clair que la piste) et `ColorScheme` Material 3 aligné (paliers
   `surfaceContainer*`, `secondaryContainer`, `inverse*`). Enveloppes `core:designsystem` : `NemlaTopBar` (défilement épinglé),
   `NemlaBackButton` (`expect/actual`), `NemlaSheet` + `NemlaListItem`, `NemlaTabs` (pas encore utilisé, étape 4), `NemlaSnackbarHost` /
-  `NemlaSnackbarEffect`, `NemlaScaffold` (sur lequel repose `NemlaScreen`), `NemlaAccountButton` / `NemlaAccountSheet`, `NemlaNavigationBar`.
+  `NemlaSnackbarEffect`, `NemlaScaffold` (sur lequel repose `NemlaScreen`), `NemlaAccountButton` / `NemlaAccountSheet`.
   `Scaffold` racine dans `shared`, transitions du `NavHost` (glissement d'un cinquième de largeur + fondu, 300 ms ; fondu seul depuis
-  le démarrage et entre onglets), retour prédictif Android (`enableOnBackInvokedCallback`), geste de bord iOS (natif dans CMP 1.12).
+  le démarrage), retour prédictif Android (`enableOnBackInvokedCallback`), geste de bord iOS (natif dans CMP 1.12).
   Mon espace : barre d'application et bouton retour natif à la place de « ← Retour ». Avis du tableau de bord en snackbar.
-- ☑ Étape 2. Deux structures au choix, une seule constante : `ActiveChromeStyle` dans `shared/.../AppChrome.kt`
-  (`TopBarWithAccountSheet` par défaut, ou `BottomNavigation`). Avatar à initiales + panneau « Compte » (pseudo, e-mail, Mon espace,
-  Se déconnecter) sur le tableau de bord et l'onboarding ; « Se déconnecter » aussi dans Mon espace › Profil. En `BottomNavigation` :
-  Accueil / Bilans / Mon espace, destination Bilans assemblée dans `shared` avec `ReportHistory`, onglet Bilans masqué dans Mon espace.
+- ☑ Étape 2. Structure arrêtée par le propriétaire le 18/11/2026 : avatar + panneau « Compte ». Avatar à initiales + panneau « Compte »
+  (pseudo, e-mail, Mon espace, Se déconnecter) sur le tableau de bord et l'onboarding ; « Se déconnecter » aussi dans Mon espace › Profil ;
+  Bilans reste un onglet de Mon espace. La variante barre de navigation en bas (Accueil / Bilans / Mon espace), essayée derrière une
+  constante, a été retirée avec `NemlaNavigationBar`.
 - ☑ Étape 3. Tableau de bord : Mois / Année en `NemlaSegmentedButtons` (`SingleChoiceSegmentedButtonRow`, coche et
   `secondaryContainer` sur l'option choisie). Bloc pilote en `HorizontalPager` (une page par période, de janvier 2000 à la
   période du jour, `PeriodPages`) : glisser ou les chevrons (`IconButton`, désactivés aux bornes) changent la période, le libellé
@@ -297,8 +297,7 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
   l'ombre ne transparaît plus dans « Zone dangereuse ».
 - **Écart à la demande** : la fiche de revue reste un écran (destination `VoiceReviewDestination`, ouverte depuis plusieurs
   endroits) et non un panneau du bas ; elle gagne une barre d'application (retour = « Plus tard ») et des boutons en bas d'écran.
-- Restes : pages voisines du pager du tableau de bord affichées « – » pendant le glissement ; arbitrage de la structure après
-  captures ; en `BottomNavigation`, la barre du bas est masquée dans les panneaux de Mon espace ; étape 7 (identité).
+- Restes : pages voisines du pager du tableau de bord affichées « – » pendant le glissement ; étape 7 (identité).
 
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.

@@ -309,7 +309,7 @@ une plateforme ajouté) :
 |---|---|---|---|
 | Bouton retour de la barre d'application (`NemlaBackButton`) | Icône flèche seule (`ArrowLeft`), libellé « Retour » / « Back » lu par TalkBack | Chevron `‹` suivi du libellé « Retour » / « Back », couleur `primary`, comme UIKit | Oui, volontaire |
 | Retour système | Retour prédictif : `android:enableOnBackInvokedCallback="true"` ; navigation-compose 2.10 joue `popExit` / `popEnter` pendant le geste | Balayage depuis le bord gauche : CMP 1.12 envoie toujours le geste de bord de départ comme évènement de retour (`navigationevent`), aucun réglage `ComposeUIViewController` nécessaire ; `NavHost` anime de même | Oui, geste natif de chaque OS |
-| Panneau du bas, barre d'application, barre de navigation | `ModalBottomSheet`, `TopAppBar`, `NavigationBar` Material 3 | Mêmes composants Material 3, pas d'équivalent UIKit | Non (identique) |
+| Panneau du bas, barre d'application | `ModalBottomSheet`, `TopAppBar` Material 3 | Mêmes composants Material 3, pas d'équivalent UIKit | Non (identique) |
 
 Le libellé iOS n'est pas le titre de l'écran précédent (UIKit le fait) mais « Retour » : l'écran précédent n'est pas connu de
 `core:designsystem`. Le bord droit (`EndEdgePanGestureBehavior`) reste désactivé, valeur par défaut de CMP.

@@ -31,7 +31,7 @@ L'interface reprend fidèlement le web (cartes, menus déroulants, boîtes de di
 | Aujourd'hui | Proposition | Composant |
 |---|---|---|
 | En-tête maison : logo + pastille « Kheireddine ▾ » qui ouvre un menu déroulant (« Gérer mon compte », « Se déconnecter ») | Barre d'application native : logo à gauche, **avatar rond seul** à droite. Le toucher ouvre un **panneau du bas** « Compte » (pseudo, Mon espace, Se déconnecter). | `TopAppBar` (`CenterAligned` ou `Small`), `IconButton`, `ModalBottomSheet` |
-| **[à arbitrer]** variante | Barre de navigation en bas à 3 onglets : **Accueil**, **Bilans**, **Mon espace** ; la déconnexion passe dans Mon espace › Profil. Plus « app » encore, et sort les bilans de leur onglet caché. | `NavigationBar` + `NavigationBarItem` |
+| **Arbitré le 18/11/2026** : variante non retenue | Barre de navigation en bas à 3 onglets (**Accueil**, **Bilans**, **Mon espace**) écartée : le propriétaire garde l'avatar et le panneau « Compte » ; Bilans reste un onglet de Mon espace, la déconnexion est dans le panneau « Compte » et dans Mon espace › Profil. | — |
 | « ← Retour » textuel en haut de Mon espace | Flèche de retour dans la barre d'application, différente selon la plateforme (voir ci-dessous) | `TopAppBar` `navigationIcon` |
 | Panneaux de Mon espace (budget, charges fixes, profil, préférences, carte) affichés dans le même écran via `AnimatedContent` | Vraies destinations de navigation, chacune avec sa barre et son titre ; le retour système et le geste fonctionnent nativement | `NavHost` + routes typées |
 | Retour système : `NavigationBackHandler` dans Mon espace seulement | Android : **retour prédictif** (aperçu de l'écran précédent en glissant), `android:enableOnBackInvokedCallback="true"` dans le manifeste. iOS : **glisser depuis le bord gauche** pour revenir (support du geste par navigation-compose sur iOS, réglage `ComposeUIViewController` à vérifier) | navigation-compose 2.10, `navigationevent` |
@@ -132,7 +132,7 @@ Chaque étape est livrable seule, dans cet ordre :
 
 1. **Fondations** : thème sombre corrigé ; enveloppes `NemlaTopBar`, `NemlaBackButton` (Android / iOS), `NemlaSheet`, `NemlaTabs`,
    `NemlaSnackbar` ; `Scaffold` dans l'écran racine ; retour prédictif Android et geste iOS ; transitions du `NavHost`.
-2. **Structure** : barre d'application avec avatar et panneau « Compte » (ou barre de navigation en bas, selon l'arbitrage).
+2. **Structure** : barre d'application avec avatar et panneau « Compte » (arbitré le 18/11/2026, pas de barre de navigation en bas).
 3. **Tableau de bord** : boutons segmentés, glissement entre mois, bouton « Ajouter » réductible et panneau du bas, marges.
 4. **Mon espace** : onglets défilants + pager avec glissement, panneaux en destinations, liste groupée.
 5. **Fenêtres** : passage des `Dialog` en panneaux du bas, snackbars.

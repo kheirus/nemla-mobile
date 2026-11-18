@@ -97,9 +97,10 @@ Aiguillage après connexion (`shared`, `AppViewModel`) : à chaque nouvel utilis
 `bootstrap_user` puis lit le profil : onboarding seulement si `onboarding_done` est faux et que le compte est vierge (budget mensuel 0,
 aucune charge fixe, aucune dépense lue avec `limit=1`) ; sinon, ou en cas d'erreur, tableau de bord. L'onboarding peut être passé. Mon espace s'ouvre depuis
 le panneau « Compte » de l'avatar du tableau de bord ou le lien des alertes de budget (onglet Catégories) ; le bouton retour de la barre
-d'application dépile. Structure de l'application (lot 6b) : `ActiveChromeStyle` (`shared`, `AppChrome.kt`) choisit la barre
-d'application avec avatar (`TopBarWithAccountSheet`) ou la barre de navigation du bas (`BottomNavigation` : Accueil, Bilans, Mon espace) ;
-`shared` passe `showAccountMenu` à `dashboardScreen` et `topLevel` à `settingsScreen`, et déclare la destination Bilans avec `ReportHistory`.
+d'application dépile. Structure de l'application (lot 6b, arrêtée le 18/11/2026) : pas de barre de navigation en bas ; le tableau
+de bord porte une barre d'application avec le logo et l'avatar, qui ouvre le panneau « Compte » (pseudo, e-mail, Mon espace, Se déconnecter).
+Mon espace est une destination empilée, toujours avec son bouton retour ; ses onglets sont Profil, Bilans (`ReportHistory` fourni par `shared`),
+Crédits et Catégories. « Se déconnecter » existe dans le panneau « Compte » et dans Mon espace › Profil.
 
 Préférences locales (langue de l'application, langue de dictée, thème) : port `PreferencesRepository` (`StateFlow`), implémenté dans
 `core:data` sur `SecureStore` (clé `preferences.v1`, conservée à la déconnexion). La devise reste dans `profiles.devise`. `shared` applique
