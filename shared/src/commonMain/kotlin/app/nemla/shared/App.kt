@@ -1,8 +1,5 @@
 package app.nemla.shared
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.designsystem.brand.NemlaLogo
@@ -38,9 +34,6 @@ import app.nemla.core.designsystem.component.NemlaLoadingIndicator
 import app.nemla.core.designsystem.component.NemlaScaffold
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaScreenAlignment
-import app.nemla.core.designsystem.component.NemlaTopBar
-import app.nemla.core.designsystem.component.NemlaTopBarBrand
-import app.nemla.core.designsystem.component.rememberNemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.PendingReview
 import app.nemla.core.domain.model.ThemeMode
@@ -70,7 +63,6 @@ import app.nemla.feature.voice.navigation.voiceGraph
 import app.nemla.shared.resources.Res
 import app.nemla.shared.resources.app_missing_config_body
 import app.nemla.shared.resources.app_missing_config_title
-import app.nemla.shared.resources.app_tab_reports
 import app.nemla.shared.resources.app_unavailable_body
 import app.nemla.shared.resources.app_unavailable_title
 import kotlinx.serialization.Serializable
@@ -126,17 +118,7 @@ private fun NemlaNavHost(
     }
     val dictation: @Composable (Boolean, (String) -> Unit, (Boolean) -> Unit, (String) -> Unit) -> Unit =
         { enabled, onTranscript, onActiveChange, onMessage -> DictationTextButton(enabled, onTranscript, onActiveChange, onMessage) }
-    val bottomNavigation = ActiveChromeStyle == AppChromeStyle.BottomNavigation
-    val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentTab = if (bottomNavigation) backStackEntry?.destination?.topLevelTab() else null
-    NemlaScaffold(
-        bottomBar = {
-            AnimatedVisibility(visible = currentTab != null, enter = expandVertically(), exit = shrinkVertically()) {
-                AppNavigationBar(selected = currentTab, onSelect = { navController.navigateToTab(it) })
-            }
-        },
-        contentWindowInsets = WindowInsets(0),
-    ) { padding ->
+    NemlaScaffold(contentWindowInsets = WindowInsets(0)) { padding ->
         NavHost(
             navController = navController,
             startDestination = SplashDestination,
@@ -160,8 +142,7 @@ private fun NemlaNavHost(
                     navController.navigateToVoiceReview()
                 },
                 onOpenSettings = { categories ->
-                    val tab = if (categories) SettingsTab.CATEGORIES else SettingsTab.PROFILE
-                    if (bottomNavigation) navController.navigateToTab(AppTab.SETTINGS, tab) else navController.navigateToSettings(tab)
+                    navController.navigateToSettings(if (categories) SettingsTab.CATEGORIES else SettingsTab.PROFILE)
                 },
                 floatingAction = { expanded ->
                     AddButtonWithImport(
@@ -174,37 +155,16 @@ private fun NemlaNavHost(
                     )
                 },
                 reportNotice = { ReportArrivalNotice() },
-                showAccountMenu = !bottomNavigation,
             )
-            if (bottomNavigation) {
-                composable<ReportsDestination> { ReportsTabScreen() }
-            }
             settingsScreen(
                 navController = navController,
                 onClose = { if (!navController.popBackStack()) navController.navigateToDashboard() },
                 onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
                 dictation = dictation,
                 reportHistory = { ReportHistory() },
-                topLevel = bottomNavigation,
             )
             voiceGraph(onClose = { navController.closeVoiceReview() })
         }
-    }
-}
-
-@Composable
-private fun ReportsTabScreen() {
-    val scrollBehavior = rememberNemlaTopBarScrollBehavior()
-    NemlaScreen(
-        topBar = {
-            NemlaTopBar(
-                title = { NemlaTopBarBrand(stringResource(Res.string.app_tab_reports)) },
-                scrollBehavior = scrollBehavior,
-            )
-        },
-        scrollBehavior = scrollBehavior,
-    ) {
-        ReportHistory()
     }
 }
 

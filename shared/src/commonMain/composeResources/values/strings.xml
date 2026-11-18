@@ -4,7 +4,4 @@
   <string name="app_missing_config_body">Renseignez SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY et API_BASE_URL (adresses en https) dans local.properties pour Android ou dans iosApp/Config.xcconfig pour iOS, puis reconstruisez l'application.</string>
   <string name="app_unavailable_title">Application indisponible</string>
   <string name="app_unavailable_body">Cette version de l'application ne peut pas se connecter au service. Mettez-la à jour ou réessayez plus tard.</string>
-  <string name="app_tab_home">Accueil</string>
-  <string name="app_tab_reports">Bilans</string>
-  <string name="app_tab_settings">Mon espace</string>
 </resources>
