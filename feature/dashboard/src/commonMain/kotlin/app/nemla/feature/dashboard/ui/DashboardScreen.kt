@@ -65,7 +65,6 @@ import app.nemla.feature.dashboard.resources.dashboard_account_menu
 import app.nemla.feature.dashboard.resources.dashboard_error_generic
 import app.nemla.feature.dashboard.resources.dashboard_error_offline
 import app.nemla.feature.dashboard.resources.dashboard_error_timeout
-import app.nemla.feature.dashboard.resources.dashboard_home_title
 import app.nemla.feature.dashboard.resources.dashboard_loading
 import app.nemla.feature.dashboard.resources.dashboard_my_space
 import app.nemla.feature.dashboard.resources.dashboard_notice_deleted
@@ -92,7 +91,6 @@ internal fun DashboardRoute(
     onOpenSettings: (Boolean) -> Unit,
     floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
-    showAccountMenu: Boolean = true,
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -117,7 +115,6 @@ internal fun DashboardRoute(
         onAction = viewModel::onAction,
         floatingAction = floatingAction,
         reportNotice = reportNotice,
-        showAccountMenu = showAccountMenu,
     )
 }
 
@@ -127,7 +124,6 @@ internal fun DashboardScreen(
     onAction: (DashboardAction) -> Unit,
     floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
-    showAccountMenu: Boolean = true,
 ) {
     val format = remember(state.language, state.currency) { DashboardFormat(state.language, state.currency) }
     val scrollBehavior = rememberNemlaTopBarScrollBehavior()
@@ -140,7 +136,7 @@ internal fun DashboardScreen(
         }
     }
     NemlaScaffold(
-        topBar = { DashboardTopBar(state, onAction, showAccountMenu, scrollBehavior) },
+        topBar = { DashboardTopBar(state, onAction, scrollBehavior) },
         floatingActionButton = { floatingAction(fabExpanded) },
         scrollBehavior = scrollBehavior,
     ) { padding ->
@@ -224,25 +220,22 @@ private fun DashboardContent(
 private fun DashboardTopBar(
     state: DashboardUiState,
     onAction: (DashboardAction) -> Unit,
-    showAccountMenu: Boolean,
     scrollBehavior: NemlaTopBarScrollBehavior,
 ) {
     var accountOpen by rememberSaveable { mutableStateOf(false) }
     NemlaTopBar(
-        title = { NemlaTopBarBrand(if (showAccountMenu) null else stringResource(Res.string.dashboard_home_title)) },
+        title = { NemlaTopBarBrand() },
         actions = {
-            if (showAccountMenu) {
-                NemlaAccountButton(
-                    name = state.pseudo,
-                    contentDescription = stringResource(Res.string.dashboard_account_menu),
-                    onClick = { accountOpen = true },
-                    fallbackIcon = householdIcon(state.household),
-                )
-            }
+            NemlaAccountButton(
+                name = state.pseudo,
+                contentDescription = stringResource(Res.string.dashboard_account_menu),
+                onClick = { accountOpen = true },
+                fallbackIcon = householdIcon(state.household),
+            )
         },
         scrollBehavior = scrollBehavior,
     )
-    if (showAccountMenu && accountOpen) {
+    if (accountOpen) {
         DashboardAccountSheet(state, onAction, onDismiss = { accountOpen = false })
     }
 }

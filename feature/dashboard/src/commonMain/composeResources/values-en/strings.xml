@@ -2,7 +2,6 @@
 <resources>
   <string name="dashboard_my_space">My space</string>
   <string name="dashboard_account_menu">Account</string>
-  <string name="dashboard_home_title">Home</string>
   <string name="dashboard_sign_out">Sign out</string>
   <string name="dashboard_signing_out">One moment…</string>
   <string name="dashboard_sign_out_failed">Could not sign out. Try again.</string>
