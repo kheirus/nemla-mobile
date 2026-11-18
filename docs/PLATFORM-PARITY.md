@@ -332,3 +332,31 @@ l'interface au moment de la planification) :
    `seen_at` ; titre vide remplacé par « nemla ». Ils restent en attente sans permission (le web ne les marque pas non plus).
 4. **Mémoire des alertes de budget** : `SecureStore` (`notifications.v1`), clés `AAAA-MM:<catégorie>` du mois courant et du précédent
    seulement ; effacée à la déconnexion (`ClearNotifications`), comme toutes les notifications planifiées et affichées.
+
+## Lot 7 — notifications locales, partie B : rappel, alertes, bannières, coordinateur (19/11/2026)
+
+Écarts Android / iOS (écrans et logique 100 % Compose / `commonMain` ; seuls la demande de permission et l'affichage restent propres
+à chaque OS, voir partie A) :
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Activation du rappel sans permission | Android 13+ : dialogue système ; après deux refus, Android ne l'affiche plus et la réponse est immédiate → « Notifications refusées… » ; Android < 13 : pas de dialogue, réponse selon l'état des notifications de l'application | dialogue système la première fois seulement ; ensuite réponse immédiate → « Notifications refusées… » | **Oui**, rendu système |
+| Interrupteur « Rappel quotidien à 20 h » | `Switch` Material 3 (`NemlaSwitch`) | le même (pas de `UISwitch`) | Non entre plateformes ; non natif sur iOS |
+| « Premier plan » du coordinateur | `Lifecycle.State.STARTED` de l'activité | `STARTED` du `ComposeUIViewController` (retour d'arrière-plan) | À vérifier sur simulateur iOS |
+
+Écarts avec le web (`specs/04` §5.8, §5.11, §12.6), à valider :
+
+1. **Interrupteur du rappel** : allumé seulement si `profiles.daily_reminder` **et** permission accordée (le web montre le seul champ
+   du profil) ; permission retirée dans les réglages du téléphone → interrupteur éteint, profil inchangé. Message de refus propre au
+   mobile : « Notifications refusées. Autorisez-les dans les réglages du téléphone. » / « Notifications blocked. Allow them in your
+   phone settings. » (pas de « Votre navigateur ne gère pas les notifications. »). Messages en bannière (4 s) au lieu d'un toast.
+2. **Alertes « Budget atteint »** : vérifiées après chaque chargement du tableau de bord (ouverture, retour au premier plan, tirer pour
+   actualiser, après une modification), pour le mois calendaire courant quelle que soit la période affichée ; une seule fois par
+   catégorie et par mois.
+3. **Bannières in-app** : relues au retour au premier plan et à chaque affichage du tableau de bord, pas toutes les 30 s ; carte entière
+   cliquable, bouton X de 32 px. Une bannière masquée disparaît aussitôt, même si l'écriture de `seen_at` échoue (elle reviendra au
+   prochain lancement).
+4. **Bilan d'une notification sans `payload`** : message « Bilan indisponible pour le moment. » ; « Réessayer » seulement si la
+   notification porte une période (recalcul par `GET /api/public/report/monthly`), sinon « J'ai compris » ; titre « Votre bilan » si
+   aucune période n'est connue.
+5. **Changement de langue** : les notifications planifiées sont replanifiées dans la nouvelle langue (sans objet sur le web).

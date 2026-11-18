@@ -238,7 +238,7 @@ Contrat : `ARCHITECTURE.md` §3 « Notifications (lot 7) ».
   `NotificationPlanner` (rappels 20 h sur 14 jours, bilans à 10 h le premier jour du bandeau, clés `AAAA-MM:<catégorie>`), ports
   `LocalNotifier`, `NotificationMemory`, `InboxRepository`, cas d'usage `RefreshScheduledNotifications`, `SetDailyReminder`,
   `AlertReachedBudgets`, `DeliverPushInbox`, `ListInAppNotices`, `DismissInboxItem`, `ClearNotifications` ; `ConfirmReviewedExpenses`
-  replanifie après succès (enregistré dans `featureVoiceModule`). 23 nouveaux tests (planificateur : mois de 30 et 31 jours, février,
+  replanifie après succès. 23 nouveaux tests (planificateur : mois de 30 et 31 jours, février,
   février bissextile, décembre, après 20 h, dépense confirmée ; un test par cas d'usage au moins).
 - ☑ `core:data` (19/11/2026) : `KtorInboxRepository` (`user_notifications` non vues, `payload` lu comme un `ReportSheet` via le
   mappage du bilan ; payload invalide → bilan absent, ligne de canal ou de type inconnu ignorée ; `seen_at`, `delivered_at`),
@@ -248,10 +248,25 @@ Contrat : `ARCHITECTURE.md` §3 « Notifications (lot 7) ».
   monochrome, alerte de budget en `VISIBILITY_PRIVATE`) et iOS (`UNUserNotificationCenter`, déclencheurs calendaires non répétitifs,
   `installNotificationPresenter`), `NotificationCopy` fr/en, `rememberNotificationPermissionRequest`. Manifeste de la bibliothèque
   fusionné dans l'APK (vérifié). 5 tests. Module Koin ajouté à `shared` (nécessaire au graphe de `ConfirmReviewedExpenses`).
-- ☐ `feature:settings` : interrupteur « Rappel quotidien à 20 h » (Préférences), encadré PWA supprimé.
-- ☐ `feature:dashboard` : alertes « Budget atteint », emplacement `notificationBanners`.
-- ☐ `feature:reports` : `InboxBanners` (§5.11), dialogue de bilan ouvert sur le `payload`.
-- ☐ `shared` : `NotificationCoordinator`, modules Koin, délégué iOS installé par `startNemla`.
+- ☑ `core:domain` / `core:notifications` (partie B, 19/11/2026) : cas d'usage `GetNotificationAccess` ; tous les cas d'usage de
+  notification enregistrés une seule fois dans `coreNotificationsModule` (retirés de `featureVoiceModule`). 1 nouveau test.
+- ☑ `core:designsystem` (19/11/2026) : icône `ListChecks`.
+- ☑ `feature:settings` (19/11/2026) : ligne bordée « Rappel quotidien à 20 h » + interrupteur dans Préférences, allumé seulement si
+  `daily_reminder` **et** permission accordée ; activation → demande de permission si besoin (`rememberNotificationPermissionRequest`),
+  puis `SetDailyReminder` et « Rappel activé pour 20 h » ; refus → « Notifications refusées. Autorisez-les dans les réglages du
+  téléphone. » ; désactivation → « Rappel désactivé » ; échec → interrupteur restauré et « Enregistrement impossible ». Encadré PWA
+  non porté. 5 nouveaux tests (19 dans le module).
+- ☑ `feature:dashboard` (19/11/2026) : `AlertReachedBudgets` après chaque chargement (mois calendaire courant, devise du profil),
+  emplacement `notificationBanners` en position 5. 2 nouveaux tests (45 dans le module).
+- ☑ `feature:reports` (19/11/2026) : `InboxBanners` (§5.11 : `ListChecks` pour le rappel, `BellRing` pour les bilans, « Voir » sauf
+  rappel, X « Masquer la notification »), relu à chaque `STARTED` ; `ReportDialog` ouvert sur le `payload` (`ReportRequest.Delivered`),
+  erreur sans `payload`, « Réessayer » seulement avec une période. 5 nouveaux tests (14 dans le module).
+- ☑ `shared` (19/11/2026) : `NotificationCoordinator` (connexion et chaque `STARTED` de la racine : replanification puis messages
+  `push` ; changement de langue : replanification ; déconnexion : `ClearNotifications`), `InboxBanners` dans `notificationBanners`,
+  `installNotificationPresenter()` appelé par `startNemla`. 4 nouveaux tests ; `NemlaKoinTest` résout le coordinateur et les 8 cas
+  d'usage (10 tests JVM, 11 sur simulateur iOS).
+- Vérifié le 19/11/2026 : `spotlessApply`, `allTests` des modules touchés (JVM et simulateur iOS), `:androidApp:assembleDebug`,
+  `:shared:linkDebugFrameworkIosSimulatorArm64`. Notifications, permission et bannières jamais essayées sur appareil ni simulateur.
 - Hors lot : push serveur (table de jetons, émetteur planifié, `BACKEND-GAPS.md`).
 
 ## Plus tard

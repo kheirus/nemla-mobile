@@ -188,8 +188,9 @@ Contrats (`core:domain`) :
   List<ReachedBudget>, currency): Int` (nombre affiché), où `ReachedBudget(categoryId, categoryName, usedCents, allocatedCents)` est
   construit par le tableau de bord depuis ses alertes (seules les lignes `allocated > 0 && used >= allocated` comptent) ;
   `DeliverPushInbox(): AppResult<Int>`. Sans permission, `AlertReachedBudgets` et `DeliverPushInbox` ne font rien et ne marquent rien.
-  `RefreshScheduledNotifications` est enregistré dans `featureVoiceModule` (pour `ConfirmReviewedExpenses`) ; `coreNotificationsModule`
-  est inclus par `shared`.
+  `GetNotificationAccess` (ajouté au lot 7, partie B) expose `LocalNotifier.access()` à `feature:settings`. Tous les cas d'usage de
+  notification sont enregistrés une seule fois, dans `coreNotificationsModule` (inclus par `shared`) ; les tests de module des
+  features (`feature:voice`, `feature:settings`, `feature:dashboard`, `feature:reports`) les déclarent eux-mêmes avec des faux.
 
 Textes : les notifications sont affichées application fermée ; `core:notifications` les résout au moment de la planification, dans la
 langue de l'interface, depuis une table fr/en (`NotificationCopy`). Un changement de langue replanifie. Aucun contenu de notification
@@ -201,8 +202,15 @@ profond au lot 7. Sur iOS, un délégué `UNUserNotificationCenterDelegate` affi
 Déclencheurs (`shared`, `NotificationCoordinator`) : à la connexion et à chaque passage au premier plan (`Lifecycle.State.STARTED` de la
 racine), `RefreshScheduledNotifications` puis `DeliverPushInbox` ; au changement de langue, replanification ; à la déconnexion,
 `ClearNotifications`. La permission n'est demandée que par l'interrupteur du rappel (Mon espace › Préférences), jamais au démarrage.
-`feature:dashboard` appelle `AlertReachedBudgets` après calcul des alertes du mois courant et expose l'emplacement `notificationBanners`
-(position 5 de `specs/04` §5.2), rempli par `shared` avec `InboxBanners` de `feature:reports`.
+`feature:dashboard` appelle `AlertReachedBudgets` après chaque chargement (initial, retour au premier plan, tirer pour actualiser,
+après une modification), avec les alertes du mois **calendaire** courant quelle que soit la période affichée (comme `specs/04` §5.8),
+si le profil, les catégories et les dépenses du mois ont été lus ; il expose l'emplacement `notificationBanners`
+(position 5 de `specs/04` §5.2), rempli par `shared` avec `InboxBanners` de `feature:reports`. `InboxBanners` relit
+`ListInAppNotices` à chaque `STARTED` ; toucher un bilan ouvre `ReportDialog` sur le `ReportSheet` du `payload`
+(`ReportRequest.Delivered`, sans appel serveur ; sans `payload`, état d'erreur, « Réessayer » seulement si la période est connue,
+qui recalcule alors par `LoadPeriodReport`). `NotificationCoordinator` est un ViewModel de `shared` (racine de `App`, hors de
+`key(langue)`), qui suit `ObserveAuthState` (une synchronisation par utilisateur connecté, pas à chaque rafraîchissement de jeton) et
+`ObservePreferences`.
 
 ## 4. Couche IA
 
