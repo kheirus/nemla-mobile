@@ -135,19 +135,17 @@ internal fun DashboardScreen(
             fabExpanded = false
         }
     }
-    NemlaScaffold(
-        topBar = { DashboardTopBar(state, onAction, scrollBehavior) },
-        floatingActionButton = { floatingAction(fabExpanded) },
-        scrollBehavior = scrollBehavior,
-    ) { padding ->
-        NemlaPullToRefreshBox(
-            isRefreshing = state.isRefreshing,
-            onRefresh = { onAction(DashboardAction.PullToRefresh) },
-            modifier = Modifier.fillMaxSize().edgeToEdgeBody(padding),
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally,
+    NemlaRotationAllowed()
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        NemlaScaffold(
+            topBar = { DashboardTopBar(state, onAction, scrollBehavior) },
+            floatingActionButton = { floatingAction(fabExpanded) },
+            scrollBehavior = scrollBehavior,
+        ) { padding ->
+            NemlaPullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = { onAction(DashboardAction.PullToRefresh) },
+                modifier = Modifier.fillMaxSize().edgeToEdgeBody(padding),
             ) {
                 Column(
                     modifier =
@@ -227,10 +225,9 @@ private fun DashboardTopBar(
         title = { NemlaTopBarBrand() },
         actions = {
             NemlaAccountButton(
-                name = state.pseudo,
                 contentDescription = stringResource(Res.string.dashboard_account_menu),
                 onClick = { accountOpen = true },
-                fallbackIcon = householdIcon(state.household),
+                icon = householdIcon(state.household),
             )
         },
         scrollBehavior = scrollBehavior,

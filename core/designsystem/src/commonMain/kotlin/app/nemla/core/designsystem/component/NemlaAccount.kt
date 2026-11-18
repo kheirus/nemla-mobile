@@ -1,6 +1,7 @@
 package app.nemla.core.designsystem.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,8 @@ import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 
 private const val AVATAR_ALPHA = 0.16f
+private const val ACCOUNT_RING_ALPHA = 0.45f
+private const val ACCOUNT_ICON_RATIO = 0.55f
 private const val MAX_INITIALS = 2
 private val ButtonAvatarSize = 34.dp
 private val SheetAvatarSize = 48.dp
@@ -73,14 +76,23 @@ fun NemlaAvatar(
 
 @Composable
 fun NemlaAccountButton(
-    name: String?,
     contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    fallbackIcon: ImageVector = NemlaIcons.UserRound,
+    icon: ImageVector = NemlaIcons.UserRound,
 ) {
+    val colors = NemlaTheme.colors
     IconButton(onClick = onClick, modifier = modifier.semantics { this.contentDescription = contentDescription }) {
-        NemlaAvatar(name = name, size = ButtonAvatarSize, fallbackIcon = fallbackIcon)
+        Box(
+            modifier =
+                Modifier
+                    .size(ButtonAvatarSize)
+                    .background(colors.primary.copy(alpha = AVATAR_ALPHA).compositeOver(colors.background), CircleShape)
+                    .border(1.5.dp, colors.primary.copy(alpha = ACCOUNT_RING_ALPHA), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = colors.primary, modifier = Modifier.size(ButtonAvatarSize * ACCOUNT_ICON_RATIO))
+        }
     }
 }
 

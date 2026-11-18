@@ -141,10 +141,9 @@ private fun OnboardingHeader(
         title = { NemlaTopBarBrand() },
         actions = {
             NemlaAccountButton(
-                name = state.pseudo,
                 contentDescription = stringResource(Res.string.onboarding_account_menu),
                 onClick = { accountOpen = true },
-                fallbackIcon = householdIcon(state.household),
+                icon = householdIcon(state.household),
             )
         },
     )
