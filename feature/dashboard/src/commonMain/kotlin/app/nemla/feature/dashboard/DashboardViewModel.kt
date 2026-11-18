@@ -17,8 +17,10 @@ import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.GlobalBudget
 import app.nemla.core.domain.model.PaymentMethod
 import app.nemla.core.domain.model.PeriodCursor
+import app.nemla.core.domain.model.ReachedBudget
 import app.nemla.core.domain.model.RecurringCharge
 import app.nemla.core.domain.model.UserProfile
+import app.nemla.core.domain.usecase.AlertReachedBudgets
 import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
 import app.nemla.core.domain.usecase.DeleteExpense
 import app.nemla.core.domain.usecase.GetDeferredDebit
@@ -73,6 +75,7 @@ internal class DashboardViewModel(
     private val updateExpense: UpdateExpense,
     private val deleteExpense: DeleteExpense,
     private val signOut: SignOut,
+    private val alertBudgets: AlertReachedBudgets,
     private val clock: DashboardClock,
     private val language: UiLanguage,
 ) : ViewModel() {
@@ -194,7 +197,19 @@ internal class DashboardViewModel(
                 mutableState.value.search.date
                     ?.let(::search)
                 ensureYear(afterLoad = true)
+                alertReachedBudgets(results)
             }
+    }
+
+    private fun alertReachedBudgets(results: LoadResults) {
+        val currency = profile?.currency ?: return
+        if (results.month is AppResult.Failure || results.categories is AppResult.Failure) return
+        val reached =
+            mutableState.value.view.alerts
+                .map { ReachedBudget(it.categoryId, it.name, it.usedCents, it.allocatedCents) }
+        if (reached.isEmpty()) return
+        val month = today.yearMonth
+        viewModelScope.launch { alertBudgets(month, reached, currency) }
     }
 
     private suspend fun fetchAll(year: Int): LoadResults =

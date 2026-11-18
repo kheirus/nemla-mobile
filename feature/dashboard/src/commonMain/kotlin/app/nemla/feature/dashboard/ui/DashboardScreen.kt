@@ -103,6 +103,7 @@ internal fun DashboardRoute(
     onOpenSettings: (Boolean) -> Unit,
     floatingAction: @Composable () -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
+    notificationBanners: @Composable () -> Unit = {},
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -122,7 +123,13 @@ internal fun DashboardRoute(
             }
         }
     }
-    DashboardScreen(state = state, onAction = viewModel::onAction, floatingAction = floatingAction, reportNotice = reportNotice)
+    DashboardScreen(
+        state = state,
+        onAction = viewModel::onAction,
+        floatingAction = floatingAction,
+        reportNotice = reportNotice,
+        notificationBanners = notificationBanners,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -132,6 +139,7 @@ internal fun DashboardScreen(
     onAction: (DashboardAction) -> Unit,
     floatingAction: @Composable () -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
+    notificationBanners: @Composable () -> Unit = {},
 ) {
     val colors = NemlaTheme.colors
     val format = remember(state.language, state.currency) { DashboardFormat(state.language, state.currency) }
@@ -155,7 +163,7 @@ internal fun DashboardScreen(
                                 .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.pageVertical),
                         verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
                     ) {
-                        DashboardContent(state, format, onAction, reportNotice)
+                        DashboardContent(state, format, onAction, reportNotice, notificationBanners)
                         Spacer(modifier = Modifier.height(FloatingActionClearance))
                     }
                 }
@@ -180,6 +188,7 @@ private fun DashboardContent(
     format: DashboardFormat,
     onAction: (DashboardAction) -> Unit,
     reportNotice: @Composable () -> Unit,
+    notificationBanners: @Composable () -> Unit,
 ) {
     state.notice?.let { notice ->
         LaunchedEffect(notice) {
@@ -220,6 +229,7 @@ private fun DashboardContent(
     if (state.view.pending.isNotEmpty()) PendingCard(state.view.pending, format, onAction)
     if (state.view.alerts.isNotEmpty()) AlertsCard(state.view.alerts, format) { onAction(DashboardAction.AdjustBudgetsClicked) }
     reportNotice()
+    notificationBanners()
     SearchCard(state, format, onAction)
     PilotCard(state, format, onAction)
     SpendingCard(state, format, onAction)

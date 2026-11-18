@@ -3,6 +3,7 @@ package app.nemla.feature.dashboard
 import app.nemla.core.common.AppError
 import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.model.AppPreferences
 import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.BudgetPeriod
 import app.nemla.core.domain.model.Category
@@ -22,7 +23,10 @@ import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.ExpenseSource
 import app.nemla.core.domain.model.GlobalBudget
+import app.nemla.core.domain.model.LocalNotice
 import app.nemla.core.domain.model.NewCategory
+import app.nemla.core.domain.model.NoticeGroup
+import app.nemla.core.domain.model.NotificationAccess
 import app.nemla.core.domain.model.Password
 import app.nemla.core.domain.model.PaymentMethod
 import app.nemla.core.domain.model.ProfileIdentity
@@ -30,6 +34,7 @@ import app.nemla.core.domain.model.PseudoAvailability
 import app.nemla.core.domain.model.RecurringCharge
 import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.RecurringChargeId
+import app.nemla.core.domain.model.ScheduledNotice
 import app.nemla.core.domain.model.Session
 import app.nemla.core.domain.model.SignUpOutcome
 import app.nemla.core.domain.model.SignUpRequest
@@ -39,11 +44,17 @@ import app.nemla.core.domain.model.VoiceEntryId
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
+import app.nemla.core.domain.port.DeviceLanguage
 import app.nemla.core.domain.port.ExpenseRepository
+import app.nemla.core.domain.port.LocalNotifier
+import app.nemla.core.domain.port.NotificationMemory
+import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.core.domain.usecase.AlertReachedBudgets
 import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
+import app.nemla.core.domain.usecase.CurrentLanguages
 import app.nemla.core.domain.usecase.DeleteExpense
 import app.nemla.core.domain.usecase.GetDeferredDebit
 import app.nemla.core.domain.usecase.ListCategories
@@ -57,6 +68,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -309,6 +322,8 @@ internal class DashboardHarness {
     val materializer = FakeMaterializer()
     val debits = FakeDebits()
     val auth = FakeAuth()
+    val notifier = FakeNotifier()
+    val memory = FakeMemory()
     var today: LocalDate = testToday
     var language: AppLanguage = AppLanguage.FR
 
@@ -324,7 +339,57 @@ internal class DashboardHarness {
             updateExpense = UpdateExpense(expenses),
             deleteExpense = DeleteExpense(expenses),
             signOut = SignOut(auth),
+            alertBudgets = AlertReachedBudgets(notifier, memory, CurrentLanguages(NoPreferences, DeviceLanguage { AppLanguage.FR })),
             clock = { today },
             language = { language },
         )
+}
+
+internal class FakeNotifier(
+    var access: NotificationAccess = NotificationAccess.GRANTED,
+) : LocalNotifier {
+    val shown = mutableListOf<Pair<LocalNotice, String>>()
+
+    override suspend fun access(): NotificationAccess = access
+
+    override suspend fun schedule(
+        group: NoticeGroup,
+        notices: List<ScheduledNotice>,
+        language: AppLanguage,
+    ): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun show(
+        notice: LocalNotice,
+        tag: String,
+        language: AppLanguage,
+    ): AppResult<Unit> {
+        shown += notice to tag
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun cancelAll(): AppResult<Unit> = AppResult.Success(Unit)
+}
+
+internal class FakeMemory : NotificationMemory {
+    val keys = mutableSetOf<String>()
+
+    override suspend fun wasAlerted(key: String): AppResult<Boolean> = AppResult.Success(key in keys)
+
+    override suspend fun remember(key: String): AppResult<Unit> {
+        keys += key
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun clear(): AppResult<Unit> {
+        keys.clear()
+        return AppResult.Success(Unit)
+    }
+}
+
+internal object NoPreferences : PreferencesRepository {
+    override val preferences: StateFlow<AppPreferences?> = MutableStateFlow(null)
+
+    override suspend fun load(): AppPreferences = AppPreferences.Default
+
+    override suspend fun update(preferences: AppPreferences): AppResult<Unit> = AppResult.Success(Unit)
 }

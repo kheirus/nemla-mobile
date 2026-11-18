@@ -5,6 +5,7 @@ import app.nemla.core.common.AppError
 import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.AppPreferences
+import app.nemla.core.domain.model.CategoryBudget
 import app.nemla.core.domain.model.CategoryId
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.DeferredDebit
@@ -12,6 +13,8 @@ import app.nemla.core.domain.model.ExpenseEdit
 import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.Household
+import app.nemla.core.domain.model.LocalNotice
+import app.nemla.core.domain.model.NotificationAccess
 import app.nemla.core.domain.model.PaymentMethod
 import app.nemla.core.domain.model.PeriodKind
 import app.nemla.core.domain.model.ReviewOrigin
@@ -21,10 +24,14 @@ import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
 import app.nemla.core.domain.port.DeviceLanguage
 import app.nemla.core.domain.port.ExpenseRepository
+import app.nemla.core.domain.port.LocalNotifier
+import app.nemla.core.domain.port.NotificationMemory
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.core.domain.usecase.AlertReachedBudgets
+import app.nemla.core.domain.usecase.CurrentLanguages
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -450,6 +457,57 @@ class DashboardViewModelTest : MainDispatcherTest() {
     }
 
     @Test
+    fun reachedCategoryBudgetsAreNotifiedOncePerLoadAndMonth() {
+        harness.categories.result =
+            AppResult.Success(
+                listOf(
+                    groceries.copy(budget = CategoryBudget.Monthly(8_000)),
+                    leisure.copy(budget = CategoryBudget.Monthly(50_000)),
+                ),
+            )
+        harness.profiles.result = AppResult.Success(profile(currency = Currency.CHF))
+        harness.expenses.month = listOf(expense("a", 10_000, testToday, groceries.id), expense("b", 5_000, testToday, leisure.id))
+        harness.expenses.years[2026] = harness.expenses.month
+        val vm = harness.viewModel()
+        val notice =
+            assertIs<LocalNotice.BudgetReached>(
+                harness.notifier.shown
+                    .single()
+                    .first,
+            )
+        assertEquals("Courses", notice.categoryName)
+        assertEquals(10_000, notice.usedCents)
+        assertEquals(8_000, notice.allocatedCents)
+        assertEquals(Currency.CHF, notice.currency)
+        assertEquals(
+            "2026-11:c-1",
+            harness.notifier.shown
+                .single()
+                .second,
+        )
+        vm.onAction(DashboardAction.PreviousPeriodClicked)
+        vm.onAction(DashboardAction.Started)
+        vm.onAction(DashboardAction.Started)
+        assertEquals(1, harness.notifier.shown.size)
+    }
+
+    @Test
+    fun budgetAlertsWaitForPermissionAndReadableData() {
+        harness.categories.result = AppResult.Success(listOf(groceries.copy(budget = CategoryBudget.Monthly(8_000))))
+        harness.expenses.month = listOf(expense("a", 10_000, testToday, groceries.id))
+        harness.notifier.access = NotificationAccess.DENIED
+        val vm = harness.viewModel()
+        assertTrue(harness.notifier.shown.isEmpty())
+        assertTrue(harness.memory.keys.isEmpty())
+        harness.notifier.access = NotificationAccess.GRANTED
+        harness.profiles.result = AppResult.Failure(AppError.Network.Offline)
+        val offline = harness.viewModel()
+        assertTrue(harness.notifier.shown.isEmpty())
+        vm.onAction(DashboardAction.PullToRefresh)
+        assertEquals(1, harness.notifier.shown.size)
+    }
+
+    @Test
     fun accountMenuAndBudgetAlertsOpenMySpace() =
         runTest {
             val vm = harness.viewModel()
@@ -489,6 +547,9 @@ class DashboardViewModelTest : MainDispatcherTest() {
                         single<AuthRepository> { harness.auth }
                         single<PreferencesRepository> { MemoryPreferences() }
                         single<DeviceLanguage> { DeviceLanguage { AppLanguage.FR } }
+                        single<LocalNotifier> { harness.notifier }
+                        single<NotificationMemory> { harness.memory }
+                        factory { AlertReachedBudgets(get(), get(), get<CurrentLanguages>()) }
                     },
                     featureDashboardModule,
                 )
