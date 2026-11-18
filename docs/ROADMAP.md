@@ -315,7 +315,14 @@ Retours du 18/11/2026 :
   restent affichés.
 - ☑ Écran d'accueil vert (logo inversé, « Dictez vos dépenses. », « Commencer » → inscription, « J'ai déjà un compte » → connexion),
   montré tant qu'aucune session n'a existé ; icônes de la barre d'état claires sur ce fond.
-- Non vérifié : tableau de bord après ces changements (session du simulateur iOS expirée, pas de compte sur l'émulateur).
+- ☑ Bouton du compte : ouvre directement Mon espace (plus de panneau « Compte ») ; « Se déconnecter » reste dans Profil & budget.
+- ☑ Libellé « Dépense » retiré : sans libellé (endpoint absent, `BACKEND-GAPS.md`), une ligne affiche sa catégorie et la façon dont elle
+  a été saisie (« Dictée », « Saisie ») ; le groupe vocal à valider devient « Dictée à vérifier ».
+- ☑ Mise en page adaptative : graphique (55 % de la largeur, 180 à 420 dp) et anneau (55 %, 168 à 320 dp) proportionnels, champs
+  de montant et de fréquence en poids ; tableau de bord sur deux colonnes à partir de 840 dp de large. Le graphique plein écran est
+  réservé au paysage d'un téléphone (hauteur < 480 dp) ; une tablette en paysage garde le tableau de bord.
+- ☑ Paysage interactif : période et total en tête, filtre des catégories, toucher une barre ouvre le mois (vérifié sur iPhone 15).
+- Reste : icône d'application (logo `nemla-512.png` du web à récupérer, voir `specs/03` §11).
 
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
