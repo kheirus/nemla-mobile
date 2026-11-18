@@ -53,20 +53,28 @@ fun NemlaLogo(
 }
 
 @Composable
-fun NemlaLogoMark(size: Dp) {
-    PlaceholderLogoMark(size)
+fun NemlaLogoMark(
+    size: Dp,
+    containerColor: Color = NemlaTheme.colors.primary,
+    contentColor: Color = NemlaTheme.colors.primaryForeground,
+) {
+    PlaceholderLogoMark(size, containerColor, contentColor)
 }
 
 @Composable
-private fun PlaceholderLogoMark(size: Dp) {
+private fun PlaceholderLogoMark(
+    size: Dp,
+    containerColor: Color,
+    contentColor: Color,
+) {
     Box(
-        modifier = Modifier.size(size).background(NemlaTheme.colors.primary, CircleShape),
+        modifier = Modifier.size(size).background(containerColor, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = PlaceholderMonogram,
             contentDescription = null,
-            tint = NemlaTheme.colors.primaryForeground,
+            tint = contentColor,
             modifier = Modifier.size(size * 0.6f),
         )
     }
