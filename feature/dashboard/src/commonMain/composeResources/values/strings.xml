@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="dashboard_my_space">Mon espace</string>
   <string name="dashboard_account_menu">Compte</string>
-  <string name="dashboard_sign_out">Se déconnecter</string>
-  <string name="dashboard_signing_out">Un instant…</string>
   <string name="dashboard_sign_out_failed">Déconnexion impossible. Réessayez.</string>
   <string name="dashboard_loading">Chargement du tableau de bord…</string>
   <string name="dashboard_error_offline">Pas de connexion. Vos données ne sont peut-être pas à jour.</string>

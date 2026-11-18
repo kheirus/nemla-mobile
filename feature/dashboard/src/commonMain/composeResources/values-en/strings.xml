@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="dashboard_my_space">My space</string>
   <string name="dashboard_account_menu">Account</string>
-  <string name="dashboard_sign_out">Sign out</string>
-  <string name="dashboard_signing_out">One moment…</string>
   <string name="dashboard_sign_out_failed">Could not sign out. Try again.</string>
   <string name="dashboard_loading">Loading your dashboard…</string>
   <string name="dashboard_error_offline">No connection. Your data may be out of date.</string>

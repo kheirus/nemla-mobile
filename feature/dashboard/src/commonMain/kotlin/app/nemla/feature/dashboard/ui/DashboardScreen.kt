@@ -75,13 +75,10 @@ import app.nemla.feature.dashboard.resources.dashboard_error_generic
 import app.nemla.feature.dashboard.resources.dashboard_error_offline
 import app.nemla.feature.dashboard.resources.dashboard_error_timeout
 import app.nemla.feature.dashboard.resources.dashboard_loading
-import app.nemla.feature.dashboard.resources.dashboard_my_space
 import app.nemla.feature.dashboard.resources.dashboard_notice_deleted
 import app.nemla.feature.dashboard.resources.dashboard_notice_updated
 import app.nemla.feature.dashboard.resources.dashboard_retry
-import app.nemla.feature.dashboard.resources.dashboard_sign_out
 import app.nemla.feature.dashboard.resources.dashboard_sign_out_failed
-import app.nemla.feature.dashboard.resources.dashboard_signing_out
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.LocalDate
@@ -264,49 +261,17 @@ private fun DashboardTopBar(
     onAction: (DashboardAction) -> Unit,
     scrollBehavior: NemlaTopBarScrollBehavior,
 ) {
-    var accountOpen by rememberSaveable { mutableStateOf(false) }
     NemlaTopBar(
         title = { NemlaTopBarBrand() },
         actions = {
             NemlaAccountButton(
                 contentDescription = stringResource(Res.string.dashboard_account_menu),
-                onClick = { accountOpen = true },
+                onClick = { onAction(DashboardAction.ManageAccountClicked) },
                 icon = householdIcon(state.household),
             )
         },
         scrollBehavior = scrollBehavior,
     )
-    if (accountOpen) {
-        DashboardAccountSheet(state, onAction, onDismiss = { accountOpen = false })
-    }
-}
-
-@Composable
-private fun DashboardAccountSheet(
-    state: DashboardUiState,
-    onAction: (DashboardAction) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val title = state.pseudo ?: state.email ?: stringResource(Res.string.dashboard_my_space)
-    NemlaAccountSheet(
-        title = title,
-        detail = state.email?.takeIf { state.pseudo != null },
-        avatarName = state.pseudo,
-        fallbackIcon = householdIcon(state.household),
-        onDismissRequest = onDismiss,
-    ) { sheet ->
-        NemlaListItem(
-            headline = stringResource(Res.string.dashboard_my_space),
-            leadingIcon = NemlaIcons.Settings,
-            onClick = { sheet.dismiss { onAction(DashboardAction.ManageAccountClicked) } },
-        )
-        NemlaListItem(
-            headline = stringResource(if (state.isSigningOut) Res.string.dashboard_signing_out else Res.string.dashboard_sign_out),
-            leadingIcon = NemlaIcons.LogOut,
-            enabled = !state.isSigningOut,
-            onClick = { sheet.dismiss { onAction(DashboardAction.SignOutClicked) } },
-        )
-    }
 }
 
 internal fun householdIcon(household: Household?): ImageVector =
