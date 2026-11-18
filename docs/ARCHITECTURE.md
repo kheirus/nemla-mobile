@@ -48,10 +48,13 @@ feature/onboarding         « Vos charges fixes » après la première connexion
 feature/settings           Mon espace : profil & budget (5 panneaux), bilans, crédits, catégories, zone dangereuse (lot 4)
 feature/import             dialogue « Importer un relevé de compte » (lot 5 ; paquet `app.nemla.feature.statementimport`,
                            `import` étant un mot réservé de Kotlin et de Java)
-feature/reports            bilans (lot 6) : dialogue de bilan, bandeau « Votre bilan de … est arrivé », historique des bilans
+feature/reports            bilans (lot 6) : dialogue de bilan, bandeau « Votre bilan de … est arrivé », historique des bilans ;
+                           bannières in-app de `user_notifications` (lot 7)
+core/notifications         notifications locales (lot 7) : permission, planification, affichage immédiat
+                           (AlarmManager + NotificationManager sur Android, UNUserNotificationCenter sur iOS)
 ```
 
-Lots suivants : notifications (lot 7, à concevoir), `ai/remote-<autre fournisseur>`.
+Lots suivants : push serveur (après le lot 7, quand le backend saura émettre), `ai/remote-<autre fournisseur>`.
 
 ### Règles de dépendance (vérifiées en revue)
 
@@ -61,6 +64,9 @@ feature:voice    -> + core:audio                                         (seule 
 core:audio       -> core:common (+ Compose runtime ; androidx activity-compose sur Android, AVFAudio sur iOS)
 feature:import   -> + core:documents                                     (seule feature autorisée à l'utiliser)
 core:documents   -> core:common (+ Compose runtime et ui ; activity-compose et PdfRenderer sur Android, UIKit et PDFKit sur iOS)
+feature:settings -> + core:notifications                                 (demande de permission seulement)
+core:notifications -> core:domain, core:common (+ Compose runtime ; androidx core et activity-compose sur Android,
+                      UserNotifications sur iOS). Il implémente le port `LocalNotifier` du domaine.
 core:data        -> core:domain, core:common, core:network, core:security, ai:api
 core:domain      -> core:common                                          (rien d'autre : ni Ktor, ni Compose, ni IA)
 core:network     -> core:common
@@ -147,6 +153,47 @@ L'analyse du code web (`docs/specs/01-api-contracts.md`) montre trois canaux, do
 Configuration (`BackendConfig`) : `supabaseUrl`, `supabasePublishableKey`, `apiBaseUrl`. Fournie au démarrage par chaque
 plateforme (BuildConfig Android, Info.plist iOS) à partir de `local.properties` / `Config.xcconfig`, jamais versionnée.
 La clé publishable est publique par nature ; aucun autre secret n'entre dans l'application.
+
+### Notifications (lot 7)
+
+Décision du propriétaire (19/11/2026) : notifications **locales** d'abord, sans Firebase, sans SDK de push et sans changement du
+backend. Le push serveur (FCM / APNs) viendra quand le backend saura émettre (`BACKEND-GAPS.md`).
+
+| Notification | Déclenchement | Condition |
+|---|---|---|
+| Rappel quotidien « Bilan de la journée… » | planifiée à 20 h locale, 14 jours d'avance | `profiles.daily_reminder`, permission accordée ; aujourd'hui sauté si une dépense confirmée existe aujourd'hui ou s'il est déjà 20 h passées |
+| « Votre bilan de {mois} est arrivé » | planifiée à 10 h le premier jour du bandeau (dernier jour du mois − 2), pour le mois courant et les 2 suivants ; en décembre, une seconde pour l'année | permission accordée |
+| « Budget atteint » | immédiate, quand le tableau de bord calcule les alertes du mois courant | permission accordée ; une seule fois par catégorie et par mois (`NotificationMemory`) |
+| `user_notifications` `channel = push` non délivrées | immédiate, à chaque retour au premier plan | permission accordée ; puis `delivered_at` et `seen_at` |
+| `user_notifications` `channel = in_app` non vues | bannières du tableau de bord (`specs/04` §5.11) | lues au retour au premier plan (pas de sondage à 30 s) |
+
+Contrats (`core:domain`) :
+- modèle `Notifications.kt` : `NotificationAccess { GRANTED, DENIED, UNDETERMINED }` ; `LocalNotice` (scellé : `DailyReminder`,
+  `ReportArrived(period: ReviewPeriod)`, `BudgetReached(categoryName, usedCents, allocatedCents, currency)`, `ServerMessage(title, body)`,
+  `toString()` masqué pour les deux derniers) ; `ScheduledNotice(notice, at: LocalDateTime)` ; `NoticeGroup { DAILY_REMINDER, REPORT_ARRIVAL }` ;
+  `NotificationPlanner` (objet pur : `reminders(now, confirmedToday)`, `reportArrivals(now)`, `budgetKey(month, categoryId)`) ;
+  `InboxItem` (id, canal `IN_APP` / `PUSH`, type `MONTH_REPORT` / `YEAR_REPORT` / `DAILY_REMINDER`, titre, corps, période, `report: ReportSheet?`
+  lu dans `payload`, `delivered`).
+- ports : `LocalNotifier` (`access()`, `schedule(group, notices, language)` qui **remplace** le groupe, `show(notice, tag, language)`,
+  `cancelAll()`) ; `NotificationMemory` (`wasAlerted(key)`, `remember(key)`, `clear()`) ; `InboxRepository` (`unseen()`, `markSeen(id)`,
+  `markDelivered(id)`).
+- cas d'usage : `RefreshScheduledNotifications` (replanifie les deux groupes ; groupe vidé si la permission manque ou si le rappel est
+  coupé ; profil illisible → groupe du rappel laissé tel quel), `SetDailyReminder` (profil puis replanification), `AlertReachedBudgets`,
+  `DeliverPushInbox`, `ListInAppNotices`, `DismissInboxItem`, `ClearNotifications` (déconnexion : `cancelAll` + `clear`).
+  `ConfirmReviewedExpenses` appelle `RefreshScheduledNotifications` après succès (le rappel du jour disparaît dès la première dépense).
+
+Textes : les notifications sont affichées application fermée ; `core:notifications` les résout au moment de la planification, dans la
+langue de l'interface, depuis une table fr/en (`NotificationCopy`). Un changement de langue replanifie. Aucun contenu de notification
+dans les journaux. Android garde le plan (heures et textes génériques, jamais d'alerte de budget) dans des `SharedPreferences` privées
+pour le reprogrammer après redémarrage (`BOOT_COMPLETED`) ; iOS conserve lui-même les notifications planifiées. Alerte de budget sur
+Android en `VISIBILITY_PRIVATE` (version publique « nemla »). Toucher une notification ouvre l'application (tableau de bord), sans lien
+profond au lot 7. Sur iOS, un délégué `UNUserNotificationCenterDelegate` affiche les notifications reçues application ouverte.
+
+Déclencheurs (`shared`, `NotificationCoordinator`) : à la connexion et à chaque passage au premier plan (`Lifecycle.State.STARTED` de la
+racine), `RefreshScheduledNotifications` puis `DeliverPushInbox` ; au changement de langue, replanification ; à la déconnexion,
+`ClearNotifications`. La permission n'est demandée que par l'interrupteur du rappel (Mon espace › Préférences), jamais au démarrage.
+`feature:dashboard` appelle `AlertReachedBudgets` après calcul des alertes du mois courant et expose l'emplacement `notificationBanners`
+(position 5 de `specs/04` §5.2), rempli par `shared` avec `InboxBanners` de `feature:reports`.
 
 ## 4. Couche IA
 

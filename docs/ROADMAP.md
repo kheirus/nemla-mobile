@@ -231,14 +231,18 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
   - publication : bloquants listés dans `PUBLICATION.md` (suppression de compte, URL de politique de confidentialité, liens de
     réinitialisation, sécurité backend), signature et numéros de version à mettre en place.
 
-## Lot 7 — Notifications ☐ (à concevoir)
-Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
-- Push « Votre bilan est arrivé » (fin de mois, fin d'année), qui ouvrirait le dialogue de bilan de `feature:reports`.
-- Rappel quotidien de 20 h (« Bilan de la journée… », `profiles.daily_reminder`) et son interrupteur dans Préférences.
-- Alertes de budget de catégorie (« Budget atteint »).
-- Bannières in-app de `user_notifications` (`specs/04` §5.11).
-- Côté backend : table de jetons d'appareil, émetteur planifié (`BACKEND-GAPS.md`, ligne Notifications).
-- Aucun code de notification, permission, FCM / APNs ni rappel local n'existe dans l'application à ce jour.
+## Lot 7 — Notifications locales ☐ (en cours)
+Décision du propriétaire (19/11/2026) : notifications locales, sans Firebase ni changement backend ; push serveur plus tard.
+Contrat : `ARCHITECTURE.md` §3 « Notifications (lot 7) ».
+- ☐ `core:domain` : modèle, `NotificationPlanner`, ports `LocalNotifier`, `NotificationMemory`, `InboxRepository`, cas d'usage.
+- ☐ `core:data` : `KtorInboxRepository` (`user_notifications`), `SecureStoreNotificationMemory`.
+- ☐ `core:notifications` (nouveau) : Android (canaux, `AlarmManager`, récepteurs, redémarrage, `POST_NOTIFICATIONS`) et iOS
+  (`UNUserNotificationCenter`, délégué de premier plan), `NotificationCopy` fr/en, demande de permission.
+- ☐ `feature:settings` : interrupteur « Rappel quotidien à 20 h » (Préférences), encadré PWA supprimé.
+- ☐ `feature:dashboard` : alertes « Budget atteint », emplacement `notificationBanners`.
+- ☐ `feature:reports` : `InboxBanners` (§5.11), dialogue de bilan ouvert sur le `payload`.
+- ☐ `shared` : `NotificationCoordinator`, modules Koin, délégué iOS installé par `startNemla`.
+- Hors lot : push serveur (table de jetons, émetteur planifié, `BACKEND-GAPS.md`).
 
 ## Plus tard
 Transcription locale (whisper.cpp), modèle local (LiteRT-LM), cache chiffré hors ligne, autre fournisseur d'IA.
