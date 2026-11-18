@@ -474,7 +474,11 @@ private fun FilterButton(
                                 .heightIn(min = NemlaTheme.sizes.minTouchTarget)
                                 .clip(RoundedCornerShape(NemlaTheme.radius.md))
                                 .background(if (selected) colors.primary.copy(alpha = SELECTED_OPTION_ALPHA) else Color.Transparent)
-                                .clickable(role = Role.Checkbox) { onAction(DashboardAction.FilterToggled(option.id)) }
+                                .clickable(
+                                    interactionSource = null,
+                                    indication = null,
+                                    role = Role.Checkbox,
+                                ) { onAction(DashboardAction.FilterToggled(option.id)) }
                                 .padding(horizontal = NemlaTheme.spacing.sm),
                         horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
