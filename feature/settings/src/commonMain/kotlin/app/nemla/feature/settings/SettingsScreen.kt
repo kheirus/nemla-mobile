@@ -47,7 +47,6 @@ import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.component.NemlaTabs
 import app.nemla.core.designsystem.component.NemlaTopBar
-import app.nemla.core.designsystem.component.NemlaTopBarBrand
 import app.nemla.core.designsystem.component.NemlaTopBarScrollBehavior
 import app.nemla.core.designsystem.component.NemlaTopBarTitle
 import app.nemla.core.designsystem.component.bottomSafeDrawingPadding
@@ -101,7 +100,6 @@ internal fun SettingsRoute(
     onClose: () -> Unit,
     onSignedOut: () -> Unit,
     reportHistory: @Composable () -> Unit,
-    topLevel: Boolean = false,
     viewModel: SettingsViewModel = koinViewModel { parametersOf(initialTab) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -134,7 +132,6 @@ internal fun SettingsRoute(
         onAction = viewModel::onAction,
         onOpenPanel = onOpenPanel,
         reportHistory = reportHistory,
-        topLevel = topLevel,
     )
 }
 
@@ -144,10 +141,9 @@ internal fun SettingsScreen(
     onAction: (SettingsAction) -> Unit,
     onOpenPanel: (SettingsPanel) -> Unit,
     reportHistory: @Composable () -> Unit,
-    topLevel: Boolean = false,
 ) {
     val scrollBehavior = rememberNemlaTopBarScrollBehavior()
-    val tabs = settingsTabs(topLevel)
+    val tabs = settingsTabs()
     val pagerState = rememberPagerState(initialPage = tabs.indexOfTab(state.tab).coerceAtLeast(0)) { tabs.size }
     val scope = rememberCoroutineScope()
     val currentState by rememberUpdatedState(state)
@@ -161,7 +157,7 @@ internal fun SettingsScreen(
         val target = tabs.indexOfTab(state.tab)
         if (target >= 0 && target != pagerState.currentPage && !pagerState.isScrollInProgress) pagerState.animateScrollToPage(target)
     }
-    NemlaScaffold(topBar = { SettingsTopBar(onAction, topLevel, scrollBehavior) }, scrollBehavior = scrollBehavior) { padding ->
+    NemlaScaffold(topBar = { SettingsTopBar(onAction, scrollBehavior) }, scrollBehavior = scrollBehavior) { padding ->
         NemlaSnackbarEffect(
             message = state.accountMessage?.let { stringResource(it.resource()) },
             onShown = { onAction(SettingsAction.AccountMessageDismissed) },
@@ -240,10 +236,10 @@ internal fun SettingsPanelScreen(
 private fun List<NemlaOption<SettingsTab>>.indexOfTab(tab: SettingsTab): Int = indexOfFirst { it.value == tab }
 
 @Composable
-private fun settingsTabs(topLevel: Boolean): List<NemlaOption<SettingsTab>> =
-    listOfNotNull(
+private fun settingsTabs(): List<NemlaOption<SettingsTab>> =
+    listOf(
         NemlaOption(SettingsTab.PROFILE, stringResource(Res.string.settings_tab_profile)),
-        if (topLevel) null else NemlaOption(SettingsTab.REPORTS, stringResource(Res.string.settings_tab_reports)),
+        NemlaOption(SettingsTab.REPORTS, stringResource(Res.string.settings_tab_reports)),
         NemlaOption(SettingsTab.CREDITS, stringResource(Res.string.settings_tab_credits)),
         NemlaOption(SettingsTab.CATEGORIES, stringResource(Res.string.settings_tab_categories)),
     )
@@ -251,15 +247,11 @@ private fun settingsTabs(topLevel: Boolean): List<NemlaOption<SettingsTab>> =
 @Composable
 private fun SettingsTopBar(
     onAction: (SettingsAction) -> Unit,
-    topLevel: Boolean,
     scrollBehavior: NemlaTopBarScrollBehavior,
 ) {
-    val title = stringResource(Res.string.settings_title)
     NemlaTopBar(
-        title = { if (topLevel) NemlaTopBarBrand(title) else NemlaTopBarTitle(title) },
-        navigationIcon = {
-            if (!topLevel) NemlaBackButton(onClick = { onAction(SettingsAction.BackClicked) })
-        },
+        title = { NemlaTopBarTitle(stringResource(Res.string.settings_title)) },
+        navigationIcon = { NemlaBackButton(onClick = { onAction(SettingsAction.BackClicked) }) },
         scrollBehavior = scrollBehavior,
     )
 }
