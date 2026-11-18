@@ -49,13 +49,13 @@ import app.nemla.feature.dashboard.resources.editor_delete_confirm
 import app.nemla.feature.dashboard.resources.editor_delete_failed
 import app.nemla.feature.dashboard.resources.editor_description
 import app.nemla.feature.dashboard.resources.editor_label_readonly
+import app.nemla.feature.dashboard.resources.editor_label_unavailable
 import app.nemla.feature.dashboard.resources.editor_offline
 import app.nemla.feature.dashboard.resources.editor_payment
 import app.nemla.feature.dashboard.resources.editor_save
 import app.nemla.feature.dashboard.resources.editor_save_failed
 import app.nemla.feature.dashboard.resources.editor_timeout
 import app.nemla.feature.dashboard.resources.editor_title
-import app.nemla.feature.dashboard.resources.expense_fallback
 import app.nemla.feature.dashboard.resources.no_category
 import app.nemla.feature.dashboard.resources.payment_card
 import app.nemla.feature.dashboard.resources.payment_cash
@@ -85,11 +85,13 @@ internal fun ExpenseEditorSheet(
         Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.fieldGap)) {
             Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs)) {
                 Text(stringResource(Res.string.editor_description), style = NemlaTheme.typography.label)
-                Text(
-                    text = editor.label?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.expense_fallback),
-                    style = NemlaTheme.typography.input,
-                )
-                MutedCaption(stringResource(Res.string.editor_label_readonly))
+                val label = editor.label?.takeIf { it.isNotBlank() }
+                if (label == null) {
+                    MutedCaption(stringResource(Res.string.editor_label_unavailable))
+                } else {
+                    Text(text = label, style = NemlaTheme.typography.input)
+                    MutedCaption(stringResource(Res.string.editor_label_readonly))
+                }
             }
             NemlaTextField(
                 value = editor.amountText,

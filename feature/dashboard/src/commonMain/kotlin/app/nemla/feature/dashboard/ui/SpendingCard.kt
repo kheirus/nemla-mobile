@@ -64,7 +64,6 @@ import app.nemla.feature.dashboard.resources.Res
 import app.nemla.feature.dashboard.resources.budget_usage
 import app.nemla.feature.dashboard.resources.budget_usage_over
 import app.nemla.feature.dashboard.resources.budgets_title
-import app.nemla.feature.dashboard.resources.expense_fallback
 import app.nemla.feature.dashboard.resources.expense_row_meta
 import app.nemla.feature.dashboard.resources.other_group
 import app.nemla.feature.dashboard.resources.spending_chart_description
@@ -260,7 +259,7 @@ private fun CategorySheet(
     ) { sheet ->
         Column {
             group.rows.forEach { row ->
-                val label = row.label?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.expense_fallback)
+                val label = rowLabel(row)
                 Row(
                     modifier =
                         Modifier
@@ -331,7 +330,7 @@ private fun GroupRow(
                 VerticalDivider(modifier = Modifier.fillMaxHeight().width(1.dp), color = colors.border)
                 Column(modifier = Modifier.padding(start = NemlaTheme.spacing.sm).weight(1f)) {
                     group.rows.forEach { row ->
-                        val label = row.label?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.expense_fallback)
+                        val label = rowLabel(row)
                         Row(
                             modifier =
                                 Modifier
