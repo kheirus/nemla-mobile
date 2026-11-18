@@ -39,6 +39,7 @@ internal val appModule: Module =
         factoryOf(::LoadPreferences)
         single<DeviceLanguage> { ComposeDeviceLanguage }
         viewModelOf(::AppViewModel)
+        viewModelOf(::NotificationCoordinator)
     }
 
 internal fun nemlaModules(

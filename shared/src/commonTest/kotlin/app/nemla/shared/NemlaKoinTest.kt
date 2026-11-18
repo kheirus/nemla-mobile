@@ -55,19 +55,25 @@ import app.nemla.core.domain.port.ReportRepository
 import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
+import app.nemla.core.domain.usecase.AlertReachedBudgets
 import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
 import app.nemla.core.domain.usecase.CaptureVoiceExpenses
+import app.nemla.core.domain.usecase.ClearNotifications
 import app.nemla.core.domain.usecase.ConfirmReviewedExpenses
 import app.nemla.core.domain.usecase.DeleteExpense
 import app.nemla.core.domain.usecase.DeletePendingExpense
+import app.nemla.core.domain.usecase.DeliverPushInbox
+import app.nemla.core.domain.usecase.DismissInboxItem
 import app.nemla.core.domain.usecase.FindArrivedReports
 import app.nemla.core.domain.usecase.FindLearnedExpenses
 import app.nemla.core.domain.usecase.GetDeferredDebit
 import app.nemla.core.domain.usecase.GetMonthlyQuota
+import app.nemla.core.domain.usecase.GetNotificationAccess
 import app.nemla.core.domain.usecase.GrantAiConsent
 import app.nemla.core.domain.usecase.ImportStatement
 import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
+import app.nemla.core.domain.usecase.ListInAppNotices
 import app.nemla.core.domain.usecase.ListRecurringCharges
 import app.nemla.core.domain.usecase.ListReportHistory
 import app.nemla.core.domain.usecase.LoadPeriodReport
@@ -76,9 +82,11 @@ import app.nemla.core.domain.usecase.MaterializeRecurringCharges
 import app.nemla.core.domain.usecase.ObserveAiConsents
 import app.nemla.core.domain.usecase.ObserveAuthState
 import app.nemla.core.domain.usecase.ObservePreferences
+import app.nemla.core.domain.usecase.RefreshScheduledNotifications
 import app.nemla.core.domain.usecase.RequestPasswordReset
 import app.nemla.core.domain.usecase.ResolveStartDestination
 import app.nemla.core.domain.usecase.SearchExpensesByDate
+import app.nemla.core.domain.usecase.SetDailyReminder
 import app.nemla.core.domain.usecase.SignIn
 import app.nemla.core.domain.usecase.SignOut
 import app.nemla.core.domain.usecase.SignUp
@@ -174,6 +182,15 @@ class NemlaKoinTest {
             koin.get<SignOut>()
             koin.get<RequestPasswordReset>()
             koin.get<AppViewModel>()
+            koin.get<NotificationCoordinator>()
+            koin.get<RefreshScheduledNotifications>()
+            koin.get<GetNotificationAccess>()
+            koin.get<SetDailyReminder>()
+            koin.get<AlertReachedBudgets>()
+            koin.get<DeliverPushInbox>()
+            koin.get<ListInAppNotices>()
+            koin.get<DismissInboxItem>()
+            koin.get<ClearNotifications>()
             koin.get<ExpenseRepository>()
             koin.get<RecurringChargeRepository>()
             koin.get<RecurringChargeMaterializer>()
