@@ -111,6 +111,8 @@ private const val MUTED_PILL_ALPHA = 0.40f
 private const val DISABLED_ARROW_ALPHA = 0.5f
 private const val PLACEHOLDER_AMOUNT = "–"
 private const val SELECTED_OPTION_ALPHA = 0.10f
+private const val FILTER_SHEET_HEIGHT = 0.6f
+private const val FILTER_SCRIM_ALPHA = 0.16f
 private val PopoverWidth = 256.dp
 
 @Composable
@@ -431,7 +433,12 @@ private fun FilterButton(
         }
     NemlaButton(text = label, onClick = { open = true }, variant = NemlaButtonVariant.Outline, leadingIcon = NemlaIcons.Filter)
     if (open) {
-        NemlaFormSheet(title = stringResource(Res.string.filter_title), onDismissRequest = { open = false }) {
+        NemlaFormSheet(
+            title = stringResource(Res.string.filter_title),
+            onDismissRequest = { open = false },
+            maxHeightFraction = FILTER_SHEET_HEIGHT,
+            scrimColor = Color.Black.copy(alpha = FILTER_SCRIM_ALPHA),
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Spacer(modifier = Modifier.weight(1f))
                 NemlaButton(
@@ -455,7 +462,7 @@ private fun FilterButton(
                             .padding(NemlaTheme.spacing.xs),
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
                 filter.options.forEach { option ->
                     val selected = option.selected && filter.summary != FilterSummary.NONE
                     Row(
