@@ -265,7 +265,7 @@ private fun ReviewCard(
                                 labelVisible = false,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
                                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                                modifier = Modifier.width(AMOUNT_WIDTH),
+                                modifier = Modifier.weight(AMOUNT_WEIGHT),
                             )
                         }
                         Row(
@@ -288,7 +288,7 @@ private fun ReviewCard(
                                 selected = row.frequency,
                                 onSelect = { onAction(OnboardingAction.RowFrequencySelected(row.key, it)) },
                                 labelVisible = false,
-                                modifier = Modifier.width(FREQUENCY_WIDTH),
+                                modifier = Modifier.weight(FREQUENCY_WEIGHT),
                             )
                             NemlaIconButton(
                                 icon = NemlaIcons.Trash2,
@@ -337,8 +337,8 @@ private fun BudgetCard(
     }
 }
 
-private val AMOUNT_WIDTH = 104.dp
-private val FREQUENCY_WIDTH = 144.dp
+private const val AMOUNT_WEIGHT = 0.45f
+private const val FREQUENCY_WEIGHT = 0.7f
 
 internal fun householdIcon(household: Household?) =
     when (household) {

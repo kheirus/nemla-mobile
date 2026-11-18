@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,6 +62,7 @@ import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.Household
 import app.nemla.core.domain.model.PendingReview
 import app.nemla.core.domain.model.PeriodCursor
+import app.nemla.core.domain.model.PeriodKind
 import app.nemla.feature.dashboard.DashboardAction
 import app.nemla.feature.dashboard.DashboardEffect
 import app.nemla.feature.dashboard.DashboardError
@@ -88,6 +90,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Duration.Companion.seconds
 
 private val FloatingActionClearance = 72.dp
+private val WideLayoutMinWidth = 840.dp
+private val CompactHeight = 480.dp
+private val WideContentMaxWidth = 1280.dp
 private val FloatingActionLabelDuration = 2.5.seconds
 
 @Composable
@@ -143,6 +148,7 @@ internal fun DashboardScreen(
     }
     NemlaRotationAllowed()
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val wide = maxWidth >= WideLayoutMinWidth
         NemlaScaffold(
             topBar = { DashboardTopBar(state, onAction, scrollBehavior) },
             floatingActionButton = { floatingAction(fabExpanded) },
@@ -160,7 +166,7 @@ internal fun DashboardScreen(
                     Column(
                         modifier =
                             Modifier
-                                .widthIn(max = NemlaTheme.sizes.contentMaxWidth)
+                                .widthIn(max = if (wide) WideContentMaxWidth else NemlaTheme.sizes.contentMaxWidth)
                                 .fillMaxWidth()
                                 .bottomSafeDrawingPadding()
                                 .padding(
@@ -171,13 +177,13 @@ internal fun DashboardScreen(
                                 ),
                         verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
                     ) {
-                        DashboardContent(state, format, onAction, reportNotice)
+                        DashboardContent(state, format, onAction, reportNotice, wide)
                     }
                 }
             }
             state.editor?.let { ExpenseEditorSheet(it, state, format, onAction) }
         }
-        if (maxWidth > maxHeight && !state.isInitialLoading) LandscapeChart(state, format, maxHeight)
+        if (maxWidth > maxHeight && maxHeight < CompactHeight && !state.isInitialLoading) LandscapeChart(state, format, onAction)
     }
 }
 
@@ -185,9 +191,11 @@ internal fun DashboardScreen(
 private fun LandscapeChart(
     state: DashboardUiState,
     format: DashboardFormat,
-    availableHeight: Dp,
+    onAction: (DashboardAction) -> Unit,
 ) {
-    Box(
+    val cursor = state.cursor
+    val period = if (cursor.kind == PeriodKind.YEAR) cursor.year.toString() else format.monthTitle(cursor.month)
+    Column(
         modifier =
             Modifier
                 .fillMaxSize()
@@ -195,20 +203,34 @@ private fun LandscapeChart(
                 .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } }
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
     ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
+            Text(
+                text = period,
+                style = NemlaTheme.typography.bodyEmphasis,
+                maxLines = 1,
+            )
+            Text(
+                text = format.money(state.view.pilot.spentCents),
+                style = NemlaTheme.typography.bodyEmphasis.tabular(),
+                color = NemlaTheme.colors.primary,
+                maxLines = 1,
+                modifier = Modifier.weight(1f),
+            )
+            FilterButton(state.view.pilot.filter, onAction)
+        }
         MonthlyChartSection(
             chart = state.view.pilot.chart,
-            animationKey = state.cursor.kind,
+            animationKey = cursor.kind,
             format = format,
-            onMonthTapped = {},
-            chartHeight = (availableHeight - LandscapeChrome).coerceAtLeast(LandscapeMinChart),
+            onMonthTapped = { onAction(DashboardAction.ChartMonthTapped(it)) },
+            modifier = Modifier.weight(1f),
+            fillHeight = true,
             showHint = false,
         )
     }
 }
-
-private val LandscapeChrome = 112.dp
-private val LandscapeMinChart = 120.dp
 
 @Composable
 private fun DashboardContent(
@@ -216,6 +238,7 @@ private fun DashboardContent(
     format: DashboardFormat,
     onAction: (DashboardAction) -> Unit,
     reportNotice: @Composable () -> Unit,
+    wide: Boolean,
 ) {
     NemlaSnackbarEffect(
         message = state.notice?.let { stringResource(it.resource()) },
@@ -250,9 +273,21 @@ private fun DashboardContent(
     if (state.view.alerts.isNotEmpty()) AlertsCard(state.view.alerts, format) { onAction(DashboardAction.AdjustBudgetsClicked) }
     reportNotice()
     SearchCard(state, format, onAction)
-    PilotCard(state, format, onAction)
-    SpendingCard(state, format, onAction)
-    TodayCard(state, format, onAction)
+    if (wide) {
+        Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap), verticalAlignment = Alignment.Top) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap)) {
+                PilotCard(state, format, onAction)
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap)) {
+                SpendingCard(state, format, onAction)
+                TodayCard(state, format, onAction)
+            }
+        }
+    } else {
+        PilotCard(state, format, onAction)
+        SpendingCard(state, format, onAction)
+        TodayCard(state, format, onAction)
+    }
 }
 
 @Composable

@@ -421,7 +421,7 @@ private fun WeatherPill(
 }
 
 @Composable
-private fun FilterButton(
+internal fun FilterButton(
     filter: FilterView,
     onAction: (DashboardAction) -> Unit,
 ) {

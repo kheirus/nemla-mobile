@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -79,7 +80,9 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-private val DonutHeight = 192.dp
+private const val DONUT_WIDTH_FRACTION = 0.55f
+private val MinDonutSize = 168.dp
+private val MaxDonutSize = 320.dp
 private const val INNER_RADIUS = 0.58f
 private const val OUTER_RADIUS = 0.88f
 private const val FULL_TURN = 360f
@@ -182,57 +185,60 @@ private fun Donut(
     val labelStyle = NemlaTheme.typography.caption.copy(fontWeight = FontWeight.Bold, color = Color.White)
     val haptics = LocalHapticFeedback.current
     val currentOnClick by rememberUpdatedState(onSliceClick)
-    Canvas(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(DonutHeight)
-                .semantics { contentDescription = description }
-                .pointerInput(slices) {
-                    detectTapGestures { tap ->
-                        val half = minOf(size.width, size.height) / 2f
-                        val dx = tap.x - size.width / 2f
-                        val dy = tap.y - size.height / 2f
-                        val distance = sqrt(dx * dx + dy * dy)
-                        if (distance < half * INNER_RADIUS * TOUCH_SLACK_IN || distance > half * OUTER_RADIUS * TOUCH_SLACK_OUT) {
-                            return@detectTapGestures
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val donutSize = (maxWidth * DONUT_WIDTH_FRACTION).coerceIn(MinDonutSize, MaxDonutSize)
+        Canvas(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(donutSize)
+                    .semantics { contentDescription = description }
+                    .pointerInput(slices) {
+                        detectTapGestures { tap ->
+                            val half = minOf(size.width, size.height) / 2f
+                            val dx = tap.x - size.width / 2f
+                            val dy = tap.y - size.height / 2f
+                            val distance = sqrt(dx * dx + dy * dy)
+                            if (distance < half * INNER_RADIUS * TOUCH_SLACK_IN || distance > half * OUTER_RADIUS * TOUCH_SLACK_OUT) {
+                                return@detectTapGestures
+                            }
+                            val angle = ((-atan2(dy, dx) * DEGREES_PER_RADIAN) % FULL_TURN + FULL_TURN) % FULL_TURN
+                            slices.firstOrNull { angle >= it.start && angle < it.start + it.sweep }?.let {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                currentOnClick(it.group.key)
+                            }
                         }
-                        val angle = ((-atan2(dy, dx) * DEGREES_PER_RADIAN) % FULL_TURN + FULL_TURN) % FULL_TURN
-                        slices.firstOrNull { angle >= it.start && angle < it.start + it.sweep }?.let {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            currentOnClick(it.group.key)
-                        }
-                    }
-                },
-    ) {
-        if (slices.isEmpty()) return@Canvas
-        val half = minOf(size.width, size.height) / 2f
-        val outer = half * OUTER_RADIUS
-        val inner = half * INNER_RADIUS
-        val ringRadius = (outer + inner) / 2f
-        val thickness = outer - inner
-        val topLeft = Offset(center.x - ringRadius, center.y - ringRadius)
-        val limit = sweep
-        slices.forEachIndexed { index, slice ->
-            val visible = minOf(slice.sweep, limit - slice.start)
-            if (visible <= 0f) return@forEachIndexed
-            drawArc(
-                color = slice.group.colorOrOther(),
-                startAngle = -slice.start,
-                sweepAngle = -visible,
-                useCenter = false,
-                topLeft = topLeft,
-                size = Size(ringRadius * 2, ringRadius * 2),
-                style = Stroke(width = thickness),
-            )
-            if (visible >= slice.sweep && slice.sweep >= MIN_LABEL_SWEEP) {
-                val layout = measurer.measure(labels[index], labelStyle)
-                val middle = -(slice.start + slice.sweep / 2f) / DEGREES_PER_RADIAN
-                val anchor = Offset(center.x + ringRadius * cos(middle), center.y + ringRadius * sin(middle))
-                drawText(
-                    layout,
-                    topLeft = Offset(anchor.x - layout.size.width / 2f, anchor.y - layout.size.height / 2f),
+                    },
+        ) {
+            if (slices.isEmpty()) return@Canvas
+            val half = minOf(size.width, size.height) / 2f
+            val outer = half * OUTER_RADIUS
+            val inner = half * INNER_RADIUS
+            val ringRadius = (outer + inner) / 2f
+            val thickness = outer - inner
+            val topLeft = Offset(center.x - ringRadius, center.y - ringRadius)
+            val limit = sweep
+            slices.forEachIndexed { index, slice ->
+                val visible = minOf(slice.sweep, limit - slice.start)
+                if (visible <= 0f) return@forEachIndexed
+                drawArc(
+                    color = slice.group.colorOrOther(),
+                    startAngle = -slice.start,
+                    sweepAngle = -visible,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = Size(ringRadius * 2, ringRadius * 2),
+                    style = Stroke(width = thickness),
                 )
+                if (visible >= slice.sweep && slice.sweep >= MIN_LABEL_SWEEP) {
+                    val layout = measurer.measure(labels[index], labelStyle)
+                    val middle = -(slice.start + slice.sweep / 2f) / DEGREES_PER_RADIAN
+                    val anchor = Offset(center.x + ringRadius * cos(middle), center.y + ringRadius * sin(middle))
+                    drawText(
+                        layout,
+                        topLeft = Offset(anchor.x - layout.size.width / 2f, anchor.y - layout.size.height / 2f),
+                    )
+                }
             }
         }
     }

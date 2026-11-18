@@ -300,7 +300,7 @@ private fun ReviewLineTile(
                     label = stringResource(Res.string.review_amount),
                     enabled = editable,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.width(AMOUNT_WIDTH),
+                    modifier = Modifier.weight(AMOUNT_WEIGHT),
                 )
             }
             if (line.categoryId == null) {
@@ -337,7 +337,7 @@ private fun ReviewLineTile(
     }
 }
 
-private val AMOUNT_WIDTH = 128.dp
+private const val AMOUNT_WEIGHT = 0.5f
 
 @Composable
 private fun WarningText(text: String) {

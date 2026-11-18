@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -69,7 +70,9 @@ import app.nemla.feature.dashboard.resources.chart_title
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
-private val ChartHeight = 208.dp
+private const val CHART_ASPECT = 0.55f
+private val MinChartHeight = 180.dp
+private val MaxChartHeight = 420.dp
 private val AxisWidth = 46.dp
 private val MaxBarWidth = 28.dp
 private val BarRadius = 5.dp
@@ -95,11 +98,36 @@ internal fun MonthlyChartSection(
     animationKey: Any,
     format: DashboardFormat,
     onMonthTapped: (Int) -> Unit,
-    chartHeight: Dp = ChartHeight,
+    modifier: Modifier = Modifier,
+    fillHeight: Boolean = false,
     showHint: Boolean = true,
 ) {
+    BoxWithConstraints(modifier = modifier) {
+        val chartModifier =
+            if (fillHeight) {
+                Modifier.fillMaxHeight()
+            } else {
+                Modifier.height((maxWidth * CHART_ASPECT).coerceIn(MinChartHeight, MaxChartHeight))
+            }
+        ChartSectionContent(chart, animationKey, format, onMonthTapped, fillHeight, chartModifier, showHint)
+    }
+}
+
+@Composable
+private fun ChartSectionContent(
+    chart: ChartView,
+    animationKey: Any,
+    format: DashboardFormat,
+    onMonthTapped: (Int) -> Unit,
+    fillHeight: Boolean,
+    chartModifier: Modifier,
+    showHint: Boolean,
+) {
     val colors = NemlaTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
+    Column(
+        modifier = if (fillHeight) Modifier.fillMaxHeight() else Modifier,
+        verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
+    ) {
         Text(
             text = stringResource(Res.string.chart_title, chart.year.toString()),
             style = NemlaTheme.typography.subTitle,
@@ -119,7 +147,13 @@ internal fun MonthlyChartSection(
                 }
             }
         }
-        MonthlyChart(chart = chart, animationKey = animationKey, height = chartHeight, format = format, onMonthTapped = onMonthTapped)
+        MonthlyChart(
+            chart = chart,
+            animationKey = animationKey,
+            format = format,
+            onMonthTapped = onMonthTapped,
+            modifier = if (fillHeight) Modifier.weight(1f) else chartModifier,
+        )
         if (showHint) {
             Text(
                 text = stringResource(Res.string.chart_hint),
@@ -152,9 +186,9 @@ private fun LegendText(text: String) {
 private fun MonthlyChart(
     chart: ChartView,
     animationKey: Any,
-    height: Dp,
     format: DashboardFormat,
     onMonthTapped: (Int) -> Unit,
+    modifier: Modifier,
 ) {
     val colors = NemlaTheme.colors
     val measurer = rememberTextMeasurer()
@@ -171,7 +205,8 @@ private fun MonthlyChart(
     val riseMillis = (BAR_RISE_MILLIS + LAST_BAR_INDEX * BAR_STAGGER_MILLIS).toFloat()
     val rise = remember(animationKey) { Animatable(0f) }
     LaunchedEffect(rise) { rise.animateTo(riseMillis, tween(riseMillis.toInt(), easing = LinearEasing)) }
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(height)) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val height = maxHeight
         val wide = maxWidth.value >= WIDE_LAYOUT_DP
         val widthPx = with(density) { maxWidth.toPx() }
         val geometry = with(density) { ChartGeometry(widthPx, height.toPx(), this) }
