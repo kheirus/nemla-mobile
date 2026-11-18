@@ -70,4 +70,10 @@ Lot 6 terminé le 17/11/2026 : `feature:reports` (bilan via `PeriodReport` → `
 bandeau « Votre bilan de … est arrivé » les 3 derniers jours du mois, historique dans l'onglet Bilans de Mon espace, vues dans
 `report_views`). Textes des bilans en français seulement (serveur). Notifications reportées au lot 7 (push serveur ou Firebase, à concevoir).
 Publication : `docs/PUBLICATION.md` (liste de contrôle, blocages, fiches des stores) et `docs/PRIVACY-POLICY-DRAFT.md` (brouillon à faire
-relire). Restes et écarts : `docs/ROADMAP.md` (lot 6) et `docs/PLATFORM-PARITY.md`. Prochaine étape : lot 7 (notifications), à concevoir.
+relire). Restes et écarts : `docs/ROADMAP.md` (lot 6) et `docs/PLATFORM-PARITY.md`. 
+
+Lot 7 terminé le 19/11/2026 : notifications locales (décision du propriétaire : ni Firebase ni push serveur pour l'instant).
+`core:notifications` (AlarmManager / UNUserNotificationCenter), rappel quotidien de 20 h (interrupteur dans Préférences, permission
+demandée là seulement), annonce du bilan de fin de mois, « Budget atteint », bannières et messages `push` de `user_notifications`,
+`NotificationCoordinator` dans `shared`. Jamais essayé sur appareil. Restes et écarts : `docs/ROADMAP.md` (lot 7) et
+`docs/PLATFORM-PARITY.md`. Prochaine étape : à définir avec le propriétaire (push serveur quand le backend émettra, publication).

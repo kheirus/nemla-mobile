@@ -231,7 +231,7 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
   - publication : bloquants listés dans `PUBLICATION.md` (suppression de compte, URL de politique de confidentialité, liens de
     réinitialisation, sécurité backend), signature et numéros de version à mettre en place.
 
-## Lot 7 — Notifications locales ☐ (en cours)
+## Lot 7 — Notifications locales ☑
 Décision du propriétaire (19/11/2026) : notifications locales, sans Firebase ni changement backend ; push serveur plus tard.
 Contrat : `ARCHITECTURE.md` §3 « Notifications (lot 7) ».
 - ☑ `core:domain` (19/11/2026) : modèle `Notifications.kt` (`LocalNotice`, `ScheduledNotice`, `NoticeGroup`, `InboxItem`, `ReachedBudget`),
@@ -267,7 +267,12 @@ Contrat : `ARCHITECTURE.md` §3 « Notifications (lot 7) ».
   d'usage (10 tests JVM, 11 sur simulateur iOS).
 - Vérifié le 19/11/2026 : `spotlessApply`, `allTests` des modules touchés (JVM et simulateur iOS), `:androidApp:assembleDebug`,
   `:shared:linkDebugFrameworkIosSimulatorArm64`. Notifications, permission et bannières jamais essayées sur appareil ni simulateur.
-- Hors lot : push serveur (table de jetons, émetteur planifié, `BACKEND-GAPS.md`).
+- Reste à faire (reporté) :
+  - essais sur appareil Android (13+ et antérieur) et simulateur iOS : permission, rappel de 20 h, reprogrammation après redémarrage,
+    « Budget atteint », bannières in-app, messages `push`, changement de langue, déconnexion : non faits ;
+  - toucher une notification ouvre le tableau de bord, sans lien profond vers le dialogue de bilan ;
+  - icône de notification Android provisoire (monogramme « n ») en attendant le logo ;
+  - push serveur (table de jetons, émetteur planifié, `BACKEND-GAPS.md`) : hors lot.
 
 ## Plus tard
 Transcription locale (whisper.cpp), modèle local (LiteRT-LM), cache chiffré hors ligne, autre fournisseur d'IA.

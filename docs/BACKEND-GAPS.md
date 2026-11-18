@@ -20,7 +20,7 @@ Détail et références de code : `specs/01-api-contracts.md` (§3.3, §5) et `s
 | Bilans dans la langue et la devise de l'utilisateur | `report/monthly` rédige `highlights` et `advice` en français, avec des montants en « € » arrondis à l'euro (formateur `fr-FR` codé en dur), quels que soient `lang` et `profiles.devise` | version structurée : codes et valeurs (`{"code":"top_category","category":"Courses","share":32,"amount":400.25}`…) que l'application rédige elle-même en fr/en, ou au minimum un paramètre `lang` et la devise du profil ; lot 6 : textes affichés tels quels, mention « These notes are written in French for now. » en anglais |
 | Phrase de variation de `report/monthly` à écart nul | `previous_total>0` et écart arrondi à 0 : « Vous avez dépensé -0 € de moins que le mois précédent. Beau travail. » (vu sur septembre 2026) | ne pas produire la phrase quand l'écart arrondi vaut 0, ou une phrase « autant que » ; lot 6 : affichée telle quelle |
 | Valider le paramètre `month` de `report/monthly` | non validé (bornes `NaN`, 500 ou résultat vide) ; défaut = mois UTC | `400` sur un mois malformé ; lot 6 : le mobile envoie toujours une période explicite calculée sur la date locale et la vérifie dans la réponse |
-| Notifications | aucune notification serveur | table de jetons, envoi FCM / APNs planifié (lot 7, à concevoir : push serveur ou Firebase) |
+| Notifications | aucune notification serveur | table de jetons, envoi FCM / APNs planifié (après le lot 7 : le mobile ne fait que des notifications locales et lit `user_notifications`) |
 | Lien de réinitialisation du mot de passe | redirection web | App Links / Universal Links déclarés dans Supabase |
 | URL de l'API, URL et clé publishable Supabase | absentes du dépôt | à fournir |
 
