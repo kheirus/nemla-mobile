@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -91,8 +92,11 @@ private const val LAST_BAR_INDEX = 11
 @Composable
 internal fun MonthlyChartSection(
     chart: ChartView,
+    animationKey: Any,
     format: DashboardFormat,
     onMonthTapped: (Int) -> Unit,
+    chartHeight: Dp = ChartHeight,
+    showHint: Boolean = true,
 ) {
     val colors = NemlaTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
@@ -115,14 +119,16 @@ internal fun MonthlyChartSection(
                 }
             }
         }
-        MonthlyChart(chart = chart, format = format, onMonthTapped = onMonthTapped)
-        Text(
-            text = stringResource(Res.string.chart_hint),
-            style = NemlaTheme.typography.caption.copy(fontSize = 11.sp),
-            color = colors.mutedForeground,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        MonthlyChart(chart = chart, animationKey = animationKey, height = chartHeight, format = format, onMonthTapped = onMonthTapped)
+        if (showHint) {
+            Text(
+                text = stringResource(Res.string.chart_hint),
+                style = NemlaTheme.typography.caption.copy(fontSize = 11.sp),
+                color = colors.mutedForeground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 
@@ -145,6 +151,8 @@ private fun LegendText(text: String) {
 @Composable
 private fun MonthlyChart(
     chart: ChartView,
+    animationKey: Any,
+    height: Dp,
     format: DashboardFormat,
     onMonthTapped: (Int) -> Unit,
 ) {
@@ -161,17 +169,17 @@ private fun MonthlyChart(
     val targetStyle = TextStyle(fontSize = 10.sp, color = colors.destructive)
     val unselectedAlpha = if (colors.isDark) UNSELECTED_ALPHA_DARK else UNSELECTED_ALPHA
     val riseMillis = (BAR_RISE_MILLIS + LAST_BAR_INDEX * BAR_STAGGER_MILLIS).toFloat()
-    val rise = remember(chart.year) { Animatable(0f) }
+    val rise = remember(animationKey) { Animatable(0f) }
     LaunchedEffect(rise) { rise.animateTo(riseMillis, tween(riseMillis.toInt(), easing = LinearEasing)) }
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(ChartHeight)) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(height)) {
         val wide = maxWidth.value >= WIDE_LAYOUT_DP
         val widthPx = with(density) { maxWidth.toPx() }
-        val geometry = with(density) { ChartGeometry(widthPx, ChartHeight.toPx(), this) }
+        val geometry = with(density) { ChartGeometry(widthPx, height.toPx(), this) }
         Canvas(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(ChartHeight)
+                    .height(height)
                     .semantics { contentDescription = description }
                     .pointerInput(chart.year, widthPx) {
                         detectTapGestures(

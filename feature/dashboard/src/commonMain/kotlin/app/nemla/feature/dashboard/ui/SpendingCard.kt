@@ -98,6 +98,8 @@ internal fun SpendingCard(
 ) {
     val spending = state.view.spending
     val tab = state.effectiveSpendingTab
+    val sweep = remember(state.cursor.kind) { Animatable(0f) }
+    LaunchedEffect(sweep) { sweep.animateTo(FULL_TURN, tween(DONUT_SWEEP_MILLIS, easing = FastOutSlowInEasing)) }
     NemlaCard(modifier = Modifier.fillMaxWidth()) {
         CardTitle(stringResource(if (tab == SpendingTab.BUDGETS) Res.string.budgets_title else Res.string.spending_title))
         if (spending.hasBudgets) {
@@ -119,7 +121,7 @@ internal fun SpendingCard(
             when {
                 tab == SpendingTab.BUDGETS -> spending.budgets.forEach { BudgetRow(it, format) }
                 spending.groups.isEmpty() -> MutedCaption(stringResource(Res.string.spending_empty))
-                else -> Breakdown(spending.groups, state.expandedGroup, format, onAction)
+                else -> Breakdown(spending.groups, sweep.value, state.expandedGroup, format, onAction)
             }
         }
     }
@@ -128,13 +130,14 @@ internal fun SpendingCard(
 @Composable
 private fun Breakdown(
     groups: List<SpendingGroup>,
+    sweep: Float,
     expanded: String?,
     format: DashboardFormat,
     onAction: (DashboardAction) -> Unit,
 ) {
     val total = groups.sumOf { it.totalCents.coerceAtLeast(0) }
     var selected by remember { mutableStateOf<String?>(null) }
-    Donut(groups, total, onSliceClick = { selected = it })
+    Donut(groups, total, sweep, onSliceClick = { selected = it })
     groups.forEach { group ->
         GroupRow(group, sharePercent(group.totalCents, total), group.key == expanded, format, onAction)
     }
@@ -170,6 +173,7 @@ private fun slices(
 private fun Donut(
     groups: List<SpendingGroup>,
     total: Long,
+    sweep: Float,
     onSliceClick: (String) -> Unit,
 ) {
     val description = stringResource(Res.string.spending_chart_description)
@@ -179,8 +183,6 @@ private fun Donut(
     val labelStyle = NemlaTheme.typography.caption.copy(fontWeight = FontWeight.Bold, color = Color.White)
     val haptics = LocalHapticFeedback.current
     val currentOnClick by rememberUpdatedState(onSliceClick)
-    val sweep = remember { Animatable(0f) }
-    LaunchedEffect(sweep) { sweep.animateTo(FULL_TURN, tween(DONUT_SWEEP_MILLIS, easing = FastOutSlowInEasing)) }
     Canvas(
         modifier =
             Modifier
@@ -211,7 +213,7 @@ private fun Donut(
         val ringRadius = (outer + inner) / 2f
         val thickness = outer - inner
         val topLeft = Offset(center.x - ringRadius, center.y - ringRadius)
-        val limit = sweep.value
+        val limit = sweep
         slices.forEachIndexed { index, slice ->
             val visible = minOf(slice.sweep, limit - slice.start)
             if (visible <= 0f) return@forEachIndexed

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlin.math.roundToLong
@@ -17,17 +18,28 @@ internal const val BAR_RISE_MILLIS = 500
 internal const val BAR_STAGGER_MILLIS = 30
 
 @Composable
-internal fun animatedCents(target: Long): Long {
+internal fun animatedCents(
+    target: Long,
+    animationKey: Any,
+): Long {
     val progress = remember { Animatable(0f) }
     var from by remember { mutableLongStateOf(0L) }
     var to by remember { mutableLongStateOf(0L) }
-    LaunchedEffect(target) {
+    var animatedFor by remember { mutableStateOf<Any?>(null) }
+    LaunchedEffect(target, animationKey) {
+        if (animatedFor == animationKey) {
+            from = target
+            to = target
+            progress.snapTo(1f)
+            return@LaunchedEffect
+        }
         from = interpolate(from, to, progress.value)
         to = target
+        animatedFor = animationKey
         progress.snapTo(0f)
         progress.animateTo(1f, tween(COUNT_UP_MILLIS, easing = FastOutSlowInEasing))
     }
-    return interpolate(from, to, progress.value)
+    return if (animatedFor == animationKey && !progress.isRunning) target else interpolate(from, to, progress.value)
 }
 
 internal fun staggeredFraction(

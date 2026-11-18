@@ -1,12 +1,5 @@
 package app.nemla.feature.dashboard.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -66,13 +60,13 @@ import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.CategoryColors
 import app.nemla.core.designsystem.theme.NemlaColors
 import app.nemla.core.designsystem.theme.NemlaTheme
-import app.nemla.core.domain.model.PeriodCursor
 import app.nemla.core.domain.model.PeriodKind
 import app.nemla.feature.dashboard.DashboardAction
 import app.nemla.feature.dashboard.DashboardUiState
 import app.nemla.feature.dashboard.logic.FilterSummary
 import app.nemla.feature.dashboard.logic.FilterView
 import app.nemla.feature.dashboard.logic.PeriodPages
+import app.nemla.feature.dashboard.logic.PilotView
 import app.nemla.feature.dashboard.logic.Weather
 import app.nemla.feature.dashboard.logic.WeatherView
 import app.nemla.feature.dashboard.resources.Res
@@ -124,12 +118,12 @@ internal fun PilotCard(
     val pilot = state.view.pilot
     val colors = NemlaTheme.colors
     NemlaCard(modifier = Modifier.fillMaxWidth(), contentPadding = NemlaTheme.spacing.md) {
-        PeriodRow(state, format, onAction)
-        SectionDivider()
-        PeriodSummaryPager(state, format, onAction)
+        PeriodKindSelector(state.cursor.kind, onAction)
+        PeriodPager(state, format, onAction)
         SectionDivider()
         MonthlyChartSection(
             chart = pilot.chart,
+            animationKey = state.cursor.kind,
             format = format,
             onMonthTapped = { onAction(DashboardAction.ChartMonthTapped(it)) },
         )
@@ -150,54 +144,106 @@ internal fun PilotCard(
 }
 
 @Composable
-private fun PeriodSummaryPager(
+private fun PeriodPager(
     state: DashboardUiState,
     format: DashboardFormat,
     onAction: (DashboardAction) -> Unit,
 ) {
     val cursor = state.cursor
+    val pilot = state.view.pilot
     val targetPage = PeriodPages.pageOf(cursor)
     val pageCount = PeriodPages.count(cursor.kind, state.today)
     val currentTarget by rememberUpdatedState(targetPage)
     val currentOnAction by rememberUpdatedState(onAction)
+    val spent = animatedCents(pilot.spentCents, animationKey = cursor.kind)
+    val isYear = cursor.kind == PeriodKind.YEAR
     key(cursor.kind) {
+        val shown = remember { mutableStateMapOf<Int, PilotView>() }
+        if (!state.isPeriodLoading && pilot.kind == cursor.kind) shown[targetPage] = pilot
         val pagerState = rememberPagerState(initialPage = targetPage) { pageCount }
         LaunchedEffect(pagerState) {
-            snapshotFlow { pagerState.settledPage }.collect { page ->
+            snapshotFlow { pagerState.targetPage }.collect { page ->
                 if (page != currentTarget) currentOnAction(DashboardAction.PeriodPageSelected(page))
             }
         }
         LaunchedEffect(pagerState, targetPage) {
             if (pagerState.currentPage != targetPage && !pagerState.isScrollInProgress) pagerState.animateScrollToPage(targetPage)
         }
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-            key = { it },
-        ) { page ->
-            if (page == targetPage) PilotSummary(state, format) else PilotSummaryPlaceholder(cursor.kind)
+        Box(modifier = Modifier.fillMaxWidth().padding(top = NemlaTheme.spacing.xs)) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                key = { it },
+            ) { page ->
+                val pageCursor = PeriodPages.cursorAt(page, cursor, state.today)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = NemlaTheme.sizes.minTouchTarget),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = if (isYear) pageCursor.year.toString() else format.monthTitle(pageCursor.month),
+                            style = NemlaTheme.typography.bodyEmphasis.tabular(),
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                        )
+                    }
+                    SectionDivider()
+                    val pagePilot = if (page == targetPage) pilot else shown[page]
+                    if (pagePilot == null) {
+                        PilotSummaryPlaceholder(cursor.kind)
+                    } else {
+                        PilotSummary(
+                            pilot = pagePilot,
+                            spentCents = if (page == targetPage) spent else pagePilot.spentCents,
+                            isLoading = page == targetPage && state.isPeriodLoading,
+                            state = state,
+                            format = format,
+                        )
+                    }
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().heightIn(min = NemlaTheme.sizes.minTouchTarget),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PeriodArrow(
+                    icon = NemlaIcons.ChevronLeft,
+                    description = stringResource(if (isYear) Res.string.period_previous_year else Res.string.period_previous_month),
+                    enabled = state.canGoPrevious,
+                    onClick = { onAction(DashboardAction.PreviousPeriodClicked) },
+                )
+                Spacer(Modifier.weight(1f))
+                PeriodArrow(
+                    icon = NemlaIcons.ChevronRight,
+                    description = stringResource(if (isYear) Res.string.period_next_year else Res.string.period_next_month),
+                    enabled = state.canGoNext,
+                    onClick = { onAction(DashboardAction.NextPeriodClicked) },
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun PilotSummary(
+    pilot: PilotView,
+    spentCents: Long,
+    isLoading: Boolean,
     state: DashboardUiState,
     format: DashboardFormat,
 ) {
-    val pilot = state.view.pilot
     val colors = NemlaTheme.colors
-    val spent = animatedCents(pilot.spentCents)
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
             Column(modifier = Modifier.weight(1f)) {
                 SpentOverline(pilot.kind)
-                Text(text = format.money(spent), style = NemlaTheme.typography.amount.tabular())
+                Text(text = format.money(spentCents), style = NemlaTheme.typography.amount.tabular())
             }
             pilot.weather?.let { WeatherPill(it, state, format) }
         }
-        if (state.isPeriodLoading) {
+        if (isLoading) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth().padding(top = NemlaTheme.spacing.xs).heightIn(max = 2.dp),
                 color = colors.primary,
@@ -243,64 +289,20 @@ private fun SectionDivider(
 }
 
 @Composable
-private fun PeriodRow(
-    state: DashboardUiState,
-    format: DashboardFormat,
+private fun PeriodKindSelector(
+    kind: PeriodKind,
     onAction: (DashboardAction) -> Unit,
 ) {
-    val cursor = state.cursor
-    val isYear = cursor.kind == PeriodKind.YEAR
-    Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
-        NemlaSegmentedButtons(
-            options =
-                listOf(
-                    NemlaOption(PeriodKind.MONTH, stringResource(Res.string.period_month)),
-                    NemlaOption(PeriodKind.YEAR, stringResource(Res.string.period_year)),
-                ),
-            selected = cursor.kind,
-            onSelect = { onAction(DashboardAction.PeriodKindSelected(it)) },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            PeriodArrow(
-                icon = NemlaIcons.ChevronLeft,
-                description = stringResource(if (isYear) Res.string.period_previous_year else Res.string.period_previous_month),
-                enabled = state.canGoPrevious,
-                onClick = { onAction(DashboardAction.PreviousPeriodClicked) },
-            )
-            AnimatedContent(
-                targetState = cursor,
-                transitionSpec = { periodTransition(initialState, targetState) },
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.weight(1f),
-            ) { shown ->
-                Text(
-                    text = if (shown.kind == PeriodKind.YEAR) shown.year.toString() else format.monthTitle(shown.month),
-                    style = NemlaTheme.typography.bodyEmphasis.tabular(),
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            PeriodArrow(
-                icon = NemlaIcons.ChevronRight,
-                description = stringResource(if (isYear) Res.string.period_next_year else Res.string.period_next_month),
-                enabled = state.canGoNext,
-                onClick = { onAction(DashboardAction.NextPeriodClicked) },
-            )
-        }
-    }
-}
-
-private fun periodTransition(
-    from: PeriodCursor,
-    to: PeriodCursor,
-): ContentTransform {
-    if (from.kind != to.kind) return fadeIn() togetherWith fadeOut()
-    val forward = if (to.kind == PeriodKind.YEAR) to.year > from.year else to.month > from.month
-    val direction = if (forward) 1 else -1
-    return (slideInHorizontally { width -> direction * width / 2 } + fadeIn()) togetherWith
-        (slideOutHorizontally { width -> -direction * width / 2 } + fadeOut())
+    NemlaSegmentedButtons(
+        options =
+            listOf(
+                NemlaOption(PeriodKind.MONTH, stringResource(Res.string.period_month)),
+                NemlaOption(PeriodKind.YEAR, stringResource(Res.string.period_year)),
+            ),
+        selected = kind,
+        onSelect = { onAction(DashboardAction.PeriodKindSelected(it)) },
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable
