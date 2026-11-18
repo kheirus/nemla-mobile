@@ -118,7 +118,5 @@
   <string name="editor_offline">No connection. Try again.</string>
   <string name="editor_timeout">The server is taking too long to respond. Try again.</string>
   <string name="alerts_adjust">Adjust my category budgets</string>
-  <string name="source_voice">Voice</string>
-  <string name="source_manual">Typed</string>
   <string name="editor_label_unavailable">The label is not available in the mobile app yet.</string>
 </resources>

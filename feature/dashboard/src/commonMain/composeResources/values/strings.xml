@@ -118,7 +118,5 @@
   <string name="editor_offline">Pas de connexion. Réessayez.</string>
   <string name="editor_timeout">Le serveur met trop de temps à répondre. Réessayez.</string>
   <string name="alerts_adjust">Ajuster mes budgets par catégorie</string>
-  <string name="source_voice">Dictée</string>
-  <string name="source_manual">Saisie</string>
   <string name="editor_label_unavailable">Le libellé n'est pas encore disponible dans l'application mobile.</string>
 </resources>

@@ -265,7 +265,6 @@ private fun CategorySheet(
     ) { sheet ->
         Column {
             group.rows.forEach { row ->
-                val label = rowLabel(row)
                 Row(
                     modifier =
                         Modifier
@@ -279,7 +278,7 @@ private fun CategorySheet(
                 ) {
                     NemlaCategoryDot(group.colorOrOther(), Modifier.size(12.dp))
                     Text(
-                        text = stringResource(Res.string.expense_row_meta, format.short(row.date), label),
+                        text = rowSummary(row, format),
                         style = NemlaTheme.typography.body,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -336,7 +335,6 @@ private fun GroupRow(
                 VerticalDivider(modifier = Modifier.fillMaxHeight().width(1.dp), color = colors.border)
                 Column(modifier = Modifier.padding(start = NemlaTheme.spacing.sm).weight(1f)) {
                     group.rows.forEach { row ->
-                        val label = rowLabel(row)
                         Row(
                             modifier =
                                 Modifier
@@ -349,7 +347,7 @@ private fun GroupRow(
                             horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
                         ) {
                             Text(
-                                text = stringResource(Res.string.expense_row_meta, format.short(row.date), label),
+                                text = rowSummary(row, format),
                                 style = NemlaTheme.typography.caption,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,

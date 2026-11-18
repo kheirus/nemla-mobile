@@ -46,8 +46,6 @@ import app.nemla.feature.dashboard.resources.dashboard_date_cancel
 import app.nemla.feature.dashboard.resources.dashboard_date_ok
 import app.nemla.feature.dashboard.resources.expense_row_meta
 import app.nemla.feature.dashboard.resources.no_category
-import app.nemla.feature.dashboard.resources.source_manual
-import app.nemla.feature.dashboard.resources.source_voice
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -111,7 +109,6 @@ internal fun ExpenseRowItem(
     val category = row.categoryName ?: stringResource(Res.string.no_category)
     val label = row.label?.takeIf { it.isNotBlank() }
     val title = label ?: category
-    val detail = if (label != null) category else sourceLabel(row.source)
     Row(
         modifier =
             Modifier
@@ -128,21 +125,20 @@ internal fun ExpenseRowItem(
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = NemlaTheme.typography.bodyStrong, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs), verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (row.source == ExpenseSource.VOICE) NemlaIcons.Mic else NemlaIcons.Pencil,
-                    contentDescription = null,
-                    tint = colors.mutedForeground,
-                    modifier = Modifier.size(12.dp),
-                )
-                Text(
-                    text = stringResource(Res.string.expense_row_meta, format.short(row.date), detail),
-                    style = NemlaTheme.typography.caption,
-                    color = colors.mutedForeground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                text =
+                    if (label !=
+                        null
+                    ) {
+                        stringResource(Res.string.expense_row_meta, format.short(row.date), category)
+                    } else {
+                        format.short(row.date)
+                    },
+                style = NemlaTheme.typography.caption,
+                color = colors.mutedForeground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
         Text(
             text = format.money(row.amountCents),
@@ -200,8 +196,11 @@ private fun LocalDate.toUtcMillis(): Long = atStartOfDayIn(TimeZone.UTC).toEpoch
 private fun Long.toUtcDate(): LocalDate = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
 
 @Composable
-internal fun sourceLabel(source: ExpenseSource): String =
-    stringResource(if (source == ExpenseSource.VOICE) Res.string.source_voice else Res.string.source_manual)
-
-@Composable
-internal fun rowLabel(row: ExpenseRow): String = row.label?.takeIf { it.isNotBlank() } ?: sourceLabel(row.source)
+internal fun rowSummary(
+    row: ExpenseRow,
+    format: DashboardFormat,
+): String =
+    row.label
+        ?.takeIf { it.isNotBlank() }
+        ?.let { stringResource(Res.string.expense_row_meta, format.short(row.date), it) }
+        ?: format.short(row.date)
