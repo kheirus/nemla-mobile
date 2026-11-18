@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -37,6 +38,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -69,9 +72,16 @@ fun NemlaSheet(
     modifier: Modifier = Modifier,
     skipPartiallyExpanded: Boolean = true,
     dismissible: Boolean = true,
+    maxHeightFraction: Float? = null,
+    scrimColor: Color = BottomSheetDefaults.ScrimColor,
     content: @Composable ColumnScope.(NemlaSheetController) -> Unit,
 ) {
     val colors = NemlaTheme.colors
+    val windowHeight =
+        with(LocalDensity.current) {
+            LocalWindowInfo.current.containerSize.height
+                .toDp()
+        }
     val currentDismissible by rememberUpdatedState(dismissible)
     val state =
         rememberModalBottomSheetState(
@@ -86,11 +96,14 @@ fun NemlaSheet(
         modifier = modifier,
         sheetState = state,
         sheetGesturesEnabled = dismissible,
+        scrimColor = scrimColor,
         containerColor = colors.popover,
         contentColor = colors.popoverForeground,
         properties = ModalBottomSheetProperties(shouldDismissOnBackPress = dismissible, shouldDismissOnClickOutside = dismissible),
     ) {
-        content(controller)
+        Column(modifier = if (maxHeightFraction != null) Modifier.heightIn(max = windowHeight * maxHeightFraction) else Modifier) {
+            content(controller)
+        }
     }
 }
 
@@ -103,6 +116,8 @@ fun NemlaFormSheet(
     description: String? = null,
     dismissible: Boolean = true,
     skipPartiallyExpanded: Boolean = true,
+    maxHeightFraction: Float? = null,
+    scrimColor: Color = BottomSheetDefaults.ScrimColor,
     content: @Composable ColumnScope.(NemlaSheetController) -> Unit,
 ) {
     NemlaSheet(
@@ -110,6 +125,8 @@ fun NemlaFormSheet(
         modifier = modifier,
         skipPartiallyExpanded = skipPartiallyExpanded,
         dismissible = dismissible,
+        maxHeightFraction = maxHeightFraction,
+        scrimColor = scrimColor,
     ) { controller ->
         Column(
             modifier =
