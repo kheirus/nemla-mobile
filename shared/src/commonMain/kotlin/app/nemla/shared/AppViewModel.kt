@@ -84,6 +84,6 @@ internal fun rootTargetFor(
 ): RootTarget? =
     when (state) {
         AuthState.Unknown -> null
-        AuthState.SignedOut -> RootTarget.Auth(if (hadSession) AuthEntry.SignIn else AuthEntry.SignUp)
+        AuthState.SignedOut -> RootTarget.Auth(if (hadSession) AuthEntry.SignIn else AuthEntry.Welcome)
         is AuthState.SignedIn -> RootTarget.Home
     }
