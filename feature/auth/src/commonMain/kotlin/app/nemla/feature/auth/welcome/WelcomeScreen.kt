@@ -38,7 +38,7 @@ import app.nemla.feature.auth.resources.auth_welcome_title
 import org.jetbrains.compose.resources.stringResource
 
 private const val SUBTITLE_ALPHA = 0.82f
-private val LogoSize = 76.dp
+private val LogoSize = 104.dp
 private val ButtonHeight = 54.dp
 
 @Composable
@@ -63,7 +63,7 @@ internal fun WelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.md),
         ) {
-            NemlaLogoMark(size = LogoSize, containerColor = colors.primaryForeground, contentColor = colors.primary)
+            NemlaLogoMark(size = LogoSize, backgroundColor = colors.primaryForeground)
             Text(
                 text = stringResource(Res.string.auth_welcome_brand),
                 style = NemlaTheme.typography.brandAuth.copy(fontSize = 44.sp, lineHeight = 48.sp),
