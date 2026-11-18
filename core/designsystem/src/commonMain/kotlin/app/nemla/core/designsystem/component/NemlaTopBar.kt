@@ -1,7 +1,5 @@
 package app.nemla.core.designsystem.component
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -12,15 +10,12 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import app.nemla.core.designsystem.brand.NemlaLogo
-import app.nemla.core.designsystem.brand.NemlaLogoMark
 import app.nemla.core.designsystem.brand.NemlaLogoSize
 import app.nemla.core.designsystem.theme.NemlaTheme
 
@@ -78,15 +73,6 @@ fun NemlaTopBarTitle(text: String) {
 }
 
 @Composable
-fun NemlaTopBarBrand(title: String? = null) {
-    if (title == null) {
-        NemlaLogo(size = NemlaLogoSize.Header)
-        return
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-        NemlaLogoMark(BrandMarkSize)
-        NemlaTopBarTitle(title)
-    }
+fun NemlaTopBarBrand() {
+    NemlaLogo(size = NemlaLogoSize.Header)
 }
-
-private val BrandMarkSize = 28.dp
