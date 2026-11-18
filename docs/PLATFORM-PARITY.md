@@ -302,3 +302,33 @@ une plateforme ajouté) :
 6. **Titres** : « Bilan de {période} » repris tel quel du web (« Bilan de Octobre 2026 », sans élision) ; anglais « Report for October 2026 »,
    « Report for the year 2025 ».
 7. **Hors périmètre** : notifications push, bannières `user_notifications` et rappel quotidien (lot 7, à concevoir).
+
+## Lot 7 — notifications locales, partie A : `core:notifications` (19/11/2026)
+
+Écarts Android / iOS (notifications système de chaque OS ; textes identiques, résolus depuis `NotificationCopy` dans la langue de
+l'interface au moment de la planification) :
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Permission | `POST_NOTIFICATIONS` demandée seulement sur Android 13+ (API 33) ; en dessous, aucune demande : la réponse est « notifications activées » (`NotificationManagerCompat.areNotificationsEnabled`) | `requestAuthorization` (alerte + son), dialogue système une seule fois | **Oui**, rendu système ; sous Android 13, aucun dialogue |
+| Lecture de l'état (`access()`) | activées → `GRANTED` ; Android 13+ sans la permission → `UNDETERMINED` (Android ne distingue pas « jamais demandée » de « refusée » sans l'activité ; une nouvelle demande après deux refus échoue aussitôt sans dialogue) ; permission accordée mais notifications coupées dans les réglages, ou Android < 13 coupées → `DENIED` | `authorized` / `provisional` / `ephemeral` → `GRANTED`, `denied` → `DENIED`, `notDetermined` → `UNDETERMINED` | **Oui** : sur Android, « refusé » peut apparaître comme « pas encore demandé » |
+| Planification | `AlarmManager.setAndAllowWhileIdle(RTC_WAKEUP)`, sans permission d'alarme exacte : l'heure peut glisser de quelques minutes en veille profonde (Doze) | `UNCalendarNotificationTrigger` non répétitif, à l'heure près | **Oui** : rappel de 20 h parfois légèrement en retard sur Android |
+| Redémarrage et mise à jour | le système efface les alarmes ; le plan (heures, textes génériques du rappel et des bilans, jamais d'alerte de budget) est gardé dans des `SharedPreferences` privées (`nemla.notifications`) et reprogrammé par un récepteur `BOOT_COMPLETED` / `MY_PACKAGE_REPLACED` | iOS conserve lui-même les notifications planifiées | Non (même résultat) |
+| Écran verrouillé | « Budget atteint » et messages du serveur en `VISIBILITY_PRIVATE`, version publique titrée « nemla » sans texte ; rappel et bilans visibles | réglage système « Afficher les aperçus » (par défaut : quand déverrouillé), identique pour toutes les notifications | **Oui** : contenu masqué différemment |
+| Application au premier plan | notification affichée normalement par le système | affichée grâce au délégué `UNUserNotificationCenterDelegate` (`installNotificationPresenter`, bannière + centre de notifications + son) | Non, une fois le délégué installé par `startNemla` |
+| Canaux | 4 canaux créés à la première notification, noms fr/en : « Rappel quotidien », « Bilans », « Alertes de budget », « Messages nemla » (renommés si la langue change) ; réglables un par un dans les réglages Android | pas de canaux : un seul interrupteur pour l'application | **Oui**, réglages système |
+| Icône | icône monochrome vectorielle (`nemla_notification_icon`, monogramme provisoire) | icône de l'application | **Oui** |
+| Toucher | ouvre l'application par son intention de lancement (tableau de bord) | ouvre l'application (comportement par défaut, pas de lien profond) | Non |
+
+Écarts avec le web (`specs/01` §5.5, `specs/04` §5.8, §5.11, §5.12), à valider :
+
+1. **Rappel quotidien** : planifié 14 jours d'avance à 20 h locale, application fermée (le web vérifie toutes les 5 minutes, application
+   ouverte). Le jour courant est sauté dès qu'une dépense confirmée **datée d'aujourd'hui** existe (lecture `expenses` `date=eq.<jour>`,
+   `confirmed=is.true`, `limit=1`), ou après 20 h. Une dépense confirmée retire le rappel du jour (replanification après confirmation).
+2. **Bilan arrivé** : nouvelle notification système à 10 h le premier jour du bandeau (dernier jour du mois − 2), mois courant et
+   2 suivants, plus l'année en décembre ; absente du web (bandeau seulement). Texte anglais « Your report for {période} is ready »,
+   aligné sur le bandeau de `feature:reports` (« Your {période} report is ready » donnerait « Your the year 2026 report »).
+3. **Messages du serveur** (`channel = push`) : affichés en notification locale au retour au premier plan, puis `delivered_at` et
+   `seen_at` ; titre vide remplacé par « nemla ». Ils restent en attente sans permission (le web ne les marque pas non plus).
+4. **Mémoire des alertes de budget** : `SecureStore` (`notifications.v1`), clés `AAAA-MM:<catégorie>` du mois courant et du précédent
+   seulement ; effacée à la déconnexion (`ClearNotifications`), comme toutes les notifications planifiées et affichées.

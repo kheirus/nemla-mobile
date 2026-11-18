@@ -234,10 +234,20 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
 ## Lot 7 — Notifications locales ☐ (en cours)
 Décision du propriétaire (19/11/2026) : notifications locales, sans Firebase ni changement backend ; push serveur plus tard.
 Contrat : `ARCHITECTURE.md` §3 « Notifications (lot 7) ».
-- ☐ `core:domain` : modèle, `NotificationPlanner`, ports `LocalNotifier`, `NotificationMemory`, `InboxRepository`, cas d'usage.
-- ☐ `core:data` : `KtorInboxRepository` (`user_notifications`), `SecureStoreNotificationMemory`.
-- ☐ `core:notifications` (nouveau) : Android (canaux, `AlarmManager`, récepteurs, redémarrage, `POST_NOTIFICATIONS`) et iOS
-  (`UNUserNotificationCenter`, délégué de premier plan), `NotificationCopy` fr/en, demande de permission.
+- ☑ `core:domain` (19/11/2026) : modèle `Notifications.kt` (`LocalNotice`, `ScheduledNotice`, `NoticeGroup`, `InboxItem`, `ReachedBudget`),
+  `NotificationPlanner` (rappels 20 h sur 14 jours, bilans à 10 h le premier jour du bandeau, clés `AAAA-MM:<catégorie>`), ports
+  `LocalNotifier`, `NotificationMemory`, `InboxRepository`, cas d'usage `RefreshScheduledNotifications`, `SetDailyReminder`,
+  `AlertReachedBudgets`, `DeliverPushInbox`, `ListInAppNotices`, `DismissInboxItem`, `ClearNotifications` ; `ConfirmReviewedExpenses`
+  replanifie après succès (enregistré dans `featureVoiceModule`). 23 nouveaux tests (planificateur : mois de 30 et 31 jours, février,
+  février bissextile, décembre, après 20 h, dépense confirmée ; un test par cas d'usage au moins).
+- ☑ `core:data` (19/11/2026) : `KtorInboxRepository` (`user_notifications` non vues, `payload` lu comme un `ReportSheet` via le
+  mappage du bilan ; payload invalide → bilan absent, ligne de canal ou de type inconnu ignorée ; `seen_at`, `delivered_at`),
+  `SecureStoreNotificationMemory` (`notifications.v1`, mois courant et précédent). 8 nouveaux tests MockEngine et mémoire.
+- ☑ `core:notifications` (nouveau, 19/11/2026) : Android (4 canaux créés à la demande, `AlarmManager.setAndAllowWhileIdle`, récepteur
+  non exporté, reprogrammation au redémarrage depuis des `SharedPreferences` privées, `POST_NOTIFICATIONS` sur Android 13+, icône
+  monochrome, alerte de budget en `VISIBILITY_PRIVATE`) et iOS (`UNUserNotificationCenter`, déclencheurs calendaires non répétitifs,
+  `installNotificationPresenter`), `NotificationCopy` fr/en, `rememberNotificationPermissionRequest`. Manifeste de la bibliothèque
+  fusionné dans l'APK (vérifié). 5 tests. Module Koin ajouté à `shared` (nécessaire au graphe de `ConfirmReviewedExpenses`).
 - ☐ `feature:settings` : interrupteur « Rappel quotidien à 20 h » (Préférences), encadré PWA supprimé.
 - ☐ `feature:dashboard` : alertes « Budget atteint », emplacement `notificationBanners`.
 - ☐ `feature:reports` : `InboxBanners` (§5.11), dialogue de bilan ouvert sur le `payload`.

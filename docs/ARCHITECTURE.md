@@ -181,12 +181,21 @@ Contrats (`core:domain`) :
   coupé ; profil illisible → groupe du rappel laissé tel quel), `SetDailyReminder` (profil puis replanification), `AlertReachedBudgets`,
   `DeliverPushInbox`, `ListInAppNotices`, `DismissInboxItem`, `ClearNotifications` (déconnexion : `cancelAll` + `clear`).
   `ConfirmReviewedExpenses` appelle `RefreshScheduledNotifications` après succès (le rappel du jour disparaît dès la première dépense).
+- signatures retenues (19/11/2026) : les ports renvoient `AppResult` (`access()` renvoie directement `NotificationAccess`,
+  `wasAlerted` renvoie `AppResult<Boolean>` : mémoire illisible → pas d'alerte) ; `RefreshScheduledNotifications(notifier, profiles,
+  expenses, languages, clock = Clock.System, timeZone)` lit l'heure locale lui-même (`kotlin.time.Clock`, comme `core:data`) et la
+  dépense du jour par `ExpenseRepository` (`date` = aujourd'hui, `confirmed`, `limit=1`) ; `AlertReachedBudgets(month, budgets:
+  List<ReachedBudget>, currency): Int` (nombre affiché), où `ReachedBudget(categoryId, categoryName, usedCents, allocatedCents)` est
+  construit par le tableau de bord depuis ses alertes (seules les lignes `allocated > 0 && used >= allocated` comptent) ;
+  `DeliverPushInbox(): AppResult<Int>`. Sans permission, `AlertReachedBudgets` et `DeliverPushInbox` ne font rien et ne marquent rien.
+  `RefreshScheduledNotifications` est enregistré dans `featureVoiceModule` (pour `ConfirmReviewedExpenses`) ; `coreNotificationsModule`
+  est inclus par `shared`.
 
 Textes : les notifications sont affichées application fermée ; `core:notifications` les résout au moment de la planification, dans la
 langue de l'interface, depuis une table fr/en (`NotificationCopy`). Un changement de langue replanifie. Aucun contenu de notification
 dans les journaux. Android garde le plan (heures et textes génériques, jamais d'alerte de budget) dans des `SharedPreferences` privées
 pour le reprogrammer après redémarrage (`BOOT_COMPLETED`) ; iOS conserve lui-même les notifications planifiées. Alerte de budget sur
-Android en `VISIBILITY_PRIVATE` (version publique « nemla »). Toucher une notification ouvre l'application (tableau de bord), sans lien
+Android en `VISIBILITY_PRIVATE` (version publique « nemla »), de même que les messages du serveur (`ServerMessage`). Toucher une notification ouvre l'application (tableau de bord), sans lien
 profond au lot 7. Sur iOS, un délégué `UNUserNotificationCenterDelegate` affiche les notifications reçues application ouverte.
 
 Déclencheurs (`shared`, `NotificationCoordinator`) : à la connexion et à chaque passage au premier plan (`Lifecycle.State.STARTED` de la
