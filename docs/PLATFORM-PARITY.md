@@ -333,3 +333,11 @@ Le menu « Ajouter » de la ligne « Menu « Ajouter », dialogues » du lot 2 e
 
 Les panneaux de Mon espace sont des destinations du `NavHost` : la flèche Android et le chevron iOS de l'étape 1 s'y appliquent,
 ainsi que le retour prédictif et le geste de bord. Aucun autre écart.
+
+## Lot 6c — retours après essai Android (18/11/2026)
+- Rotation : même règle sur les deux plateformes (portrait partout, paysage permis sur le tableau de bord seulement). Limites propres à
+  chaque système : Android 16 ignore le verrouillage d'orientation sur les grands écrans (largeur ≥ 600 dp) ; sur iPad, iOS ignore le
+  masque d'orientation tant que l'app accepte le multitâche (pas de `UIRequiresFullScreen`). Sur iOS 15, le retour forcé en portrait
+  n'existe pas : l'écran revient en portrait au prochain mouvement de l'appareil (iOS 16+ : immédiat).
+- Barre d'état claire de l'écran d'accueil : Android par `WindowInsetsControllerCompat`, iOS par le style global de
+  `UIApplication` (`UIViewControllerBasedStatusBarAppearance` à `NO` dans `Info.plist`). Rendu identique.

@@ -299,6 +299,24 @@ Rapport et découpage détaillé : `UI-REVIEW.md`.
   endroits) et non un panneau du bas ; elle gagne une barre d'application (retour = « Plus tard ») et des boutons en bas d'écran.
 - Restes : pages voisines du pager du tableau de bord affichées « – » pendant le glissement ; étape 7 (identité).
 
+## Lot 6c — Retours du propriétaire après essai Android ☐ (branche `claude/lot-6c-polish`)
+Retours du 18/11/2026 :
+- ☑ Mois / Année sans coche (le « / » vu sur Android était la coche animée de `SegmentedButton`).
+- ☑ Le titre de la période glisse avec le montant : un seul `HorizontalPager` porte titre et résumé, les chevrons sont posés par-dessus.
+  La période change dès que le pager vise une nouvelle page (`targetPage`), et les pages déjà vues gardent leur résumé
+  pendant le glissement : plus de « – » ni de clignotement.
+- ☑ Animations seulement à l'arrivée et au passage Mois ↔ Année : total (`animatedCents` avec clé), anneau (balayage tenu par la
+  carte), barres (clé de mode, plus d'animation à chaque changement d'année).
+- ☑ Filtre des catégories : plus d'effet gris au toucher. Le titre « Filtrer les catégories » s'affiche sur l'émulateur Android
+  (Pixel 7, API 34) : à revérifier sur l'appareil du propriétaire.
+- ☑ Bouton du compte : icône de personne (selon le foyer) dans un cercle cerclé, à la place de l'initiale.
+- ☑ Rotation : seul le tableau de bord tourne (Android `requestedOrientation`, iOS `supportedInterfaceOrientationsFor` piloté par
+  `NemlaOrientationLock`) ; en paysage, le graphique mensuel occupe tout l'écran, sans autre action possible. Les panneaux ouverts
+  restent affichés.
+- ☑ Écran d'accueil vert (logo inversé, « Dictez vos dépenses. », « Commencer » → inscription, « J'ai déjà un compte » → connexion),
+  montré tant qu'aucune session n'a existé ; icônes de la barre d'état claires sur ce fond.
+- Non vérifié : tableau de bord après ces changements (session du simulateur iOS expirée, pas de compte sur l'émulateur).
+
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
 - Push « Votre bilan est arrivé » (fin de mois, fin d'année), qui ouvrirait le dialogue de bilan de `feature:reports`.
@@ -316,6 +334,24 @@ Mise en conformité de toute l'application (référentiel visé à arbitrer : WC
 - ordre de lecture et focus logiques, titres de section annoncés ;
 - respect du réglage « réduire les animations » ;
 - vérification avec Accessibility Scanner (Android) et Accessibility Inspector (iOS), et tests Compose sur la sémantique.
+
+## Lot 9 — Sécurité du compte ☐ (à concevoir)
+Demande du propriétaire du 18/11/2026.
+- Double authentification : TOTP (Supabase Auth MFA, facteurs `totp`), écran d'inscription du facteur (QR code et code manuel),
+  défi à la connexion, codes de secours ; à arbitrer : SMS ou non.
+- Verrouillage de l'app par biométrie (BiometricPrompt, LocalAuthentication) et délai de reverrouillage.
+- Gestion des sessions : liste des appareils connectés, déconnexion à distance, « se déconnecter partout ».
+- Changement d'e-mail et de mot de passe depuis Mon espace, alertes de connexion depuis un nouvel appareil.
+- Côté backend : MFA activé dans Supabase, endpoints de sessions (`BACKEND-GAPS.md` à compléter).
+
+## Lot 10 — Encouragements ☐ (à concevoir)
+Demande du propriétaire du 18/11/2026 : donner envie de revenir dicter.
+- Carte du tableau de bord à l'arrivée : « Vous avez dépensé 120 € de moins que le mois dernier à la même date », comparaison
+  calculée à date égale pour rester juste en début de mois.
+- Séries : jours consécutifs avec au moins une dépense dictée, petit badge.
+- Petites victoires : budget tenu, catégorie en baisse, premier mois complet.
+- Ton positif sans culpabiliser quand le mois est moins bon ; masquable dans Préférences.
+- Calcul local à partir des montants déjà lus (aucun nouvel endpoint pour la comparaison simple).
 
 ## Plus tard
 Transcription locale (whisper.cpp), modèle local (LiteRT-LM), cache chiffré hors ligne, autre fournisseur d'IA.
