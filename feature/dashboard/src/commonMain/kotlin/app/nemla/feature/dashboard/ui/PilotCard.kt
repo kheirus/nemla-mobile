@@ -22,10 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,6 +58,7 @@ import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaCategoryDot
+import app.nemla.core.designsystem.component.NemlaFormSheet
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaProgressBar
 import app.nemla.core.designsystem.component.NemlaSegmentedButtons
@@ -430,77 +429,58 @@ private fun FilterButton(
             FilterSummary.NONE -> stringResource(Res.string.filter_none)
             FilterSummary.SOME -> pluralStringResource(Res.plurals.filter_some, filter.selectedCount, filter.selectedCount)
         }
-    Box {
-        NemlaButton(text = label, onClick = { open = true }, variant = NemlaButtonVariant.Outline, leadingIcon = NemlaIcons.Filter)
-        DropdownMenu(
-            expanded = open,
-            onDismissRequest = { open = false },
-            shape = RoundedCornerShape(NemlaTheme.radius.md),
-            containerColor = colors.popover,
-            modifier = Modifier.width(PopoverWidth),
-        ) {
-            Column(modifier = Modifier.padding(horizontal = NemlaTheme.spacing.xs)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(Res.string.filter_title),
-                        style = NemlaTheme.typography.caption.copy(fontWeight = FontWeight.Medium),
-                        color = colors.mutedForeground,
-                        modifier = Modifier.weight(1f),
-                    )
-                    NemlaButton(
-                        text =
-                            stringResource(
-                                if (filter.summary == FilterSummary.ALL) Res.string.filter_deselect_all else Res.string.filter_select_all,
-                            ),
-                        onClick = { onAction(DashboardAction.FilterAllToggled) },
-                        variant = NemlaButtonVariant.Ghost,
-                    )
-                }
-                if (filter.summary == FilterSummary.NONE) {
-                    Text(
-                        text = stringResource(Res.string.filter_empty),
-                        style = NemlaTheme.typography.caption,
-                        color = colors.destructive,
+    NemlaButton(text = label, onClick = { open = true }, variant = NemlaButtonVariant.Outline, leadingIcon = NemlaIcons.Filter)
+    if (open) {
+        NemlaFormSheet(title = stringResource(Res.string.filter_title), onDismissRequest = { open = false }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.weight(1f))
+                NemlaButton(
+                    text =
+                        stringResource(
+                            if (filter.summary == FilterSummary.ALL) Res.string.filter_deselect_all else Res.string.filter_select_all,
+                        ),
+                    onClick = { onAction(DashboardAction.FilterAllToggled) },
+                    variant = NemlaButtonVariant.Ghost,
+                )
+            }
+            if (filter.summary == FilterSummary.NONE) {
+                Text(
+                    text = stringResource(Res.string.filter_empty),
+                    style = NemlaTheme.typography.caption,
+                    color = colors.destructive,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(colors.destructive.copy(alpha = 0.10f), RoundedCornerShape(NemlaTheme.radius.sm))
+                            .padding(NemlaTheme.spacing.xs),
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs)) {
+                filter.options.forEach { option ->
+                    val selected = option.selected && filter.summary != FilterSummary.NONE
+                    Row(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = NemlaTheme.spacing.xxs)
-                                .background(colors.destructive.copy(alpha = 0.10f), RoundedCornerShape(NemlaTheme.radius.sm))
-                                .padding(NemlaTheme.spacing.xs),
-                    )
-                }
-                Column(modifier = Modifier.heightIn(max = 256.dp).verticalScroll(rememberScrollState())) {
-                    filter.options.forEach { option ->
-                        val selected = option.selected && filter.summary != FilterSummary.NONE
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = NemlaTheme.sizes.minTouchTarget)
-                                    .clip(RoundedCornerShape(NemlaTheme.radius.sm))
-                                    .background(if (selected) colors.primary.copy(alpha = SELECTED_OPTION_ALPHA) else Color.Transparent)
-                                    .clickable(role = Role.Checkbox) { onAction(DashboardAction.FilterToggled(option.id)) }
-                                    .padding(horizontal = NemlaTheme.spacing.xs),
-                            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            NemlaCategoryDot(CategoryColors.parse(option.colorHex), Modifier.size(14.dp))
-                            Text(
-                                text = option.name,
-                                style = if (selected) NemlaTheme.typography.bodyStrong else NemlaTheme.typography.body,
-                                color = if (selected) colors.primary else colors.foreground,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (selected) {
-                                Icon(
-                                    NemlaIcons.Check,
-                                    contentDescription = null,
-                                    tint = colors.primary,
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            }
+                                .heightIn(min = NemlaTheme.sizes.minTouchTarget)
+                                .clip(RoundedCornerShape(NemlaTheme.radius.md))
+                                .background(if (selected) colors.primary.copy(alpha = SELECTED_OPTION_ALPHA) else Color.Transparent)
+                                .clickable(role = Role.Checkbox) { onAction(DashboardAction.FilterToggled(option.id)) }
+                                .padding(horizontal = NemlaTheme.spacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        NemlaCategoryDot(CategoryColors.parse(option.colorHex), Modifier.size(16.dp))
+                        Text(
+                            text = option.name,
+                            style = if (selected) NemlaTheme.typography.bodyStrong else NemlaTheme.typography.body,
+                            color = if (selected) colors.primary else colors.foreground,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (selected) {
+                            Icon(NemlaIcons.Check, contentDescription = null, tint = colors.primary, modifier = Modifier.size(20.dp))
                         }
                     }
                 }
