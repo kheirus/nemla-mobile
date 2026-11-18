@@ -38,6 +38,7 @@ fun <T> NemlaSegmentedButtons(
                 onClick = { onSelect(option.value) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
                 colors = buttonColors,
+                icon = {},
                 label = {
                     Text(
                         text = option.label,
