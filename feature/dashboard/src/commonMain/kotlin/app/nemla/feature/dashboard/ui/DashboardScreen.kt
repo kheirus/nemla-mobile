@@ -1,13 +1,19 @@
 package app.nemla.feature.dashboard.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -22,8 +28,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -38,6 +46,7 @@ import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
 import app.nemla.core.designsystem.component.NemlaPullToRefreshBox
+import app.nemla.core.designsystem.component.NemlaRotationAllowed
 import app.nemla.core.designsystem.component.NemlaScaffold
 import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.component.NemlaTopBar
@@ -148,26 +157,61 @@ internal fun DashboardScreen(
                 modifier = Modifier.fillMaxSize().edgeToEdgeBody(padding),
             ) {
                 Column(
-                    modifier =
-                        Modifier
-                            .widthIn(max = NemlaTheme.sizes.contentMaxWidth)
-                            .fillMaxWidth()
-                            .bottomSafeDrawingPadding()
-                            .padding(
-                                start = NemlaTheme.spacing.pageHorizontal,
-                                top = NemlaTheme.spacing.pageVertical,
-                                end = NemlaTheme.spacing.pageHorizontal,
-                                bottom = FloatingActionClearance,
-                            ),
-                    verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
+                    modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    DashboardContent(state, format, onAction, reportNotice)
+                    Column(
+                        modifier =
+                            Modifier
+                                .widthIn(max = NemlaTheme.sizes.contentMaxWidth)
+                                .fillMaxWidth()
+                                .bottomSafeDrawingPadding()
+                                .padding(
+                                    start = NemlaTheme.spacing.pageHorizontal,
+                                    top = NemlaTheme.spacing.pageVertical,
+                                    end = NemlaTheme.spacing.pageHorizontal,
+                                    bottom = FloatingActionClearance,
+                                ),
+                        verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
+                    ) {
+                        DashboardContent(state, format, onAction, reportNotice)
+                    }
                 }
             }
+            state.editor?.let { ExpenseEditorSheet(it, state, format, onAction) }
         }
-        state.editor?.let { ExpenseEditorSheet(it, state, format, onAction) }
+        if (maxWidth > maxHeight && !state.isInitialLoading) LandscapeChart(state, format, maxHeight)
     }
 }
+
+@Composable
+private fun LandscapeChart(
+    state: DashboardUiState,
+    format: DashboardFormat,
+    availableHeight: Dp,
+) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(NemlaTheme.colors.background)
+                .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } }
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(horizontal = NemlaTheme.spacing.pageHorizontal, vertical = NemlaTheme.spacing.sm),
+    ) {
+        MonthlyChartSection(
+            chart = state.view.pilot.chart,
+            animationKey = state.cursor.kind,
+            format = format,
+            onMonthTapped = {},
+            chartHeight = (availableHeight - LandscapeChrome).coerceAtLeast(LandscapeMinChart),
+            showHint = false,
+        )
+    }
+}
+
+private val LandscapeChrome = 112.dp
+private val LandscapeMinChart = 120.dp
 
 @Composable
 private fun DashboardContent(
