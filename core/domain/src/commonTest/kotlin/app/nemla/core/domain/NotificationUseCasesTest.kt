@@ -22,6 +22,7 @@ import app.nemla.core.domain.usecase.AlertReachedBudgets
 import app.nemla.core.domain.usecase.ClearNotifications
 import app.nemla.core.domain.usecase.DeliverPushInbox
 import app.nemla.core.domain.usecase.DismissInboxItem
+import app.nemla.core.domain.usecase.GetNotificationAccess
 import app.nemla.core.domain.usecase.ListInAppNotices
 import app.nemla.core.domain.usecase.SetDailyReminder
 import kotlinx.coroutines.test.runTest
@@ -49,6 +50,14 @@ class NotificationUseCasesTest {
             assertEquals(4, notifier.scheduled.getValue(NoticeGroup.REPORT_ARRIVAL).size)
             assertTrue(notifier.languages.all { it == AppLanguage.EN })
             assertEquals(ExpenseQuery(dateEquals = LocalDate(2026, 11, 19), confirmed = true, limit = 1), expenses.queries.single())
+        }
+
+    @Test
+    fun accessIsReadFromTheNotifier() =
+        runTest {
+            assertEquals(NotificationAccess.GRANTED, GetNotificationAccess(notifier)())
+            notifier.access = NotificationAccess.DENIED
+            assertEquals(NotificationAccess.DENIED, GetNotificationAccess(notifier)())
         }
 
     @Test

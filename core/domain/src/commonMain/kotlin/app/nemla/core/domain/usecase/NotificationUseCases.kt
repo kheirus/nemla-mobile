@@ -57,6 +57,12 @@ class RefreshScheduledNotifications(
     }
 }
 
+class GetNotificationAccess(
+    private val notifier: LocalNotifier,
+) {
+    suspend operator fun invoke(): NotificationAccess = notifier.access()
+}
+
 class SetDailyReminder(
     private val profiles: ProfileRepository,
     private val refresh: RefreshScheduledNotifications,
