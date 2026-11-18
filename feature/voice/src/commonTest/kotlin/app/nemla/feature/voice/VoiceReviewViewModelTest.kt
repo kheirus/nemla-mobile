@@ -41,7 +41,7 @@ class VoiceReviewViewModelTest : MainDispatcherTest() {
             store = store,
             listCategories = ListCategories(categories),
             findLearned = FindLearnedExpenses(reviews),
-            confirmReviewed = ConfirmReviewedExpenses(reviews),
+            confirmReviewed = ConfirmReviewedExpenses(reviews, testRefresh()),
             deletePending = DeletePendingExpense(reviews),
             today = { testToday },
             decimalSeparator = ',',

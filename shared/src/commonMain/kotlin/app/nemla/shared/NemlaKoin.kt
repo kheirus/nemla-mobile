@@ -14,6 +14,7 @@ import app.nemla.core.domain.usecase.ObservePreferences
 import app.nemla.core.domain.usecase.ResolveStartDestination
 import app.nemla.core.network.BackendConfig
 import app.nemla.core.network.coreNetworkModule
+import app.nemla.core.notifications.coreNotificationsModule
 import app.nemla.core.security.coreSecurityModule
 import app.nemla.feature.auth.featureAuthModule
 import app.nemla.feature.dashboard.featureDashboardModule
@@ -56,6 +57,7 @@ internal fun nemlaModules(
         coreNetworkModule,
         coreAudioModule,
         coreDocumentsModule,
+        coreNotificationsModule,
         aiLocalModule,
         aiRemoteNemlaModule,
         coreDataModule,
