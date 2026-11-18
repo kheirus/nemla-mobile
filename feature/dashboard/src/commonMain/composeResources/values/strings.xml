@@ -83,6 +83,7 @@
   <string name="spending_empty">Aucune dépense sur cette période.</string>
   <string name="spending_chart_description">Répartition des dépenses par catégorie</string>
   <string name="other_group">Autre</string>
+  <string name="spending_percent">%1$s %</string>
   <string name="budget_usage">%1$s / %2$s</string>
   <string name="budget_usage_over">%1$s / %2$s · +%3$s</string>
   <string name="today_title">Dépenses du jour</string>

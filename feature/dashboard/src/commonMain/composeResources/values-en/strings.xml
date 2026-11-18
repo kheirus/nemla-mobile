@@ -83,6 +83,7 @@
   <string name="spending_empty">No expenses for this period.</string>
   <string name="spending_chart_description">Spending by category</string>
   <string name="other_group">Other</string>
+  <string name="spending_percent">%1$s%</string>
   <string name="budget_usage">%1$s / %2$s</string>
   <string name="budget_usage_over">%1$s / %2$s · +%3$s</string>
   <string name="today_title">Today's expenses</string>
