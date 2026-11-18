@@ -8,12 +8,18 @@ import app.nemla.core.domain.model.CategoryShare
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.DateSpan
 import app.nemla.core.domain.model.GlobalBudget
+import app.nemla.core.domain.model.InboxChannel
+import app.nemla.core.domain.model.InboxItem
+import app.nemla.core.domain.model.InboxItemId
+import app.nemla.core.domain.model.InboxKind
 import app.nemla.core.domain.model.PeriodReview
 import app.nemla.core.domain.model.ProfileIdentity
 import app.nemla.core.domain.model.PseudoAvailability
+import app.nemla.core.domain.model.ReportSheet
 import app.nemla.core.domain.model.ReviewPeriod
 import app.nemla.core.domain.model.UserId
 import app.nemla.core.domain.model.UserProfile
+import app.nemla.core.domain.port.InboxRepository
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
@@ -127,4 +133,26 @@ internal class FakePreferences : PreferencesRepository {
         state.value = preferences
         return AppResult.Success(Unit)
     }
+}
+
+internal fun inboxItem(
+    id: String,
+    kind: InboxKind = InboxKind.MONTH_REPORT,
+    channel: InboxChannel = InboxChannel.IN_APP,
+    period: ReviewPeriod? = null,
+    report: ReportSheet? = null,
+) = InboxItem(InboxItemId(id), channel, kind, "Titre $id", "Corps $id", period, report, false)
+
+internal class FakeInbox : InboxRepository {
+    var items: AppResult<List<InboxItem>> = AppResult.Success(emptyList())
+    val seen = mutableListOf<InboxItemId>()
+
+    override suspend fun unseen(): AppResult<List<InboxItem>> = items
+
+    override suspend fun markSeen(id: InboxItemId): AppResult<Unit> {
+        seen += id
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun markDelivered(id: InboxItemId): AppResult<Unit> = AppResult.Success(Unit)
 }

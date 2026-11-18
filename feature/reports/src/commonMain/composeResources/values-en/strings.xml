@@ -26,4 +26,6 @@
   <string name="reports_history_empty">No report available yet: your reports will appear here at the end of your first filled month.</string>
   <string name="reports_history_failed">History unavailable for now.</string>
   <string name="reports_history_annual">Year</string>
+  <string name="reports_title_generic">Your report</string>
+  <string name="reports_inbox_dismiss">Hide notification</string>
 </resources>

@@ -52,6 +52,7 @@ import app.nemla.feature.reports.resources.reports_retry
 import app.nemla.feature.reports.resources.reports_server_language
 import app.nemla.feature.reports.resources.reports_share
 import app.nemla.feature.reports.resources.reports_title
+import app.nemla.feature.reports.resources.reports_title_generic
 import app.nemla.feature.reports.resources.reports_total
 import app.nemla.feature.reports.resources.reports_trend_down
 import app.nemla.feature.reports.resources.reports_trend_up
@@ -68,8 +69,24 @@ fun ReportDialog(
     period: ReviewPeriod,
     onDismiss: () -> Unit,
 ) {
-    val viewModel: ReportDialogViewModel =
-        koinViewModel(key = "report-" + ReportCalendar.key(period)) { parametersOf(period) }
+    ReportDialogRoute(key = "report-" + ReportCalendar.key(period), request = ReportRequest.Compute(period), onDismiss = onDismiss)
+}
+
+@Composable
+internal fun DeliveredReportDialog(
+    opened: OpenedInboxReport,
+    onDismiss: () -> Unit,
+) {
+    ReportDialogRoute(key = "report-inbox-" + opened.id.value, request = opened.request, onDismiss = onDismiss)
+}
+
+@Composable
+private fun ReportDialogRoute(
+    key: String,
+    request: ReportRequest,
+    onDismiss: () -> Unit,
+) {
+    val viewModel: ReportDialogViewModel = koinViewModel(key = key) { parametersOf(request) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     ReportDialogContent(state = state, onAction = viewModel::onAction, onDismiss = onDismiss)
 }
@@ -81,7 +98,9 @@ internal fun ReportDialogContent(
     onDismiss: () -> Unit,
 ) {
     NemlaDialog(
-        title = stringResource(Res.string.reports_title, periodLabel(state.period, state.language)),
+        title =
+            state.period?.let { stringResource(Res.string.reports_title, periodLabel(it, state.language)) }
+                ?: stringResource(Res.string.reports_title_generic),
         onDismissRequest = onDismiss,
         maxWidth = ReportDialogMaxWidth,
     ) {
@@ -107,13 +126,22 @@ internal fun ReportDialogContent(
                     style = NemlaTheme.typography.body,
                     color = NemlaTheme.colors.destructive,
                 )
-                NemlaButton(
-                    text = stringResource(Res.string.reports_retry),
-                    onClick = { onAction(ReportDialogAction.RetryClicked) },
-                    variant = NemlaButtonVariant.Outline,
-                    leadingIcon = NemlaIcons.RefreshCw,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (state.canRetry) {
+                    NemlaButton(
+                        text = stringResource(Res.string.reports_retry),
+                        onClick = { onAction(ReportDialogAction.RetryClicked) },
+                        variant = NemlaButtonVariant.Outline,
+                        leadingIcon = NemlaIcons.RefreshCw,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    NemlaButton(
+                        text = stringResource(Res.string.reports_understood),
+                        onClick = onDismiss,
+                        variant = NemlaButtonVariant.Outline,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
 
             is ReportContent.Loaded -> {
