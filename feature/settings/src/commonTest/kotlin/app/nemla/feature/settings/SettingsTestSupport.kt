@@ -23,18 +23,26 @@ import app.nemla.core.domain.model.DebitSettings
 import app.nemla.core.domain.model.DeferredDebit
 import app.nemla.core.domain.model.EmailAddress
 import app.nemla.core.domain.model.EstimateBasis
+import app.nemla.core.domain.model.Expense
+import app.nemla.core.domain.model.ExpenseEdit
+import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.Gender
 import app.nemla.core.domain.model.GlobalBudget
 import app.nemla.core.domain.model.Household
+import app.nemla.core.domain.model.LocalNotice
 import app.nemla.core.domain.model.MonthSpending
 import app.nemla.core.domain.model.MonthlyQuota
 import app.nemla.core.domain.model.NewCategory
+import app.nemla.core.domain.model.NoticeGroup
+import app.nemla.core.domain.model.NotificationAccess
 import app.nemla.core.domain.model.Password
 import app.nemla.core.domain.model.ProfileIdentity
 import app.nemla.core.domain.model.PseudoAvailability
 import app.nemla.core.domain.model.RecurringCharge
 import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.RecurringChargeId
+import app.nemla.core.domain.model.ScheduledNotice
 import app.nemla.core.domain.model.Session
 import app.nemla.core.domain.model.SignUpOutcome
 import app.nemla.core.domain.model.SignUpRequest
@@ -46,6 +54,8 @@ import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.BudgetAdvisor
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
+import app.nemla.core.domain.port.ExpenseRepository
+import app.nemla.core.domain.port.LocalNotifier
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
@@ -131,7 +141,13 @@ internal class FakeProfiles : ProfileRepository {
         return AppResult.Success(Unit)
     }
 
-    override suspend fun setDailyReminder(enabled: Boolean): AppResult<Unit> = AppResult.Success(Unit)
+    var reminderResult: AppResult<Unit> = AppResult.Success(Unit)
+    val reminders = mutableListOf<Boolean>()
+
+    override suspend fun setDailyReminder(enabled: Boolean): AppResult<Unit> {
+        reminders += enabled
+        return reminderResult
+    }
 
     override suspend fun checkPseudo(pseudo: String): AppResult<PseudoAvailability> = AppResult.Success(this.pseudo)
 
@@ -305,4 +321,45 @@ internal class FakeAuth : AuthRepository {
     override suspend fun requestPasswordReset(email: EmailAddress): AppResult<Unit> = AppResult.Success(Unit)
 
     override suspend fun refreshSession(): AppResult<Session> = AppResult.Success(session)
+}
+
+internal class FakeNotifier(
+    var access: NotificationAccess = NotificationAccess.UNDETERMINED,
+) : LocalNotifier {
+    val scheduled = mutableListOf<NoticeGroup>()
+
+    override suspend fun access(): NotificationAccess = access
+
+    override suspend fun schedule(
+        group: NoticeGroup,
+        notices: List<ScheduledNotice>,
+        language: AppLanguage,
+    ): AppResult<Unit> {
+        scheduled += group
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun show(
+        notice: LocalNotice,
+        tag: String,
+        language: AppLanguage,
+    ): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun cancelAll(): AppResult<Unit> = AppResult.Success(Unit)
+}
+
+internal object NoExpenses : ExpenseRepository {
+    override suspend fun list(query: ExpenseQuery): AppResult<List<Expense>> = AppResult.Success(emptyList())
+
+    override suspend fun searchByLabel(
+        term: String,
+        limit: Int,
+    ): AppResult<List<Expense>> = AppResult.Success(emptyList())
+
+    override suspend fun update(
+        id: ExpenseId,
+        edit: ExpenseEdit,
+    ): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun delete(id: ExpenseId): AppResult<Unit> = AppResult.Success(Unit)
 }

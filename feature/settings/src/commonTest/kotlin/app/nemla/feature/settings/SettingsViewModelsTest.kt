@@ -13,9 +13,11 @@ import app.nemla.core.domain.model.DebitSettings
 import app.nemla.core.domain.model.DeferredDebit
 import app.nemla.core.domain.model.GlobalBudget
 import app.nemla.core.domain.model.Household
+import app.nemla.core.domain.model.NotificationAccess
 import app.nemla.core.domain.model.RecurringCharge
 import app.nemla.core.domain.model.RecurringChargeId
 import app.nemla.core.domain.model.ThemeMode
+import app.nemla.core.domain.model.UserProfile
 import app.nemla.core.domain.port.AccountRepository
 import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
@@ -23,6 +25,7 @@ import app.nemla.core.domain.port.BudgetAdvisor
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
 import app.nemla.core.domain.port.DeviceLanguage
+import app.nemla.core.domain.port.LocalNotifier
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
@@ -35,17 +38,20 @@ import app.nemla.core.domain.usecase.DeleteCategory
 import app.nemla.core.domain.usecase.DeleteRecurringCharge
 import app.nemla.core.domain.usecase.GetDebitSettings
 import app.nemla.core.domain.usecase.GetMonthlyQuota
+import app.nemla.core.domain.usecase.GetNotificationAccess
 import app.nemla.core.domain.usecase.GetUserProfile
 import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListRecurringCharges
 import app.nemla.core.domain.usecase.ObserveAiConsents
 import app.nemla.core.domain.usecase.ObservePreferences
 import app.nemla.core.domain.usecase.ParseRecurringCharges
+import app.nemla.core.domain.usecase.RefreshScheduledNotifications
 import app.nemla.core.domain.usecase.RevokeAllAiConsents
 import app.nemla.core.domain.usecase.SaveDebitSettings
 import app.nemla.core.domain.usecase.SaveGlobalBudget
 import app.nemla.core.domain.usecase.SaveProfileIdentity
 import app.nemla.core.domain.usecase.SaveRecurringCharges
+import app.nemla.core.domain.usecase.SetDailyReminder
 import app.nemla.core.domain.usecase.SignOut
 import app.nemla.core.domain.usecase.SuggestBudget
 import app.nemla.core.domain.usecase.UpdateCategory
@@ -64,6 +70,7 @@ import app.nemla.feature.settings.categories.CategoriesViewModel
 import app.nemla.feature.settings.common.NoticeKind
 import app.nemla.feature.settings.credits.CreditsViewModel
 import app.nemla.feature.settings.preferences.PreferencesAction
+import app.nemla.feature.settings.preferences.PreferencesEffect
 import app.nemla.feature.settings.preferences.PreferencesMessage
 import app.nemla.feature.settings.preferences.PreferencesViewModel
 import app.nemla.feature.settings.profile.ProfileAction
@@ -98,6 +105,131 @@ class SettingsViewModelsTest : MainDispatcherTest() {
     private val consents = FakeConsents()
     private val auth = FakeAuth()
     private val languages = CurrentLanguages(preferences) { AppLanguage.FR }
+    private val notifier = FakeNotifier()
+
+    private fun refresh() =
+        RefreshScheduledNotifications(notifier = notifier, profiles = profiles, expenses = NoExpenses, languages = languages)
+
+    private fun preferencesViewModel() =
+        PreferencesViewModel(
+            GetUserProfile(profiles),
+            UpdateCurrency(profiles),
+            ObservePreferences(preferences),
+            UpdatePreferences(preferences),
+            languages,
+            ObserveAiConsents(consents),
+            RevokeAllAiConsents(consents),
+            GetNotificationAccess(notifier),
+            SetDailyReminder(profiles, refresh()),
+        )
+
+    @Test
+    fun reminderIsShownOnOnlyWithProfileFlagAndPermission() {
+        val denied = preferencesViewModel()
+        denied.onAction(PreferencesAction.Opened)
+        assertFalse(denied.state.value.dailyReminder)
+        notifier.access = NotificationAccess.GRANTED
+        val granted = preferencesViewModel()
+        granted.onAction(PreferencesAction.Opened)
+        assertTrue(granted.state.value.dailyReminder)
+        profiles.profile = AppResult.Success(profile().withReminder(false))
+        val off = preferencesViewModel()
+        off.onAction(PreferencesAction.Opened)
+        assertFalse(off.state.value.dailyReminder)
+    }
+
+    @Test
+    fun enablingTheReminderAsksPermissionFirst() =
+        runTest {
+            val vm = preferencesViewModel()
+            vm.effects.test {
+                vm.onAction(PreferencesAction.ReminderToggled(true))
+                assertEquals(PreferencesEffect.RequestNotificationPermission, awaitItem())
+                assertTrue(vm.state.value.isSavingReminder)
+                assertTrue(profiles.reminders.isEmpty())
+                vm.onAction(PreferencesAction.NotificationPermissionAnswered(true))
+            }
+            assertEquals(listOf(true), profiles.reminders)
+            assertTrue(vm.state.value.dailyReminder)
+            assertFalse(vm.state.value.isSavingReminder)
+            assertEquals(
+                PreferencesMessage.ReminderEnabled,
+                vm.state.value.notice
+                    ?.message,
+            )
+            assertEquals(
+                NoticeKind.SUCCESS,
+                vm.state.value.notice
+                    ?.kind,
+            )
+            assertTrue(notifier.scheduled.isNotEmpty())
+        }
+
+    @Test
+    fun refusedPermissionKeepsTheReminderOff() =
+        runTest {
+            val vm = preferencesViewModel()
+            vm.effects.test {
+                vm.onAction(PreferencesAction.ReminderToggled(true))
+                awaitItem()
+                vm.onAction(PreferencesAction.NotificationPermissionAnswered(false))
+            }
+            assertTrue(profiles.reminders.isEmpty())
+            assertFalse(vm.state.value.dailyReminder)
+            assertFalse(vm.state.value.isSavingReminder)
+            assertEquals(
+                PreferencesMessage.NotificationsDenied,
+                vm.state.value.notice
+                    ?.message,
+            )
+            assertEquals(
+                NoticeKind.ERROR,
+                vm.state.value.notice
+                    ?.kind,
+            )
+            vm.onAction(PreferencesAction.NotificationPermissionAnswered(true))
+            assertTrue(profiles.reminders.isEmpty())
+        }
+
+    @Test
+    fun grantedAccessSavesDirectlyAndTurningOffSavesFalse() =
+        runTest {
+            notifier.access = NotificationAccess.GRANTED
+            profiles.profile = AppResult.Success(profile().withReminder(false))
+            val vm = preferencesViewModel()
+            vm.onAction(PreferencesAction.Opened)
+            vm.effects.test {
+                vm.onAction(PreferencesAction.ReminderToggled(true))
+                expectNoEvents()
+            }
+            assertTrue(vm.state.value.dailyReminder)
+            vm.onAction(PreferencesAction.ReminderToggled(false))
+            assertEquals(listOf(true, false), profiles.reminders)
+            assertFalse(vm.state.value.dailyReminder)
+            assertEquals(
+                PreferencesMessage.ReminderDisabled,
+                vm.state.value.notice
+                    ?.message,
+            )
+        }
+
+    @Test
+    fun aFailedReminderSaveRestoresTheSwitch() {
+        notifier.access = NotificationAccess.GRANTED
+        profiles.reminderResult = AppResult.Failure(AppError.Network.Offline)
+        val vm = preferencesViewModel()
+        vm.onAction(PreferencesAction.Opened)
+        assertTrue(vm.state.value.dailyReminder)
+        vm.onAction(PreferencesAction.ReminderToggled(false))
+        assertTrue(vm.state.value.dailyReminder)
+        assertFalse(vm.state.value.isSavingReminder)
+        assertEquals(
+            PreferencesMessage.Failed,
+            vm.state.value.notice
+                ?.message,
+        )
+        assertTrue(notifier.scheduled.isEmpty())
+    }
 
     @Test
     fun hostSwitchesTabsAndPanelsAndClosesFromTheList() =
@@ -326,6 +458,8 @@ class SettingsViewModelsTest : MainDispatcherTest() {
                 languages,
                 ObserveAiConsents(consents),
                 RevokeAllAiConsents(consents),
+                GetNotificationAccess(notifier),
+                SetDailyReminder(profiles, refresh()),
             )
         vm.onAction(PreferencesAction.Opened)
         assertTrue(vm.state.value.aiConsentGranted)
@@ -550,6 +684,9 @@ class SettingsViewModelsTest : MainDispatcherTest() {
                         single<AiConsentRepository> { consents }
                         single<AuthRepository> { auth }
                         single<DeviceLanguage> { DeviceLanguage { AppLanguage.FR } }
+                        single<LocalNotifier> { notifier }
+                        factory { GetNotificationAccess(get()) }
+                        factory { SetDailyReminder(get(), refresh()) }
                     },
                     featureSettingsModule,
                 )
@@ -574,3 +711,6 @@ class SettingsViewModelsTest : MainDispatcherTest() {
         }
     }
 }
+
+private fun UserProfile.withReminder(value: Boolean) =
+    UserProfile(userId, pseudo, age, gender, household, currency, budget, onboardingDone, value)

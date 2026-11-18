@@ -18,7 +18,7 @@
   <string name="settings_entry_profile">Mon profil</string>
   <string name="settings_entry_profile_help">Pseudo, âge, sexe, situation familiale.</string>
   <string name="settings_entry_preferences">Préférences</string>
-  <string name="settings_entry_preferences_help">Devise, langue, thème et accord IA.</string>
+  <string name="settings_entry_preferences_help">Devise, langue, thème, rappel et accord IA.</string>
   <string name="settings_entry_card">Ma carte bancaire</string>
   <string name="settings_entry_card_help">Débit immédiat ou différé : cela change la date à laquelle vos achats carte quittent votre compte.</string>
   <string name="settings_danger_title">Zone dangereuse</string>
@@ -134,6 +134,11 @@
   <string name="preferences_ai_consent_none">Aucun accord donné : il vous sera demandé avant la prochaine dictée.</string>
   <string name="preferences_ai_consent_revoke">Retirer mon accord</string>
   <string name="preferences_consent_revoked">Accord retiré : il vous sera redemandé avant la prochaine dictée.</string>
+  <string name="preferences_daily_reminder">Rappel quotidien à 20 h</string>
+  <string name="preferences_daily_reminder_help">Uniquement si aucune dépense n'a encore été saisie ce jour-là.</string>
+  <string name="preferences_reminder_enabled">Rappel activé pour 20 h</string>
+  <string name="preferences_reminder_disabled">Rappel désactivé</string>
+  <string name="preferences_notifications_denied">Notifications refusées. Autorisez-les dans les réglages du téléphone.</string>
   <string name="preferences_failed">Enregistrement impossible</string>
   <string name="card_title">Ma carte bancaire</string>
   <string name="card_intro">Débit immédiat ou différé : cela change la date à laquelle vos achats carte quittent votre compte.</string>
