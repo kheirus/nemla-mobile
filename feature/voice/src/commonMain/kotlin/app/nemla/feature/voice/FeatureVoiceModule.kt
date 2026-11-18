@@ -12,7 +12,6 @@ import app.nemla.core.domain.usecase.GrantAiConsent
 import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ObserveAiConsents
 import app.nemla.core.domain.usecase.ObserveAuthState
-import app.nemla.core.domain.usecase.RefreshScheduledNotifications
 import app.nemla.core.domain.usecase.TranscribeSpeech
 import app.nemla.feature.voice.capture.VoiceCaptureViewModel
 import app.nemla.feature.voice.dictation.DictationViewModel
@@ -35,7 +34,6 @@ val featureVoiceModule: Module =
         factoryOf(::GetMonthlyQuota)
         factoryOf(::ListCategories)
         factoryOf(::FindLearnedExpenses)
-        factory { RefreshScheduledNotifications(notifier = get(), profiles = get(), expenses = get(), languages = get()) }
         factoryOf(::ConfirmReviewedExpenses)
         factoryOf(::DeletePendingExpense)
         factoryOf(::TranscribeSpeech)

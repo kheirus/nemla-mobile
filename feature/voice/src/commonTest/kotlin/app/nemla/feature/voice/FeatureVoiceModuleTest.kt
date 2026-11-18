@@ -48,6 +48,7 @@ class FeatureVoiceModuleTest : MainDispatcherTest() {
                         single<LocalNotifier> { FakeNotifier() }
                         single<ProfileRepository> { UnreadableProfiles }
                         single<ExpenseRepository> { NoExpenses }
+                        factory { testRefresh(get()) }
                     },
                     featureVoiceModule,
                 )
