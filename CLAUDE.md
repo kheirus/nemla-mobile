@@ -36,38 +36,15 @@ Kotlin Multiplatform, interface 100 % partagée en Compose Multiplatform.
 - À la fin d'un travail sur une branche, demander au propriétaire de tester (appareil Android, simulateur iOS) en indiquant quoi essayer.
 - Ne jamais fusionner dans `main` sans son accord explicite : lui demander à chaque fois s'il autorise la fusion.
 
+## Une conversation par lot (règle du propriétaire)
+- Chaque lot, ou demi-lot (B5a, B5b…), se fait dans **une conversation neuve**, dans son worktree et sa branche. Le contexte utile est
+  dans le dépôt (ce fichier, `docs/`), pas dans l'historique d'une conversation précédente.
+- À la fin d'un lot, après les vérifications, les commits et la demande d'essai : **prévenir le propriétaire qu'il doit ouvrir une nouvelle
+  conversation** pour le lot suivant, et lui donner la phrase de départ (par exemple « Lot B3 selon docs/BACKEND-PLAN.md »).
+  Ne jamais enchaîner le lot suivant dans la même conversation, même si on le demande en passant : le rappeler d'abord.
+- Garder le contexte petit : code écrit par des sous-agents, sorties de Gradle filtrées (`--quiet`, erreurs seulement),
+  lecture des seules parties utiles des gros fichiers.
+
 ## État
-Lot 0 (socle de build) terminé le 16/11/2026 : wrapper Gradle 9.7.1, `build-logic` (plugins `nemla.kmp.library`, `nemla.compose`,
-`nemla.feature`, `nemla.android.application`, `nemla.spotless`), tous les modules d'ARCHITECTURE §2 configurés, `androidApp`,
-`iosApp`, Spotless + ktlint, CI GitHub Actions. JDK 17 requis : `gradle/gradle-daemon-jvm.properties` l'impose au daemon.
-
-Lot 1 (fondations) terminé le 16/11/2026 : `core:*`, `ai:*`, `core:designsystem` (thème clair/sombre, jetons, composants),
-`feature:auth` (connexion, inscription, mot de passe oublié), `feature:home` (coquille), `shared` (App, navigation pilotée par la
-session, assemblage Koin), coquilles Android (`NemlaApplication`, R8 vérifié) et iOS (`startNemla` + `mainViewController`).
-Restes et écarts : `docs/ROADMAP.md` (lot 1) et `docs/PLATFORM-PARITY.md`. Polices Outfit / DM Sans et logo à fournir
-(fichier unique `NemlaFonts.kt`, monogramme provisoire dans `brand/NemlaLogo.kt`).
-
-Lot 2 (dictée) terminé le 16/11/2026 : `core:audio` (WAV 16 kHz mono, silence, 30 s, `AudioRecord` / `AVAudioEngine`, permission micro),
-`feature:voice` (bouton « Ajouter », dialogue de dictée, consentement IA `PERSONAL`, crédits, fiche de revue), confirmation des dépenses
-en PostgREST direct (libellé non modifiable faute d'endpoint). Capture réelle jamais essayée sur appareil. Restes et écarts : `docs/ROADMAP.md`
-(lot 2) et `docs/PLATFORM-PARITY.md`.
-
-Lot 3 (tableau de bord) terminé le 16/11/2026 : `feature:dashboard` remplace `feature:home` (bloc pilote, météo, graphique et anneau en
-`Canvas`, « Où part l'argent », budgets, dépenses du jour, débit différé, édition réduite, dépenses à valider). Libellés et recherche
-texte indisponibles tant que le backend n'expose pas `GET /api/public/expenses`. Restes : `docs/ROADMAP.md` (lot 3).
-
-Lot 4 terminé le 16/11/2026 : `feature:onboarding` (charges fixes saisies ou dictées, budget ; seuls les comptes vierges y sont envoyés,
-lien « Passer pour l'instant ») et `feature:settings` (Mon espace : budget, charges fixes, profil, préférences, carte bancaire, crédits,
-catégories ; onglet Bilans au lot 6). Dictée en texte via l'emplacement `DictationTextButton` de `feature:voice`. Suppression de compte
-en `NotSupportedYet`, export et rappel quotidien reportés. Restes et écarts : `docs/ROADMAP.md` (lot 4) et `docs/PLATFORM-PARITY.md`.
-
-Lot 5 terminé le 17/11/2026 : `core:documents` (sélecteur de fichier, extraction CSV/TXT/PDF en mémoire ; PDF Android 12+ selon
-l'extension SDK, Excel refusé) et `feature:import` (menu « Ajouter » → « Importer un relevé »). Aucun fichier brut ne quitte l'appareil :
-anonymisation locale puis `POST /api/public/import/text`, endpoint encore absent côté backend ; la sonde échoue fermée et l'app affiche
-« arrive bientôt… Rien n'a été envoyé ». Restes et écarts : `docs/ROADMAP.md` (lot 5) et `docs/PLATFORM-PARITY.md`.
-
-Lot 6 terminé le 17/11/2026 : `feature:reports` (bilan via `PeriodReport` → `GET /api/public/report/monthly` sur la période locale,
-bandeau « Votre bilan de … est arrivé » les 3 derniers jours du mois, historique dans l'onglet Bilans de Mon espace, vues dans
-`report_views`). Textes des bilans en français seulement (serveur). Notifications reportées au lot 7 (push serveur ou Firebase, à concevoir).
-Publication : `docs/PUBLICATION.md` (liste de contrôle, blocages, fiches des stores) et `docs/PRIVACY-POLICY-DRAFT.md` (brouillon à faire
-relire). Restes et écarts : `docs/ROADMAP.md` (lot 6) et `docs/PLATFORM-PARITY.md`. Prochaine étape : lot 7 (notifications), à concevoir.
+Avancement, restes et prochaine étape : `docs/ROADMAP.md` (lots mobiles 0 à 6 terminés) et `docs/BACKEND-PLAN.md` (backend Kotlin, lots B0 à B12).
+JDK 17 requis : `gradle/gradle-daemon-jvm.properties` l'impose au daemon.
