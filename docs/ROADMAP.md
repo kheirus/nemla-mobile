@@ -324,6 +324,11 @@ Retours du 18/11/2026 :
 - ☑ Paysage interactif : période et total en tête, filtre des catégories, toucher une barre ouvre le mois (vérifié sur iPhone 15).
 - Reste : icône d'application (logo `nemla-512.png` du web à récupérer, voir `../docs/specs/03` §11).
 
+## Lot 6d — Tableau de bord en trois onglets ☐ (décidé le 19/11/2026)
+Aujourd'hui / Dépenses / Analyse dans une barre de navigation en bas : cette décision remplace celle du 18/11/2026 (lot 6b, étape 2).
+Total du jour et budget du jour en tête, liste des dépenses avec tri et filtres, anneau et graphique dans Analyse,
+infos calculées sur le téléphone. Plan détaillé : `DASHBOARD-TABS-PLAN.md` ; maquette : `maquettes/dashboard-onglets.html`.
+
 ## Reprise du backend Lovable et mise en production (lots R0 à R5, M7 à M11) ☐ (validé le 19/11/2026, prochain : R0, M7 possible en parallèle)
 On garde le code web de Lovable (TanStack Start, Supabase) sur les comptes du propriétaire, avec les correctifs indispensables et les
 endpoints qui manquent au mobile, pour aller en production avant toute migration. Plan, chiffrage et arbitrages : `../docs/LOVABLE-EXIT-PLAN.md`.
