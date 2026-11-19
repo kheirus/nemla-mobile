@@ -231,6 +231,10 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
   - publication : bloquants listés dans `PUBLICATION.md` (suppression de compte, URL de politique de confidentialité, liens de
     réinitialisation, sécurité backend), signature et numéros de version à mettre en place.
 
+## Backend Kotlin (lots B0 à B12) ☐ (proposé, à valider)
+Réécriture du backend en Kotlin (Ktor, domaine partagé avec `core:domain`), Supabase réduit à Postgres et Auth, sortie complète de Lovable,
+site réduit à une vitrine. Plan, chiffrage et arbitrages : `docs/BACKEND-PLAN.md`. S'il est validé, le lot 7 devient le lot B8.
+
 ## Lot 7 — Notifications ☐ (à concevoir)
 Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
 - Push « Votre bilan est arrivé » (fin de mois, fin d'année), qui ouvrirait le dialogue de bilan de `feature:reports`.
