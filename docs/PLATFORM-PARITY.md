@@ -25,7 +25,7 @@ Branchement (lot 1, 16/11/2026) : `NemlaAndroid.start` (appelé par `NemlaApplic
 l'application ; `MainActivity` ne pose plus `FLAG_SECURE` elle-même (vérifié actif dans un APK release sur émulateur).
 `startNemla` (appelé par `iOSApp.init`) installe le voile `IosScreenProtection`. Les deux affichent `App()`.
 
-Écarts entre le web et le mobile à trancher (voir `specs/03` et `specs/04`) : graisse 600 absente de DM Sans (rendue en 700 sur le web),
+Écarts entre le web et le mobile à trancher (voir `../docs/specs/03` et `../docs/specs/04`) : graisse 600 absente de DM Sans (rendue en 700 sur le web),
 ambre au survol sans équivalent tactile, toasts en haut sur le web, fenêtres modales pleine largeur à coins carrés sur mobile web,
 logo absent du dépôt web (hébergé sur le CDN Lovable).
 
@@ -45,13 +45,13 @@ logo absent du dépôt web (hébergé sur le CDN Lovable).
 
 Écarts web / mobile introduits ou constatés au lot 1 (à valider par le propriétaire) :
 
-1. **Thème** : le mobile suit le thème du système ; le web est clair par défaut sans mode « système » (`specs/03` §1).
+1. **Thème** : le mobile suit le thème du système ; le web est clair par défaut sans mode « système » (`../docs/specs/03` §1).
 2. **Polices** : Outfit et DM Sans non embarquées (aucun fichier téléchargé) ; familles définies dans un seul fichier,
    `core/designsystem/.../theme/NemlaFonts.kt`, avec le « semi-gras » du corps déjà mappé sur 700 comme le rendu web.
 3. **Logo** : `nemla-logo.png` absent ; monogramme « n » dessiné en Compose (`brand/NemlaLogo.kt`, fonction `PlaceholderLogoMark`).
 4. **Hauteur des contrôles** : boutons, champs et listes à 48 dp (cible tactile) au lieu de 36 px sur le web.
 5. **Toasts** → bannières dans la carte (erreur, information, succès), annoncées aux lecteurs d'écran.
-6. **Messages** : erreurs de validation sous les champs (textes nouveaux, `specs/04` §2.3) ; les messages bruts de Supabase ne sont
+6. **Messages** : erreurs de validation sous les champs (textes nouveaux, `../docs/specs/04` §2.3) ; les messages bruts de Supabase ne sont
    jamais affichés, remplacés par des messages traduits (identifiants incorrects, email non confirmé, email déjà inscrit,
    hors ligne, délai dépassé, trop de tentatives, configuration).
 7. **Modes de l'écran d'authentification** : trois destinations de navigation (connexion, inscription, mot de passe oublié) au lieu
@@ -65,7 +65,7 @@ logo absent du dépôt web (hébergé sur le CDN Lovable).
 11. **En-tête de l'accueil** : bouton « Se déconnecter » visible directement, sans menu « Mon espace ».
 12. **Traductions anglaises** : `en-marketing.ts` n'étant pas dans les spécifications, les textes anglais de l'authentification et
     de l'accueil ont été rédigés pour le mobile (« Pseudo » → « Username », « Femme » → « Woman », « Colocation » →
-    « Shared housing » suivent les valeurs effectives de `specs/04` §I.1) ; à relire.
+    « Shared housing » suivent les valeurs effectives de `../docs/specs/04` §I.1) ; à relire.
 
 
 ## Lot 2 — dictée (16/11/2026)
@@ -87,14 +87,14 @@ permission sont propres à chaque plateforme, dans `core:audio`) :
 
 1. **Stockage de l'audio** : le WAV n'est pas téléversé dans le bucket `voice-notes` et `audio_url` n'est jamais envoyé ; il part
    directement en multipart vers `voice/process` et ne vit qu'en mémoire (remis à zéro après l'envoi). Rien ne reste côté stockage
-   en cas d'échec (le web y laisse l'audio, `specs/01` §2.1 étape 11).
+   en cas d'échec (le web y laisse l'audio, `../docs/specs/01` §2.1 étape 11).
 2. **Consentement IA** : dialogue explicite avant la première dictée (niveau `PERSONAL`), absent du web. Refus : rien n'est enregistré
    ni envoyé, message neutre. Révocation prévue dans Mon espace (lot 4).
 3. **Langue de dictée** : langue du système (`en` si le système est en anglais, sinon `fr`) en attendant les préférences (lot 4).
 4. **Fiche de revue** : écran dédié (destination `voiceGraph`) ouvert après une dictée réussie, au lieu d'un bloc inséré dans le
    tableau de bord (lot 3). « Plus tard » et le retour système reviennent à l'accueil. Les dépenses en attente ne peuvent être
    rouvertes que pendant la session, par l'entrée « Dépenses à valider » ajoutée au menu « Ajouter » (en mémoire, oubliée au
-   redémarrage, à la déconnexion et au changement de compte) ; la carte « Dépenses à valider » (`specs/04` §5.3) attend
+   redémarrage, à la déconnexion et au changement de compte) ; la carte « Dépenses à valider » (`../docs/specs/04` §5.3) attend
    `GET /api/public/expenses`.
 5. **Libellé en lecture seule** dans la fiche (renommer exige `PUT /api/public/expenses/{id}`) ; la majuscule initiale n'est pas
    réappliquée (le serveur l'a déjà fait à l'extraction). `prettyLabel` n'est pas porté (sans effet notable sur un libellé dicté ;
@@ -217,7 +217,7 @@ une plateforme ajouté) :
    de l'en-tête réduit à « Se déconnecter » (pas de « Gérer mon compte », qui permettrait de contourner l'onboarding) ; « Aucune charge
    fixe détectée » affiché aussi ici ; pas de toast « Configuration enregistrée » (le tableau de bord s'ouvre directement) ; erreurs en
    bannière (5 s) au lieu de toasts. Aucune validation, comme le web (montant illisible = 0, budget vide = 0).
-3. **Dictée des charges fixes** : lit `transcript.text` (le web passe l'objet et échoue, `specs/01` §2.2). La transcription est ajoutée
+3. **Dictée des charges fixes** : lit `transcript.text` (le web passe l'objet et échoue, `../docs/specs/01` §2.2). La transcription est ajoutée
    au texte (« , ») puis seule analysée, dans l'onboarding comme dans Mon espace. Bouton « Transcription… » pendant l'envoi.
 4. **Toasts** : bannières en haut du panneau ouvert (4 s, touchables pour fermer), comme aux lots 2 et 3.
 5. **En-têtes** : avatar selon la situation familiale (aussi sur le tableau de bord) ; menu du tableau de bord : « Gérer mon compte »
@@ -263,7 +263,7 @@ une plateforme ajouté) :
 | Taille | `OpenableColumns.SIZE` puis lecture plafonnée à 8 Mo ; PDF : `statSize` | `NSURLFileSizeKey` puis `NSData` | Non |
 | Message PDF non lisible | mentionne Android | jamais affiché (PDFKit toujours présent) | Non |
 
-Écarts avec le web (§9 de `specs/04`), à valider :
+Écarts avec le web (§9 de `../docs/specs/04`), à valider :
 
 1. **Formats** : Excel (`.xls`, `.xlsx`, `.xlsm`, `.ods`) non lu (aucune bibliothèque au catalogue) ; le fichier reste sélectionnable et
    l'application demande d'exporter en CSV. Textes adaptés : « PDF ou CSV » (description, sous-texte du menu « Ajouter »).
@@ -284,12 +284,12 @@ une plateforme ajouté) :
 
 Écarts Android / iOS : aucun. Bandeau, dialogue et historique sont 100 % Compose ; aucun composant système (pas de notification).
 
-Écarts avec le web (§5.10, §10.1, §10.2 de `specs/04`), à valider :
+Écarts avec le web (§5.10, §10.1, §10.2 de `../docs/specs/04`), à valider :
 
 1. **Période envoyée** : toujours explicite (`?month=AAAA-MM` ou `?year=AAAA`) et calculée sur la date **locale** ; le web laisse parfois le
    serveur prendre le mois UTC. Une réponse pour une autre période est refusée (« Bilan indisponible pour le moment. »).
 2. **Montants** : total, écart et lignes « Où part l'argent » formatés sur l'appareil dans la devise du profil (formateur commun) ; les
-   points clés et pistes restent ceux du serveur, en français avec « € » arrondi (voir `BACKEND-GAPS.md`). En anglais, une ligne
+   points clés et pistes restent ceux du serveur, en français avec « € » arrondi (voir `../docs/BACKEND-GAPS.md`). En anglais, une ligne
    « These notes are written in French for now. » est ajoutée sous ces textes.
 3. **Erreur du dialogue** : « Bilan indisponible pour le moment. » plus un bouton « Réessayer » (absent du web). « J'ai compris » n'apparaît
    qu'une fois le bilan chargé ; la croix ferme dans tous les états.

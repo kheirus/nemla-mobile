@@ -2,7 +2,7 @@
 
 Ce document ne contient aucun secret. Clés de signature, mots de passe, identifiants de comptes développeur et jetons d'API restent
 hors du dépôt (variables d'environnement, propriétés Gradle de l'utilisateur, trousseau macOS, secrets de la CI).
-Références : `ARCHITECTURE.md` §5, `BACKEND-GAPS.md`, `specs/01` §2.7 et §5.
+Références : `ARCHITECTURE.md` §5, `../docs/BACKEND-GAPS.md`, `../docs/specs/01` §2.7 et §5.
 
 ## 1. Ce que l'application envoie réellement (base des déclarations)
 
@@ -91,14 +91,14 @@ sous-traitance.
 
 ## 4. Bloquants avant soumission
 
-1. **Suppression de compte** : `DELETE /api/public/account` (`BACKEND-GAPS.md`) ; le bouton existe, le port renvoie `NotSupportedYet`.
+1. **Suppression de compte** : `DELETE /api/public/account` (`../docs/BACKEND-GAPS.md`) ; le bouton existe, le port renvoie `NotSupportedYet`.
    Corriger aussi la purge (audio du bucket `voice-notes`, email en clair dans `deleted_accounts`). Exigé par les deux stores, ainsi
    qu'une page web de demande de suppression pour Google Play.
-2. **Politique de confidentialité** publiée à une URL stable (brouillon : `PRIVACY-POLICY-DRAFT.md`, relecture juridique requise) et
+2. **Politique de confidentialité** publiée à une URL stable (brouillon : `../docs/PRIVACY-POLICY-DRAFT.md`, relecture juridique requise) et
    liée depuis l'application (Mon espace) et les fiches.
 3. **Lien de réinitialisation du mot de passe** : App Links (Android) et Universal Links (iOS) déclarés dans Supabase, écran
    « Nouveau mot de passe » dans l'application (ROADMAP lot 1).
-4. **Sécurité backend** (`BACKEND-GAPS.md`) : RLS `user_quotas` et `profiles.suspended`, quotas et limites de taille de `/transcribe`
+4. **Sécurité backend** (`../docs/BACKEND-GAPS.md`) : RLS `user_quotas` et `profiles.suspended`, quotas et limites de taille de `/transcribe`
    et `/parse/recurring`, statuts 401/402/429 de la passerelle IA, réponses HTML, dépendance `xlsx`, anonymisation serveur de l'IBAN
    compact.
 5. **Sous-traitants** déclarés (registre RGPD, contrats, transferts hors UE vers OpenAI et Google) ; mention dans la politique.
@@ -158,4 +158,4 @@ Seules des fonctions présentes dans l'application sont citées. Pas d'import de
 
 - **Keywords** (App Store, 100 characters): `budget,expenses,voice,dictation,spending tracker,personal finance,monthly report,savings`
 
-À noter pour l'anglais : les points clés des bilans sont encore rédigés en français par le serveur (`BACKEND-GAPS.md`).
+À noter pour l'anglais : les points clés des bilans sont encore rédigés en français par le serveur (`../docs/BACKEND-GAPS.md`).

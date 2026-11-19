@@ -82,7 +82,7 @@ en attente depuis le tableau de bord, `feature:dashboard` émet un `PendingRevie
 `shared` le confie au port `PendingReviewOpener` (implémenté par `feature:voice` au-dessus de `VoiceReviewStore`) puis ouvre `voiceGraph`.
 
 Les bilans (lot 6) suivent le même principe : `feature:dashboard` expose l'emplacement `reportNotice` (rendu juste après les alertes
-de budget, position 4 de `specs/04` §5.2) que `shared` remplit avec `ReportArrivalNotice`, et `feature:settings` expose `reportHistory`
+de budget, position 4 de `../docs/specs/04` §5.2) que `shared` remplit avec `ReportArrivalNotice`, et `feature:settings` expose `reportHistory`
 (onglet « Bilans ») que `shared` remplit avec `ReportHistory`. Les deux ouvrent `ReportDialog` de `feature:reports`, qui ne connaît que
 des cas d'usage (`LoadPeriodReport`, `FindArrivedReports`, `MarkReportViewed`, `ListReportHistory`).
 
@@ -138,14 +138,14 @@ UI (Compose)  ──action──▶  ViewModel  ──▶  cas d'usage  ──�
 
 ### Accès au backend
 
-L'analyse du code web (`docs/specs/01-api-contracts.md`) montre trois canaux, dont un inutilisable par le mobile :
+L'analyse du code web (`../docs/specs/01-api-contracts.md`) montre trois canaux, dont un inutilisable par le mobile :
 
 1. **Supabase Auth (GoTrue)** : inscription, connexion, rafraîchissement, mot de passe oublié. Utilisable tel quel.
 2. **PostgREST + RLS** : profil, catégories, charges fixes, quotas, montants et dates des dépenses. Utilisable tel quel.
 3. **Endpoints `/api/public/*`** : dictée, transcription, import, charges fixes, suggestion de budget, bilan. Utilisables tels quels.
 4. **Server functions TanStack** : libellés de dépenses (chiffrés), transcription, matérialisation des charges fixes,
    suppression de compte. **Non appelables par le mobile.** Des endpoints REST équivalents doivent être ajoutés au backend
-   (liste dans `docs/BACKEND-GAPS.md`). Tant qu'ils n'existent pas, les fonctions concernées restent derrière leurs ports
+   (liste dans `../docs/BACKEND-GAPS.md`). Tant qu'ils n'existent pas, les fonctions concernées restent derrière leurs ports
    avec une implémentation qui renvoie `AppError.NotSupportedYet`.
 
 Configuration (`BackendConfig`) : `supabaseUrl`, `supabasePublishableKey`, `apiBaseUrl`. Fournie au démarrage par chaque
@@ -212,7 +212,7 @@ calendrier (bandeau des 3 derniers jours, décembre, candidats M−1…M−24 et
 
 `StatementParsing` (lot 5) : le mobile n'appelle **jamais** `/import/file`, même en repli, car cet endpoint reçoit le fichier brut.
 `NemlaStatementParsingEngine` envoie le seul texte anonymisé à l'endpoint **proposé** `POST /api/public/import/text`
-(contrat dans `docs/BACKEND-GAPS.md`). Son `availability()` sonde l'endpoint avec un corps vide `{}` et ne laisse partir le texte que sur
+(contrat dans `../docs/BACKEND-GAPS.md`). Son `availability()` sonde l'endpoint avec un corps vide `{}` et ne laisse partir le texte que sur
 une réponse JSON 400, 401, 413, 422 ou 429 (sonde « fermée par défaut ») : 404, 405, corps non JSON ou erreur de route de l'hébergeur web
 (`500 Only HTML requests are supported here`) rendent le moteur indisponible (`not_supported`) avant tout envoi du texte ; hors ligne,
 délai dépassé et autres 5xx le rendent aussi indisponible ; et `core:data` traduit cet échec en `AppError.NotSupportedYet` (l'interface
@@ -238,11 +238,11 @@ fichier : le champ `kind` n'est donc pas envoyé (point à arbitrer, voir ROADMA
 | Minimisation | Aucune donnée financière au repos (lots 1 à 3 : le tableau de bord garde ses données en mémoire, dans le ViewModel). Audio en mémoire uniquement : jamais écrit sur disque ni téléversé dans le bucket `voice-notes` (le WAV part directement en multipart vers `voice/process`), tampons remis à zéro après envoi, refus ou annulation. Enregistrement annulé quand l'application passe en arrière-plan. La dictée en attente de revue reste en mémoire et est oubliée à la déconnexion ou au changement de compte. Relevés (lot 5) : le fichier n'est ni copié ni mis en cache (lecture du flux du sélecteur, iOS en mode ouverture sans copie), les octets lus sont remis à zéro après décodage, le texte extrait vit dans le ViewModel le temps de l'import ; seul le texte anonymisé quitte l'appareil ; ni nom de fichier, ni contenu, ni texte anonymisé dans les journaux (type d'erreur, format et longueur seulement). Bilans (lot 6) : calculés par le serveur à chaque ouverture et gardés dans le ViewModel du dialogue ; seules les dates des dépenses confirmées sont lues pour l'historique, sans montant ni libellé. |
 | Consentement | Envoi de données à une IA distante soumis à un accord explicite, par niveau de sensibilité, révocable dans Mon espace › Préférences (lot 4 : « Retirer mon accord » retire tous les niveaux). La dictée (FAB et bouton « Dicter ») exige le niveau `PERSONAL` : dialogue avant la première dictée et à chaque `ConsentRequired` du routeur ; refus = rien n'est enregistré ni envoyé. L'import de relevé exige `ANONYMIZED` (couvert aussi par `PERSONAL`) : dialogue propre à l'import avant la première lecture et sur `ConsentRequired` ; refus = rien n'est lu ni envoyé. |
 | Apprentissage | `record_category_correction` reçoit la clé marchand normalisée et un `p_label` vide (le RPC l'ignore) : le libellé ne quitte pas l'appareil pour l'apprentissage. |
-| Droits | Suppression de compte : bouton et confirmation dans Mon espace, port `AccountRepository.deleteAccount` en `NotSupportedYet` (message explicite, rien n'est supprimé) tant que `DELETE /api/public/account` n'existe pas. Export des données : absent du web et du backend, non construit (voir `BACKEND-GAPS.md`). |
+| Droits | Suppression de compte : bouton et confirmation dans Mon espace, port `AccountRepository.deleteAccount` en `NotSupportedYet` (message explicite, rien n'est supprimé) tant que `DELETE /api/public/account` n'existe pas. Export des données : absent du web et du backend, non construit (voir `../docs/BACKEND-GAPS.md`). |
 | Traceurs | Aucun SDK d'analyse, de publicité ou de suivi. Manifeste de confidentialité iOS (`PrivacyInfo.xcprivacy`) déclaré sans collecte tierce. |
 | Code | R8 activé en release. Aucun secret dans le dépôt ni dans le binaire. |
 
-Les points qui relèvent du backend (RLS, conservation, sous-traitants) sont dans `docs/BACKEND-GAPS.md`.
+Les points qui relèvent du backend (RLS, conservation, sous-traitants) sont dans `../docs/BACKEND-GAPS.md`.
 
 ## 6. Parité Android / iOS
 
