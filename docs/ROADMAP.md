@@ -234,7 +234,7 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
 ## Reprise du backend Lovable et mise en production (lots R0 à R5, M7 à M11) ☐ (validé le 19/11/2026, prochain : R0, M7 possible en parallèle)
 On garde le code web de Lovable (TanStack Start, Supabase) sur les comptes du propriétaire, avec les correctifs indispensables et les
 endpoints qui manquent au mobile, pour aller en production avant toute migration. Plan, chiffrage et arbitrages : `docs/LOVABLE-EXIT-PLAN.md`.
-- Lots R0 à R5 : dépôt `nemla-web` (sortie de Lovable, Mistral, hébergement, sécurité, endpoints, pages légales).
+- Lots R0 à R5 : dépôt `voxbudget` (sortie de Lovable, Mistral, hébergement, sécurité, endpoints, pages légales).
 - Lot M7 — Notifications locales ☐ : rappel de 20 h, bilan arrivé, alerte de budget, bannières in-app ; indépendant des lots R.
 - Lot M8 — Dépenses complètes ☐ : libellés, recherche par mot-clé, création manuelle, renommage, charges fixes, astuces (après R4).
 - Lot M9 — Relevés en local ☐ : lecture CSV et PDF sur l'appareil, catégorisation locale, enregistrement (après R4).

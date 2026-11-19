@@ -26,7 +26,8 @@ Android / iOS (KMP)  ──HTTPS──►  nemla.app (TanStack Start, Node, cont
         └──► PostgREST (lectures sans libellé, déjà fait aux lots 3 à 6)
 ```
 
-- **Code** : synchronisation GitHub de Lovable vers un dépôt du propriétaire (`nemla-web`), puis Lovable n'est plus utilisé.
+- **Code** : synchronisation GitHub de Lovable vers le dépôt du propriétaire `voxbudget`, branche `main`
+  (active et à jour le 19/11/2026), puis Lovable n'est plus utilisé.
   Les lots R1 à R5 se font **dans ce dépôt**, cloné sur le Mac, avec sa propre conversation Claude Code.
 - **Base** : nouveau projet Supabase du propriétaire en région UE, schéma recréé à partir de `supabase/migrations` du dépôt web.
   Pas de reprise de données (aucun vrai utilisateur ; les comptes de test sont recréés).
@@ -42,7 +43,7 @@ Android / iOS (KMP)  ──HTTPS──►  nemla.app (TanStack Start, Node, cont
 ## 3. Lots
 
 Règles inchangées (`CLAUDE.md`) : une conversation neuve par lot, code écrit par Opus 5.5, Fable 5.2 pour la conception, les contrats et
-les revues de sécurité. Lots R : dépôt `nemla-web` (fin de lot : lint, tests, build, image Docker). Lots M : ce dépôt (fin de lot habituelle).
+les revues de sécurité. Lots R : dépôt `voxbudget` (fin de lot : lint, tests, build, image Docker). Lots M : ce dépôt (fin de lot habituelle).
 
 | Lot | Contenu | Modèle | Jetons (M) | Coût équivalent API |
 |---|---|---|---|---|
@@ -119,7 +120,7 @@ Les textes juridiques sont rédigés par Claude comme brouillons ; leur relectur
 
 ## 6. Ce qui reste à faire par le propriétaire
 
-- Activer la synchronisation GitHub dans Lovable, puis résilier Lovable une fois R2 déployé et vérifié.
+- ☑ Synchronisation GitHub active (dépôt `voxbudget`, constatée le 19/11/2026). Résilier Lovable une fois R2 déployé et vérifié.
 - Créer et posséder les comptes : Supabase (UE), Scaleway, Mistral, Apple Developer, Google Play.
 - Signer les DPA ; faire relire CGU, politique de confidentialité, mentions légales et AIPD.
 - Tester chaque lot sur appareil Android et simulateur iOS (liste d'essais fournie à la fin de chaque lot).
