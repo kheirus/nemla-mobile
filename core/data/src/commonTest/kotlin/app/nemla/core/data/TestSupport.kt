@@ -12,6 +12,7 @@ import app.nemla.core.data.remote.KtorCategoryRepository
 import app.nemla.core.data.remote.KtorDeferredDebitRepository
 import app.nemla.core.data.remote.KtorExpenseRepository
 import app.nemla.core.data.remote.KtorExpenseReviewRepository
+import app.nemla.core.data.remote.KtorInboxRepository
 import app.nemla.core.data.remote.KtorProfileRepository
 import app.nemla.core.data.remote.KtorQuotaRepository
 import app.nemla.core.data.remote.KtorRecurringChargeRepository
@@ -114,6 +115,7 @@ internal class DataHarness(
     val recurring = KtorRecurringChargeRepository(postgrest)
     val debits = KtorDeferredDebitRepository(postgrest)
     val reports = KtorReportRepository(postgrest)
+    val inbox = KtorInboxRepository(postgrest, profiles, clock)
 
     fun on(
         method: String,

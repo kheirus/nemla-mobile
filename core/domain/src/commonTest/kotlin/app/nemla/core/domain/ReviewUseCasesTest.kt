@@ -11,6 +11,7 @@ import app.nemla.core.domain.model.CategoryOutcome
 import app.nemla.core.domain.model.CategoryType
 import app.nemla.core.domain.model.ExpenseDraft
 import app.nemla.core.domain.model.ExpenseId
+import app.nemla.core.domain.model.NoticeGroup
 import app.nemla.core.domain.model.ReviewDecision
 import app.nemla.core.domain.model.ReviewedExpense
 import app.nemla.core.domain.model.VoiceEntryId
@@ -24,6 +25,8 @@ import kotlin.test.assertTrue
 
 class ReviewUseCasesTest {
     private val reviews = FakeExpenseReviewRepository()
+    private val notifier = FakeNotifier()
+    private val refresh = refreshWith(notifier)
     private val day = LocalDate(2026, 11, 16)
     private val groceries = category("c-1", "Courses")
     private val leisure = category("c-2", "Loisirs")
@@ -48,7 +51,7 @@ class ReviewUseCasesTest {
                     ReviewDecision(draft("e-1", "Marché"), 1_000, day, groceries.id),
                     ReviewDecision(draft("e-2", "Cinéma Pathé"), 1_250, LocalDate(2026, 11, 15), leisure.id),
                 )
-            val result = ConfirmReviewedExpenses(reviews)(VoiceEntryId("v-1"), decisions, listOf(groceries, leisure))
+            val result = ConfirmReviewedExpenses(reviews, refresh)(VoiceEntryId("v-1"), decisions, listOf(groceries, leisure))
             assertEquals(AppResult.Success(Unit), result)
             assertEquals(
                 listOf(
@@ -58,6 +61,7 @@ class ReviewUseCasesTest {
                 reviews.confirmed,
             )
             assertEquals(listOf(VoiceEntryId("v-1")), reviews.marked)
+            assertEquals(listOf(NoticeGroup.REPORT_ARRIVAL, NoticeGroup.DAILY_REMINDER), notifier.scheduleCalls)
         }
 
     @Test
@@ -68,7 +72,7 @@ class ReviewUseCasesTest {
                     ReviewDecision(draft("e-1", "Marché"), 1_000, day, groceries.id),
                     ReviewDecision(draft("e-2", "Cinéma Pathé"), 1_000, day, leisure.id),
                 )
-            ConfirmReviewedExpenses(reviews)(null, decisions, listOf(groceries, leisure))
+            ConfirmReviewedExpenses(reviews, refresh)(null, decisions, listOf(groceries, leisure))
             assertEquals(
                 listOf(
                     CategoryOutcome(ExpenseId("e-1"), "marche", groceries.id, "Courses", "Courses", wasCorrection = false),
@@ -84,7 +88,7 @@ class ReviewUseCasesTest {
     fun amountChangesAreLoggedAsCorrectionsAndUnusableKeysAreNotLearned() =
         runTest {
             val decisions = listOf(ReviewDecision(draft("e-1", "le 12"), 900, day, groceries.id))
-            ConfirmReviewedExpenses(reviews)(null, decisions, listOf(groceries))
+            ConfirmReviewedExpenses(reviews, refresh)(null, decisions, listOf(groceries))
             assertTrue(reviews.outcomes.isEmpty())
             assertEquals(1_000, reviews.corrections.single().suggestedAmountCents)
             assertEquals(900, reviews.corrections.single().finalAmountCents)
@@ -95,10 +99,11 @@ class ReviewUseCasesTest {
         runTest {
             reviews.confirmResult = AppResult.Failure(AppError.Network.Offline)
             val decisions = listOf(ReviewDecision(draft("e-1", "Marché"), 1_000, day, groceries.id))
-            val result = ConfirmReviewedExpenses(reviews)(VoiceEntryId("v-1"), decisions, listOf(groceries))
+            val result = ConfirmReviewedExpenses(reviews, refresh)(VoiceEntryId("v-1"), decisions, listOf(groceries))
             assertEquals(AppResult.Failure(AppError.Network.Offline), result)
             assertTrue(reviews.marked.isEmpty())
             assertTrue(reviews.outcomes.isEmpty())
+            assertTrue(notifier.scheduleCalls.isEmpty())
         }
 
     @Test
@@ -106,14 +111,14 @@ class ReviewUseCasesTest {
         runTest {
             reviews.outcomeResult = AppResult.Failure(AppError.Server(500))
             val decisions = listOf(ReviewDecision(draft("e-1", "Marché"), 1_000, day, null))
-            assertEquals(AppResult.Success(Unit), ConfirmReviewedExpenses(reviews)(null, decisions, listOf(groceries)))
+            assertEquals(AppResult.Success(Unit), ConfirmReviewedExpenses(reviews, refresh)(null, decisions, listOf(groceries)))
         }
 
     @Test
     fun linesWithoutIdentifierAreRejected() =
         runTest {
             val decisions = listOf(ReviewDecision(draft(null, "Marché"), 1_000, day, groceries.id))
-            val result = ConfirmReviewedExpenses(reviews)(null, decisions, emptyList())
+            val result = ConfirmReviewedExpenses(reviews, refresh)(null, decisions, emptyList())
             assertEquals(AppResult.Failure(AppError.Validation(ValidationCode.INVALID_INPUT)), result)
             assertTrue(reviews.confirmed.isEmpty())
         }

@@ -26,4 +26,6 @@
   <string name="reports_history_empty">Aucun bilan disponible pour l'instant : vos bilans apparaîtront ici à la fin du premier mois rempli.</string>
   <string name="reports_history_failed">Historique indisponible pour le moment.</string>
   <string name="reports_history_annual">Année</string>
+  <string name="reports_title_generic">Votre bilan</string>
+  <string name="reports_inbox_dismiss">Masquer la notification</string>
 </resources>

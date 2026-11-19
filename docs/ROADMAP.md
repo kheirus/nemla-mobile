@@ -324,11 +324,54 @@ Retours du 18/11/2026 :
 - ☑ Paysage interactif : période et total en tête, filtre des catégories, toucher une barre ouvre le mois (vérifié sur iPhone 15).
 - Reste : icône d'application (logo `nemla-512.png` du web à récupérer, voir `../docs/specs/03` §11).
 
-## Reprise du backend Lovable et mise en production (lots R0 à R5, M7 à M11) ☐ (validé le 19/11/2026, prochain : R0, M7 possible en parallèle)
+## Lot 7 — Notifications locales ☑
+Décision du propriétaire (19/11/2026) : notifications locales, sans Firebase ni changement backend ; push serveur plus tard.
+Contrat : `ARCHITECTURE.md` §3 « Notifications (lot 7) ».
+- ☑ `core:domain` (19/11/2026) : modèle `Notifications.kt` (`LocalNotice`, `ScheduledNotice`, `NoticeGroup`, `InboxItem`, `ReachedBudget`),
+  `NotificationPlanner` (rappels 20 h sur 14 jours, bilans à 10 h le premier jour du bandeau, clés `AAAA-MM:<catégorie>`), ports
+  `LocalNotifier`, `NotificationMemory`, `InboxRepository`, cas d'usage `RefreshScheduledNotifications`, `SetDailyReminder`,
+  `AlertReachedBudgets`, `DeliverPushInbox`, `ListInAppNotices`, `DismissInboxItem`, `ClearNotifications` ; `ConfirmReviewedExpenses`
+  replanifie après succès. 23 nouveaux tests (planificateur : mois de 30 et 31 jours, février,
+  février bissextile, décembre, après 20 h, dépense confirmée ; un test par cas d'usage au moins).
+- ☑ `core:data` (19/11/2026) : `KtorInboxRepository` (`user_notifications` non vues, `payload` lu comme un `ReportSheet` via le
+  mappage du bilan ; payload invalide → bilan absent, ligne de canal ou de type inconnu ignorée ; `seen_at`, `delivered_at`),
+  `SecureStoreNotificationMemory` (`notifications.v1`, mois courant et précédent). 8 nouveaux tests MockEngine et mémoire.
+- ☑ `core:notifications` (nouveau, 19/11/2026) : Android (4 canaux créés à la demande, `AlarmManager.setAndAllowWhileIdle`, récepteur
+  non exporté, reprogrammation au redémarrage depuis des `SharedPreferences` privées, `POST_NOTIFICATIONS` sur Android 13+, icône
+  monochrome, alerte de budget en `VISIBILITY_PRIVATE`) et iOS (`UNUserNotificationCenter`, déclencheurs calendaires non répétitifs,
+  `installNotificationPresenter`), `NotificationCopy` fr/en, `rememberNotificationPermissionRequest`. Manifeste de la bibliothèque
+  fusionné dans l'APK (vérifié). 5 tests. Module Koin ajouté à `shared` (nécessaire au graphe de `ConfirmReviewedExpenses`).
+- ☑ `core:domain` / `core:notifications` (partie B, 19/11/2026) : cas d'usage `GetNotificationAccess` ; tous les cas d'usage de
+  notification enregistrés une seule fois dans `coreNotificationsModule` (retirés de `featureVoiceModule`). 1 nouveau test.
+- ☑ `core:designsystem` (19/11/2026) : icône `ListChecks`.
+- ☑ `feature:settings` (19/11/2026) : ligne bordée « Rappel quotidien à 20 h » + interrupteur dans Préférences, allumé seulement si
+  `daily_reminder` **et** permission accordée ; activation → demande de permission si besoin (`rememberNotificationPermissionRequest`),
+  puis `SetDailyReminder` et « Rappel activé pour 20 h » ; refus → « Notifications refusées. Autorisez-les dans les réglages du
+  téléphone. » ; désactivation → « Rappel désactivé » ; échec → interrupteur restauré et « Enregistrement impossible ». Encadré PWA
+  non porté. 5 nouveaux tests (19 dans le module).
+- ☑ `feature:dashboard` (19/11/2026) : `AlertReachedBudgets` après chaque chargement (mois calendaire courant, devise du profil),
+  emplacement `notificationBanners` en position 5. 2 nouveaux tests (45 dans le module).
+- ☑ `feature:reports` (19/11/2026) : `InboxBanners` (§5.11 : `ListChecks` pour le rappel, `BellRing` pour les bilans, « Voir » sauf
+  rappel, X « Masquer la notification »), relu à chaque `STARTED` ; `ReportDialog` ouvert sur le `payload` (`ReportRequest.Delivered`),
+  erreur sans `payload`, « Réessayer » seulement avec une période. 5 nouveaux tests (14 dans le module).
+- ☑ `shared` (19/11/2026) : `NotificationCoordinator` (connexion et chaque `STARTED` de la racine : replanification puis messages
+  `push` ; changement de langue : replanification ; déconnexion : `ClearNotifications`), `InboxBanners` dans `notificationBanners`,
+  `installNotificationPresenter()` appelé par `startNemla`. 4 nouveaux tests ; `NemlaKoinTest` résout le coordinateur et les 8 cas
+  d'usage (10 tests JVM, 11 sur simulateur iOS).
+- Vérifié le 19/11/2026 : `spotlessApply`, `allTests` des modules touchés (JVM et simulateur iOS), `:androidApp:assembleDebug`,
+  `:shared:linkDebugFrameworkIosSimulatorArm64`. Notifications, permission et bannières jamais essayées sur appareil ni simulateur.
+- Reste à faire (reporté) :
+  - essais sur appareil Android (13+ et antérieur) et simulateur iOS : permission, rappel de 20 h, reprogrammation après redémarrage,
+    « Budget atteint », bannières in-app, messages `push`, changement de langue, déconnexion : non faits ;
+  - toucher une notification ouvre le tableau de bord, sans lien profond vers le dialogue de bilan ;
+  - icône de notification Android provisoire (monogramme « n ») en attendant le logo ;
+  - push serveur (table de jetons, émetteur planifié, `../docs/BACKEND-GAPS.md`) : hors lot.
+
+## Reprise du backend Lovable et mise en production (lots R0 à R5, M7 à M11) ☐ (validé le 19/11/2026, prochain : R0, M7 fait)
 On garde le code web de Lovable (TanStack Start, Supabase) sur les comptes du propriétaire, avec les correctifs indispensables et les
 endpoints qui manquent au mobile, pour aller en production avant toute migration. Plan, chiffrage et arbitrages : `../docs/LOVABLE-EXIT-PLAN.md`.
 - Lots R0 à R5 : `../nemla-web` (dépôt `voxbudget`) (sortie de Lovable, Mistral, hébergement, sécurité, endpoints, pages légales).
-- Lot M7 — Notifications locales ☐ : rappel de 20 h, bilan arrivé, alerte de budget, bannières in-app ; indépendant des lots R.
+- Lot M7 — Notifications locales ☑ : fait sous le nom de lot 7 (voir plus haut), fusionné dans `main` le 19/11/2026.
 - Lot M8 — Dépenses complètes ☐ : libellés, recherche par mot-clé, création manuelle, renommage, charges fixes, astuces (après R4).
 - Lot M9 — Relevés en local ☐ : lecture CSV et PDF sur l'appareil, catégorisation locale, enregistrement (après R4).
 - Lot M10 — Compte et conformité ☐ : CGU, confidentialité, consentements, suppression et export, nouveau mot de passe (après R4 et R5).

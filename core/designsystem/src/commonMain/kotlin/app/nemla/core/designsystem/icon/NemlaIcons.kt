@@ -329,6 +329,10 @@ object NemlaIcons {
         )
     }
 
+    val ListChecks: ImageVector by lazy {
+        lucide("ListChecks", "M3 17l2 2 4-4", "M3 7l2 2 4-4", "M13 6h8", "M13 12h8", "M13 18h8")
+    }
+
     val TrendingUp: ImageVector by lazy {
         lucide("TrendingUp", "M16 7h6v6", "M22 7l-8.5 8.5-5-5L2 17")
     }

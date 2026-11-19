@@ -16,6 +16,8 @@ import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
 import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
+import app.nemla.core.domain.port.InboxRepository
+import app.nemla.core.domain.port.NotificationMemory
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
@@ -68,6 +70,8 @@ class CoreDataModuleTest {
             koin.get<RecurringChargeParser>()
             koin.get<BudgetAdvisor>()
             koin.get<PeriodReviewer>()
+            koin.get<InboxRepository>()
+            koin.get<NotificationMemory>()
             koin.get<ConnectivityMonitor>()
             assertIs<SessionManager>(koin.get<SessionTokenStore>())
             assertSame(koin.get<SessionTokenStore>(), koin.get<SessionManager>())

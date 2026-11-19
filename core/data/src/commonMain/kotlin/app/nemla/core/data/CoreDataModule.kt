@@ -18,11 +18,13 @@ import app.nemla.core.data.ai.RoutedSpeechTranscriber
 import app.nemla.core.data.ai.RoutedStatementImporter
 import app.nemla.core.data.ai.RoutedVoiceExpenseCapturer
 import app.nemla.core.data.consent.SecureStoreAiConsentRepository
+import app.nemla.core.data.notifications.SecureStoreNotificationMemory
 import app.nemla.core.data.preferences.SecureStorePreferencesRepository
 import app.nemla.core.data.remote.KtorCategoryRepository
 import app.nemla.core.data.remote.KtorDeferredDebitRepository
 import app.nemla.core.data.remote.KtorExpenseRepository
 import app.nemla.core.data.remote.KtorExpenseReviewRepository
+import app.nemla.core.data.remote.KtorInboxRepository
 import app.nemla.core.data.remote.KtorProfileRepository
 import app.nemla.core.data.remote.KtorQuotaRepository
 import app.nemla.core.data.remote.KtorRecurringChargeRepository
@@ -41,6 +43,8 @@ import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeferredDebitRepository
 import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
+import app.nemla.core.domain.port.InboxRepository
+import app.nemla.core.domain.port.NotificationMemory
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
@@ -95,6 +99,8 @@ val coreDataModule: Module =
         single<ReportRepository> { KtorReportRepository(postgrest = get()) }
         single<AccountRepository> { UnsupportedAccountRepository }
         single<PreferencesRepository> { SecureStorePreferencesRepository(store = get(), logger = get()) }
+        single<InboxRepository> { KtorInboxRepository(postgrest = get(), profiles = get(), clock = Clock.System) }
+        single<NotificationMemory> { SecureStoreNotificationMemory(store = get(), clock = Clock.System, logger = get()) }
 
         single<ConnectivityMonitor> { AssumeOnlineConnectivityMonitor }
         single<AiContextSource> { RepositoryAiContextSource(connectivity = get(), quotas = get(), consents = get()) }

@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,11 +21,13 @@ import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaChoiceCard
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaSelectField
+import app.nemla.core.designsystem.component.NemlaSwitch
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.ThemeMode
+import app.nemla.core.notifications.rememberNotificationPermissionRequest
 import app.nemla.feature.settings.common.Caption
 import app.nemla.feature.settings.common.NoticeBanner
 import app.nemla.feature.settings.common.PanelCard
@@ -49,6 +52,8 @@ import app.nemla.feature.settings.resources.preferences_country_xof
 import app.nemla.feature.settings.resources.preferences_currency
 import app.nemla.feature.settings.resources.preferences_currency_option
 import app.nemla.feature.settings.resources.preferences_currency_updated
+import app.nemla.feature.settings.resources.preferences_daily_reminder
+import app.nemla.feature.settings.resources.preferences_daily_reminder_help
 import app.nemla.feature.settings.resources.preferences_dark
 import app.nemla.feature.settings.resources.preferences_dictation_english
 import app.nemla.feature.settings.resources.preferences_dictation_french
@@ -57,6 +62,9 @@ import app.nemla.feature.settings.resources.preferences_english
 import app.nemla.feature.settings.resources.preferences_failed
 import app.nemla.feature.settings.resources.preferences_french
 import app.nemla.feature.settings.resources.preferences_light
+import app.nemla.feature.settings.resources.preferences_notifications_denied
+import app.nemla.feature.settings.resources.preferences_reminder_disabled
+import app.nemla.feature.settings.resources.preferences_reminder_enabled
 import app.nemla.feature.settings.resources.preferences_title
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -65,7 +73,18 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 internal fun PreferencesPanelRoute(viewModel: PreferencesViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val requestPermission =
+        rememberNotificationPermissionRequest { granted ->
+            viewModel.onAction(PreferencesAction.NotificationPermissionAnswered(granted))
+        }
     LaunchedEffect(viewModel) { viewModel.onAction(PreferencesAction.Opened) }
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                PreferencesEffect.RequestNotificationPermission -> requestPermission()
+            }
+        }
+    }
     PreferencesPanel(state = state, onAction = viewModel::onAction)
 }
 
@@ -135,6 +154,23 @@ internal fun PreferencesPanel(
                 }
             }
             val shape = RoundedCornerShape(NemlaTheme.radius.xl)
+            Row(
+                modifier = Modifier.fillMaxWidth().border(1.dp, NemlaTheme.colors.border, shape).padding(NemlaTheme.spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val title = stringResource(Res.string.preferences_daily_reminder)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs)) {
+                    Text(title, style = NemlaTheme.typography.bodyStrong)
+                    Caption(stringResource(Res.string.preferences_daily_reminder_help))
+                }
+                NemlaSwitch(
+                    checked = state.dailyReminder,
+                    onCheckedChange = { onAction(PreferencesAction.ReminderToggled(it)) },
+                    contentDescription = title,
+                    enabled = !state.isSavingReminder,
+                )
+            }
             Column(
                 modifier = Modifier.fillMaxWidth().border(1.dp, NemlaTheme.colors.border, shape).padding(NemlaTheme.spacing.sm),
                 verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
@@ -187,6 +223,18 @@ private fun PreferencesMessage.text(): String =
 
         PreferencesMessage.ConsentRevoked -> {
             stringResource(Res.string.preferences_consent_revoked)
+        }
+
+        PreferencesMessage.ReminderEnabled -> {
+            stringResource(Res.string.preferences_reminder_enabled)
+        }
+
+        PreferencesMessage.ReminderDisabled -> {
+            stringResource(Res.string.preferences_reminder_disabled)
+        }
+
+        PreferencesMessage.NotificationsDenied -> {
+            stringResource(Res.string.preferences_notifications_denied)
         }
 
         PreferencesMessage.Failed -> {

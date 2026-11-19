@@ -10,6 +10,7 @@ import app.nemla.core.audio.VoiceRecorderFactory
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.common.AppResult
 import app.nemla.core.documents.DocumentTextReader
+import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.AppPreferences
 import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.BudgetPeriod
@@ -20,12 +21,16 @@ import app.nemla.core.domain.model.ExpenseEdit
 import app.nemla.core.domain.model.ExpenseId
 import app.nemla.core.domain.model.ExpenseQuery
 import app.nemla.core.domain.model.GlobalBudget
+import app.nemla.core.domain.model.LocalNotice
+import app.nemla.core.domain.model.NoticeGroup
+import app.nemla.core.domain.model.NotificationAccess
 import app.nemla.core.domain.model.Password
 import app.nemla.core.domain.model.ProfileIdentity
 import app.nemla.core.domain.model.PseudoAvailability
 import app.nemla.core.domain.model.RecurringCharge
 import app.nemla.core.domain.model.RecurringChargeDraft
 import app.nemla.core.domain.model.RecurringChargeId
+import app.nemla.core.domain.model.ScheduledNotice
 import app.nemla.core.domain.model.Session
 import app.nemla.core.domain.model.SignUpOutcome
 import app.nemla.core.domain.model.SignUpRequest
@@ -38,6 +43,9 @@ import app.nemla.core.domain.port.DeferredDebitRepository
 import app.nemla.core.domain.port.DeviceLanguage
 import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
+import app.nemla.core.domain.port.InboxRepository
+import app.nemla.core.domain.port.LocalNotifier
+import app.nemla.core.domain.port.NotificationMemory
 import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
@@ -47,19 +55,25 @@ import app.nemla.core.domain.port.ReportRepository
 import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.StatementImporter
 import app.nemla.core.domain.port.VoiceExpenseCapturer
+import app.nemla.core.domain.usecase.AlertReachedBudgets
 import app.nemla.core.domain.usecase.BootstrapAndLoadProfile
 import app.nemla.core.domain.usecase.CaptureVoiceExpenses
+import app.nemla.core.domain.usecase.ClearNotifications
 import app.nemla.core.domain.usecase.ConfirmReviewedExpenses
 import app.nemla.core.domain.usecase.DeleteExpense
 import app.nemla.core.domain.usecase.DeletePendingExpense
+import app.nemla.core.domain.usecase.DeliverPushInbox
+import app.nemla.core.domain.usecase.DismissInboxItem
 import app.nemla.core.domain.usecase.FindArrivedReports
 import app.nemla.core.domain.usecase.FindLearnedExpenses
 import app.nemla.core.domain.usecase.GetDeferredDebit
 import app.nemla.core.domain.usecase.GetMonthlyQuota
+import app.nemla.core.domain.usecase.GetNotificationAccess
 import app.nemla.core.domain.usecase.GrantAiConsent
 import app.nemla.core.domain.usecase.ImportStatement
 import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
+import app.nemla.core.domain.usecase.ListInAppNotices
 import app.nemla.core.domain.usecase.ListRecurringCharges
 import app.nemla.core.domain.usecase.ListReportHistory
 import app.nemla.core.domain.usecase.LoadPeriodReport
@@ -68,9 +82,11 @@ import app.nemla.core.domain.usecase.MaterializeRecurringCharges
 import app.nemla.core.domain.usecase.ObserveAiConsents
 import app.nemla.core.domain.usecase.ObserveAuthState
 import app.nemla.core.domain.usecase.ObservePreferences
+import app.nemla.core.domain.usecase.RefreshScheduledNotifications
 import app.nemla.core.domain.usecase.RequestPasswordReset
 import app.nemla.core.domain.usecase.ResolveStartDestination
 import app.nemla.core.domain.usecase.SearchExpensesByDate
+import app.nemla.core.domain.usecase.SetDailyReminder
 import app.nemla.core.domain.usecase.SignIn
 import app.nemla.core.domain.usecase.SignOut
 import app.nemla.core.domain.usecase.SignUp
@@ -114,6 +130,7 @@ class NemlaKoinTest {
             single<SecureStore> { InMemorySecureStore() }
             single<MicrophonePermission> { GrantedMicrophone }
             single<VoiceRecorderFactory> { VoiceRecorderFactory { IdleRecorder } }
+            single<LocalNotifier> { SilentNotifier }
         }
 
     @BeforeTest
@@ -154,6 +171,8 @@ class NemlaKoinTest {
             koin.get<ListCategories>()
             koin.get<FindLearnedExpenses>()
             koin.get<ConfirmReviewedExpenses>()
+            koin.get<InboxRepository>()
+            koin.get<NotificationMemory>()
             koin.get<DeletePendingExpense>()
             koin.get<ObserveAiConsents>()
             koin.get<GrantAiConsent>()
@@ -163,6 +182,15 @@ class NemlaKoinTest {
             koin.get<SignOut>()
             koin.get<RequestPasswordReset>()
             koin.get<AppViewModel>()
+            koin.get<NotificationCoordinator>()
+            koin.get<RefreshScheduledNotifications>()
+            koin.get<GetNotificationAccess>()
+            koin.get<SetDailyReminder>()
+            koin.get<AlertReachedBudgets>()
+            koin.get<DeliverPushInbox>()
+            koin.get<ListInAppNotices>()
+            koin.get<DismissInboxItem>()
+            koin.get<ClearNotifications>()
             koin.get<ExpenseRepository>()
             koin.get<RecurringChargeRepository>()
             koin.get<RecurringChargeMaterializer>()
@@ -255,6 +283,24 @@ class NemlaKoinTest {
         val signedIn = AuthState.SignedIn(Session(UserId("u"), email = null, expiresAt = null))
         assertEquals(RootTarget.Home, rootTargetFor(signedIn, hadSession = false))
     }
+}
+
+private object SilentNotifier : LocalNotifier {
+    override suspend fun access(): NotificationAccess = NotificationAccess.DENIED
+
+    override suspend fun schedule(
+        group: NoticeGroup,
+        notices: List<ScheduledNotice>,
+        language: AppLanguage,
+    ): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun show(
+        notice: LocalNotice,
+        tag: String,
+        language: AppLanguage,
+    ): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun cancelAll(): AppResult<Unit> = AppResult.Success(Unit)
 }
 
 private object GrantedMicrophone : MicrophonePermission {

@@ -102,6 +102,7 @@ internal fun DashboardRoute(
     onOpenSettings: (Boolean) -> Unit,
     floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
+    notificationBanners: @Composable () -> Unit = {},
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -126,6 +127,7 @@ internal fun DashboardRoute(
         onAction = viewModel::onAction,
         floatingAction = floatingAction,
         reportNotice = reportNotice,
+        notificationBanners = notificationBanners,
     )
 }
 
@@ -135,6 +137,7 @@ internal fun DashboardScreen(
     onAction: (DashboardAction) -> Unit,
     floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
+    notificationBanners: @Composable () -> Unit = {},
 ) {
     val format = remember(state.language, state.currency) { DashboardFormat(state.language, state.currency) }
     val scrollBehavior = rememberNemlaTopBarScrollBehavior()
@@ -177,7 +180,7 @@ internal fun DashboardScreen(
                                 ),
                         verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap),
                     ) {
-                        DashboardContent(state, format, onAction, reportNotice, wide)
+                        DashboardContent(state, format, onAction, reportNotice, wide, notificationBanners)
                     }
                 }
             }
@@ -239,6 +242,7 @@ private fun DashboardContent(
     onAction: (DashboardAction) -> Unit,
     reportNotice: @Composable () -> Unit,
     wide: Boolean,
+    notificationBanners: @Composable () -> Unit,
 ) {
     NemlaSnackbarEffect(
         message = state.notice?.let { stringResource(it.resource()) },
@@ -272,6 +276,7 @@ private fun DashboardContent(
     if (state.view.pending.isNotEmpty()) PendingCard(state.view.pending, format, onAction)
     if (state.view.alerts.isNotEmpty()) AlertsCard(state.view.alerts, format) { onAction(DashboardAction.AdjustBudgetsClicked) }
     reportNotice()
+    notificationBanners()
     SearchCard(state, format, onAction)
     if (wide) {
         Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sectionGap), verticalAlignment = Alignment.Top) {

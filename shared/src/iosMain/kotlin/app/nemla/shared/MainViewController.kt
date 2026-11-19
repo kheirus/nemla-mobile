@@ -4,6 +4,7 @@ import androidx.compose.ui.window.ComposeUIViewController
 import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.designsystem.component.NemlaOrientationLock
 import app.nemla.core.network.BackendConfig
+import app.nemla.core.notifications.installNotificationPresenter
 import app.nemla.core.security.IosScreenProtection
 import platform.UIKit.UIViewController
 
@@ -19,6 +20,7 @@ fun startNemla(
             buildInfo = AppBuildInfo(isDebug),
         )
     koin.get<IosScreenProtection>().install()
+    installNotificationPresenter()
 }
 
 fun mainViewController(): UIViewController = ComposeUIViewController { App() }

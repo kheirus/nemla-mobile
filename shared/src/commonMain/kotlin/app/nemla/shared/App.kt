@@ -49,6 +49,7 @@ import app.nemla.feature.dashboard.navigateToDashboard
 import app.nemla.feature.onboarding.isOnboarding
 import app.nemla.feature.onboarding.navigateToOnboarding
 import app.nemla.feature.onboarding.onboardingScreen
+import app.nemla.feature.reports.InboxBanners
 import app.nemla.feature.reports.ReportArrivalNotice
 import app.nemla.feature.reports.ReportHistory
 import app.nemla.feature.settings.SettingsTab
@@ -76,6 +77,7 @@ internal data object SplashDestination
 @Composable
 fun App() {
     val viewModel = koinViewModel<AppViewModel>()
+    NotificationCoordinatorEffect()
     val preferences by viewModel.preferences.collectAsStateWithLifecycle()
     val loaded = preferences
     if (loaded == null) {
@@ -155,6 +157,7 @@ private fun NemlaNavHost(
                     )
                 },
                 reportNotice = { ReportArrivalNotice() },
+                notificationBanners = { InboxBanners() },
             )
             settingsScreen(
                 navController = navController,

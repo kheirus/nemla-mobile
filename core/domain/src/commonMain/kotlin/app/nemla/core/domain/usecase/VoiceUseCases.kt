@@ -66,6 +66,7 @@ class DeletePendingExpense(
 
 class ConfirmReviewedExpenses(
     private val reviews: ExpenseReviewRepository,
+    private val refreshNotifications: RefreshScheduledNotifications,
 ) {
     suspend operator fun invoke(
         voiceEntryId: VoiceEntryId?,
@@ -83,6 +84,7 @@ class ConfirmReviewedExpenses(
         }
         val names = categories.associate { it.id to it.name }
         decisions.forEach { learnFrom(it, voiceEntryId, names) }
+        refreshNotifications()
         return AppResult.Success(Unit)
     }
 

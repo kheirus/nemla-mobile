@@ -16,7 +16,7 @@
   <string name="settings_entry_profile">My profile</string>
   <string name="settings_entry_profile_help">Username, age, sex, household.</string>
   <string name="settings_entry_preferences">Preferences</string>
-  <string name="settings_entry_preferences_help">Currency, language, theme and AI consent.</string>
+  <string name="settings_entry_preferences_help">Currency, language, theme, reminder and AI consent.</string>
   <string name="settings_entry_card">My bank card</string>
   <string name="settings_entry_card_help">Immediate or deferred debit: it changes the date your card purchases leave your account.</string>
   <string name="settings_danger_title">Danger zone</string>
@@ -132,6 +132,11 @@
   <string name="preferences_ai_consent_none">No consent given: you will be asked before your next dictation.</string>
   <string name="preferences_ai_consent_revoke">Withdraw my consent</string>
   <string name="preferences_consent_revoked">Consent withdrawn: you will be asked again before your next dictation.</string>
+  <string name="preferences_daily_reminder">Daily reminder at 8 pm</string>
+  <string name="preferences_daily_reminder_help">Only if no expense has been entered yet that day.</string>
+  <string name="preferences_reminder_enabled">Reminder set for 8 pm</string>
+  <string name="preferences_reminder_disabled">Reminder turned off</string>
+  <string name="preferences_notifications_denied">Notifications blocked. Allow them in your phone settings.</string>
   <string name="preferences_failed">Save failed</string>
   <string name="card_title">My bank card</string>
   <string name="card_intro">Immediate or deferred debit: it changes the date your card purchases leave your account.</string>

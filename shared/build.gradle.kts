@@ -22,6 +22,7 @@ kotlin {
             implementation(projects.core.designsystem)
             implementation(projects.core.audio)
             implementation(projects.core.documents)
+            implementation(projects.core.notifications)
             implementation(projects.ai.api)
             implementation(projects.ai.local)
             implementation(projects.ai.remoteNemla)

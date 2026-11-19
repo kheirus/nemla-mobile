@@ -9,9 +9,12 @@ import app.nemla.core.domain.port.AiConsentRepository
 import app.nemla.core.domain.port.AuthRepository
 import app.nemla.core.domain.port.CategoryRepository
 import app.nemla.core.domain.port.DeviceLanguage
+import app.nemla.core.domain.port.ExpenseRepository
 import app.nemla.core.domain.port.ExpenseReviewRepository
+import app.nemla.core.domain.port.LocalNotifier
 import app.nemla.core.domain.port.PendingReviewOpener
 import app.nemla.core.domain.port.PreferencesRepository
+import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.QuotaRepository
 import app.nemla.core.domain.port.SpeechTranscriber
 import app.nemla.core.domain.port.VoiceExpenseCapturer
@@ -42,6 +45,10 @@ class FeatureVoiceModuleTest : MainDispatcherTest() {
                         single<SpeechTranscriber> { FakeTranscriber() }
                         single<PreferencesRepository> { FakePreferences() }
                         single<DeviceLanguage> { DeviceLanguage { AppLanguage.FR } }
+                        single<LocalNotifier> { FakeNotifier() }
+                        single<ProfileRepository> { UnreadableProfiles }
+                        single<ExpenseRepository> { NoExpenses }
+                        factory { testRefresh(get()) }
                     },
                     featureVoiceModule,
                 )

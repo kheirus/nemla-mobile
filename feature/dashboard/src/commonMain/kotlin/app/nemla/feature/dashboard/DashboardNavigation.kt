@@ -19,6 +19,7 @@ fun NavGraphBuilder.dashboardScreen(
     onOpenSettings: (categories: Boolean) -> Unit,
     floatingAction: @Composable (expanded: Boolean) -> Unit = {},
     reportNotice: @Composable () -> Unit = {},
+    notificationBanners: @Composable () -> Unit = {},
 ) {
     composable<DashboardDestination> {
         DashboardRoute(
@@ -27,6 +28,7 @@ fun NavGraphBuilder.dashboardScreen(
             onOpenSettings = onOpenSettings,
             floatingAction = floatingAction,
             reportNotice = reportNotice,
+            notificationBanners = notificationBanners,
         )
     }
 }

@@ -1,6 +1,5 @@
 package app.nemla.feature.reports
 
-import app.nemla.core.domain.model.ReviewPeriod
 import app.nemla.core.domain.usecase.CurrentLanguages
 import app.nemla.core.domain.usecase.FindArrivedReports
 import app.nemla.core.domain.usecase.ListReportHistory
@@ -21,7 +20,8 @@ val featureReportsModule: Module =
         factoryOf(::CurrentLanguages)
         single<ReportsClock> { SystemReportsClock }
         single<ReportsLanguage> { PreferredReportsLanguage(get()) }
-        viewModel { (period: ReviewPeriod) -> ReportDialogViewModel(period, get(), get()) }
+        viewModel { (request: ReportRequest) -> ReportDialogViewModel(request, get(), get()) }
         viewModelOf(::ReportNoticeViewModel)
         viewModelOf(::ReportHistoryViewModel)
+        viewModelOf(::InboxBannersViewModel)
     }

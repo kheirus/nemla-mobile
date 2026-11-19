@@ -5,14 +5,21 @@ import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AppLanguage
 import app.nemla.core.domain.model.Currency
 import app.nemla.core.domain.model.DateSpan
+import app.nemla.core.domain.model.InboxChannel
+import app.nemla.core.domain.model.InboxItemId
+import app.nemla.core.domain.model.InboxKind
+import app.nemla.core.domain.model.ReportSheet
 import app.nemla.core.domain.model.ReportYearGroup
 import app.nemla.core.domain.model.ReviewPeriod
 import app.nemla.core.domain.port.DeviceLanguage
+import app.nemla.core.domain.port.InboxRepository
 import app.nemla.core.domain.port.PeriodReviewer
 import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.ReportRepository
+import app.nemla.core.domain.usecase.DismissInboxItem
 import app.nemla.core.domain.usecase.FindArrivedReports
+import app.nemla.core.domain.usecase.ListInAppNotices
 import app.nemla.core.domain.usecase.ListReportHistory
 import app.nemla.core.domain.usecase.LoadPeriodReport
 import app.nemla.core.domain.usecase.MarkReportViewed
@@ -25,7 +32,9 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -36,7 +45,16 @@ class ReportsViewModelsTest : MainDispatcherTest() {
     private var language = AppLanguage.FR
 
     private fun dialog(period: ReviewPeriod = month(2026, 10)) =
-        ReportDialogViewModel(period, LoadPeriodReport(reviewer, FakeProfiles()), { language })
+        ReportDialogViewModel(ReportRequest.Compute(period), LoadPeriodReport(reviewer, FakeProfiles()), { language })
+
+    private fun delivered(
+        period: ReviewPeriod?,
+        sheet: ReportSheet?,
+    ) = ReportDialogViewModel(ReportRequest.Delivered(period, sheet), LoadPeriodReport(reviewer, FakeProfiles()), { language })
+
+    private val inbox = FakeInbox()
+
+    private fun banners() = InboxBannersViewModel(ListInAppNotices(inbox), DismissInboxItem(inbox), { language })
 
     private fun notice() = ReportNoticeViewModel(FindArrivedReports(reports), MarkReportViewed(reports), { today }, { language })
 
@@ -67,6 +85,106 @@ class ReportsViewModelsTest : MainDispatcherTest() {
             assertEquals(2, reviewer.calls.size)
             vm.onAction(ReportDialogAction.RetryClicked)
             assertEquals(2, reviewer.calls.size)
+        }
+
+    @Test
+    fun deliveredReportsAreShownWithoutLoading() {
+        val sheet = ReportSheet(sampleReview(month(2026, 10)), Currency.EUR)
+        val vm = delivered(null, sheet)
+        assertEquals(ReportContent.Loaded(sheet), vm.state.value.content)
+        assertEquals(month(2026, 10), vm.state.value.period)
+        assertTrue(reviewer.calls.isEmpty())
+    }
+
+    @Test
+    fun aMissingDeliveredReportFailsAndRetriesOnlyWithAPeriod() {
+        val orphan = delivered(null, null)
+        assertEquals(ReportContent.Failed, orphan.state.value.content)
+        assertFalse(orphan.state.value.canRetry)
+        assertNull(orphan.state.value.period)
+        orphan.onAction(ReportDialogAction.RetryClicked)
+        assertEquals(ReportContent.Failed, orphan.state.value.content)
+        assertTrue(reviewer.calls.isEmpty())
+        val dated = delivered(ReviewPeriod.Year(2025), null)
+        assertEquals(ReportContent.Failed, dated.state.value.content)
+        assertTrue(dated.state.value.canRetry)
+        assertTrue(reviewer.calls.isEmpty())
+        dated.onAction(ReportDialogAction.RetryClicked)
+        assertIs<ReportContent.Loaded>(dated.state.value.content)
+        assertEquals(listOf<ReviewPeriod>(ReviewPeriod.Year(2025)), reviewer.calls)
+    }
+
+    @Test
+    fun bannersListInAppItemsOnEachStart() =
+        runTest {
+            inbox.items = AppResult.Success(listOf(inboxItem("n-1"), inboxItem("p-1", channel = InboxChannel.PUSH)))
+            val vm = banners()
+            assertTrue(
+                vm.state.value.items
+                    .isEmpty(),
+            )
+            vm.onAction(InboxBannersAction.Started)
+            assertEquals(
+                listOf(InboxItemId("n-1")),
+                vm.state.value.items
+                    .map { it.id },
+            )
+            inbox.items = AppResult.Failure(AppError.Network.Offline)
+            vm.onAction(InboxBannersAction.Started)
+            assertEquals(
+                listOf(InboxItemId("n-1")),
+                vm.state.value.items
+                    .map { it.id },
+            )
+            inbox.items = AppResult.Success(listOf(inboxItem("n-1"), inboxItem("n-2", kind = InboxKind.DAILY_REMINDER)))
+            language = AppLanguage.EN
+            vm.onAction(InboxBannersAction.Started)
+            assertEquals(2, vm.state.value.items.size)
+            assertEquals(AppLanguage.EN, vm.state.value.language)
+        }
+
+    @Test
+    fun dismissingOrTappingAReminderMarksItSeen() =
+        runTest {
+            inbox.items = AppResult.Success(listOf(inboxItem("n-1"), inboxItem("r-1", kind = InboxKind.DAILY_REMINDER)))
+            val vm = banners()
+            vm.onAction(InboxBannersAction.Started)
+            vm.onAction(InboxBannersAction.ItemClicked(InboxItemId("r-1")))
+            assertNull(vm.state.value.opened)
+            vm.onAction(InboxBannersAction.DismissClicked(InboxItemId("n-1")))
+            assertEquals(listOf(InboxItemId("r-1"), InboxItemId("n-1")), inbox.seen)
+            assertTrue(
+                vm.state.value.items
+                    .isEmpty(),
+            )
+            vm.onAction(InboxBannersAction.Started)
+            assertTrue(
+                vm.state.value.items
+                    .isEmpty(),
+            )
+            vm.onAction(InboxBannersAction.DismissClicked(InboxItemId("n-1")))
+            assertEquals(2, inbox.seen.size)
+        }
+
+    @Test
+    fun tappingAReportOpensTheDeliveredSheetAndMarksItSeen() =
+        runTest {
+            val sheet = ReportSheet(sampleReview(month(2026, 10)), Currency.EUR)
+            inbox.items = AppResult.Success(listOf(inboxItem("n-1", period = month(2026, 10), report = sheet)))
+            val vm = banners()
+            vm.onAction(InboxBannersAction.Started)
+            vm.onAction(InboxBannersAction.ItemClicked(InboxItemId("n-1")))
+            val opened = assertNotNull(vm.state.value.opened)
+            assertEquals(InboxItemId("n-1"), opened.id)
+            assertEquals(sheet, opened.request.sheet)
+            assertEquals(month(2026, 10), opened.request.period)
+            assertEquals(listOf(InboxItemId("n-1")), inbox.seen)
+            assertTrue(
+                vm.state.value.items
+                    .isEmpty(),
+            )
+            vm.onAction(InboxBannersAction.DialogClosed)
+            assertNull(vm.state.value.opened)
         }
 
     @Test
@@ -177,12 +295,17 @@ class ReportsViewModelsTest : MainDispatcherTest() {
                         single<ProfileRepository> { FakeProfiles() }
                         single<PreferencesRepository> { FakePreferences() }
                         single<DeviceLanguage> { DeviceLanguage { AppLanguage.FR } }
+                        single<InboxRepository> { inbox }
+                        factory { ListInAppNotices(get()) }
+                        factory { DismissInboxItem(get()) }
                     },
                     featureReportsModule,
                 )
             }.koin
         koin.get<ReportNoticeViewModel>()
         koin.get<ReportHistoryViewModel>()
-        koin.get<ReportDialogViewModel> { parametersOf(month(2026, 10)) }
+        koin.get<InboxBannersViewModel>()
+        koin.get<ReportDialogViewModel> { parametersOf(ReportRequest.Compute(month(2026, 10))) }
+        koin.get<ReportDialogViewModel> { parametersOf(ReportRequest.Delivered(null, null)) }
     }
 }
