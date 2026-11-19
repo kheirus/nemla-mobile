@@ -205,11 +205,14 @@ Répartition des modèles conforme à `CLAUDE.md` : Fable 5.2 pour l'architectur
 | B2 | Socle : cibles `jvm()` sur `core:common`, `core:domain`, `ai:api`, `ai:local` ; modules `server:*` et `api:contract` ; plugin `nemla.jvm.server` ; configuration, santé, journaux expurgés, Docker, CI | Opus | 30–50 | 15–25 $ |
 | B3 | Base : migrations Flyway, rôles, RLS, chiffrement Tink + KMS, contexte de transaction, tests Testcontainers d'accès croisé | Opus | 45–65 | 20–30 $ |
 | B4 | Comptes : vérification JWT, bootstrap, profil, pseudo, consentements, export, suppression (effacement cryptographique) | Opus | 30–50 | 15–25 $ |
-| B5 | Cœur métier : catégories, dépenses, renommage, recherche, tableau de bord, budgets, charges fixes et occurrences, débit différé | Opus | 65–95 | 30–45 $ |
-| B6 | IA serveur : moteurs du fournisseur retenu, dictée, transcription, extraction, import de texte anonymisé, charges fixes dictées, suggestion de budget, mémoire marchands, quotas | Opus | 65–95 | 30–45 $ |
+| B5a | Dépenses : catégories, création et modification idempotentes, suppression, renommage groupé, recherche sur libellés déchiffrés, confirmation | Opus | 30–45 | 15–20 $ |
+| B5b | Calculs : tableau de bord, budgets, charges fixes et génération des occurrences, débit différé (règles de `core:domain`) | Opus | 35–50 | 15–25 $ |
+| B6a | IA, socle et dictée : moteurs du fournisseur retenu, contrôle du consentement, quotas, dictée (audio → dépenses en attente), transcription seule | Opus | 35–50 | 15–25 $ |
+| B6b | IA, textes : extraction depuis un texte, import de texte anonymisé, charges fixes dictées, suggestion de budget, mémoire marchands | Opus | 30–45 | 15–20 $ |
 | B7 | Bilans structurés et leur rédaction fr/en dans l'application | Opus | 20–30 | 10–15 $ |
 | B8 | Notifications (ancien lot 7) : jetons, FCM HTTP v1, APNs par jeton `.p8`, rappel de 20 h dans le fuseau de l'utilisateur, bilan de fin de mois, alerte de budget ; côté mobile : permission, réception, ouverture du bon écran | Opus | 50–75 | 25–35 $ |
-| B9 | Rebranchement mobile : `core:data` et `ai:remote-nemla` sur `api:contract`, suppression de PostgREST, fin des `NotSupportedYet` (libellés, suppression de compte, export, import), liens d'application pour le mot de passe oublié | Opus | 65–95 | 30–45 $ |
+| B9a | Mobile, données : `core:data` sur `api:contract` (bootstrap, profil, catégories, dépenses avec libellés, tableau de bord, charges fixes), suppression de PostgREST | Opus | 35–50 | 15–25 $ |
+| B9b | Mobile, IA et compte : `ai:remote-nemla` sur la nouvelle API, import, bilans, suppression et export du compte, fin des `NotSupportedYet`, liens d'application du mot de passe oublié | Opus | 30–45 | 15–20 $ |
 | B10 | Page vitrine `nemla.app`, politique de confidentialité finale, mentions légales, page de suppression de compte, `.well-known` | Opus | 10–20 | 5–10 $ |
 | B11 | Audit final : ASVS niveau 2, API Top 10, MASVS, revue des dépendances, AIPD finale, essai de restauration | Fable | 40–70 | 20–35 $ |
 | B12 | Mise en production : déploiement, secrets, sauvegardes, alertes de disponibilité, suppression de l'ancien projet Supabase | Opus | 15–25 | 8–12 $ |
@@ -218,7 +221,8 @@ Répartition des modèles conforme à `CLAUDE.md` : Fable 5.2 pour l'architectur
 Dont Fable 5.2 : ≈ 35–60 $ (≈ 15 % du total). Prévoir **20 % de marge** pour les reprises après vos essais sur appareil :
 **enveloppe réaliste ≈ 270–420 $ d'équivalent API**. Jetons de sortie (le code et les documents réellement écrits) : ≈ 3 à 4 M.
 
-Ordre : B0 → B1 → B2 → B3 → B4 → (B5, B6 et B7 dans cet ordre) → B9 → B8 → B10 → B11 → B12. B10 peut se faire n'importe quand après B1.
+Ordre : B0 → B1 → B2 → B3 → B4 → B5a → B5b → B6a → B6b → B7 → B9a → B9b → B8 → B10 → B11 → B12. B10 peut se faire n'importe quand après B1.
+**Une conversation neuve par ligne du tableau** (voir `CLAUDE.md`) : chaque ligne reste ainsi sous ≈ 200 à 300 k jetons de contexte.
 Chaque lot se termine comme les lots mobiles : `spotlessApply`, tests du lot, `assembleDebug`, framework iOS, plus `./gradlew :server:app:test`
 et l'image Docker construite ; commits atomiques ; revue Fable des points de sécurité du lot.
 
