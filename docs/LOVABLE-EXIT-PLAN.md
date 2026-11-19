@@ -1,6 +1,6 @@
 # Reprise du backend Lovable et mise en production mobile
 
-Rédigé le 19/11/2026. Statut : **proposé, en attente de validation du propriétaire**.
+Rédigé le 19/11/2026. Statut : **validé par le propriétaire le 19/11/2026**, arbitrages P1 à P6 (§5) compris.
 Ce plan passe avant `BACKEND-PLAN.md` (réécriture Kotlin), qui est **suspendu** : il sera réévalué après les essais en production.
 
 ## 1. Objectif
@@ -106,7 +106,7 @@ production plus tôt, au prix d'un code TypeScript qui sera remplacé si la ré�
 Les textes juridiques sont rédigés par Claude comme brouillons ; leur relecture par un juriste reste nécessaire avant la publication publique
 (le test fermé peut commencer avec des brouillons, à la responsabilité du propriétaire).
 
-## 5. Arbitrages à valider
+## 5. Arbitrages (validés le 19/11/2026)
 
 | # | Question | Proposition |
 |---|---|---|

@@ -231,7 +231,7 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
   - publication : bloquants listés dans `PUBLICATION.md` (suppression de compte, URL de politique de confidentialité, liens de
     réinitialisation, sécurité backend), signature et numéros de version à mettre en place.
 
-## Reprise du backend Lovable et mise en production (lots R0 à R5, M7 à M11) ☐ (proposé le 19/11/2026, en attente de validation)
+## Reprise du backend Lovable et mise en production (lots R0 à R5, M7 à M11) ☐ (validé le 19/11/2026, prochain : R0, M7 possible en parallèle)
 On garde le code web de Lovable (TanStack Start, Supabase) sur les comptes du propriétaire, avec les correctifs indispensables et les
 endpoints qui manquent au mobile, pour aller en production avant toute migration. Plan, chiffrage et arbitrages : `docs/LOVABLE-EXIT-PLAN.md`.
 - Lots R0 à R5 : dépôt `nemla-web` (sortie de Lovable, Mistral, hébergement, sécurité, endpoints, pages légales).
