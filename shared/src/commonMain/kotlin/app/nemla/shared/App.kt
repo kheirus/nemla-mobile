@@ -5,8 +5,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +31,7 @@ import app.nemla.core.common.AppBuildInfo
 import app.nemla.core.designsystem.brand.NemlaLogo
 import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
+import app.nemla.core.designsystem.component.NemlaScaffold
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaScreenAlignment
 import app.nemla.core.designsystem.theme.NemlaTheme
@@ -114,51 +118,64 @@ private fun NemlaNavHost(
     }
     val dictation: @Composable (Boolean, (String) -> Unit, (Boolean) -> Unit, (String) -> Unit) -> Unit =
         { enabled, onTranscript, onActiveChange, onMessage -> DictationTextButton(enabled, onTranscript, onActiveChange, onMessage) }
-    NavHost(navController = navController, startDestination = SplashDestination) {
-        composable<SplashDestination> { SplashScreen() }
-        authGraph(navController = navController, onAuthenticated = {})
-        onboardingScreen(
-            onFinished = { viewModel.onOnboardingFinished() },
-            onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
-            dictation = dictation,
-        )
-        dashboardScreen(
-            onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
-            onReviewPending = { review ->
-                reviewOpener.open(review)
-                navController.navigateToVoiceReview()
-            },
-            onOpenSettings = { categories ->
-                navController.navigateToSettings(if (categories) SettingsTab.CATEGORIES else SettingsTab.PROFILE)
-            },
-            floatingAction = {
-                AddButtonWithImport(
-                    onOpenReview = { navController.navigateToVoiceReview() },
-                    onImported = { review ->
-                        reviewOpener.open(review)
-                        navController.navigateToVoiceReview()
-                    },
-                )
-            },
-            reportNotice = { ReportArrivalNotice() },
-        )
-        settingsScreen(
-            onClose = { if (!navController.popBackStack()) navController.navigateToDashboard() },
-            onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
-            dictation = dictation,
-            reportHistory = { ReportHistory() },
-        )
-        voiceGraph(onClose = { navController.closeVoiceReview() })
+    NemlaScaffold(contentWindowInsets = WindowInsets(0)) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = SplashDestination,
+            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+            enterTransition = { appEnter() },
+            exitTransition = { appExit() },
+            popEnterTransition = { appPopEnter() },
+            popExitTransition = { appPopExit() },
+        ) {
+            composable<SplashDestination> { SplashScreen() }
+            authGraph(navController = navController, onAuthenticated = {})
+            onboardingScreen(
+                onFinished = { viewModel.onOnboardingFinished() },
+                onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
+                dictation = dictation,
+            )
+            dashboardScreen(
+                onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
+                onReviewPending = { review ->
+                    reviewOpener.open(review)
+                    navController.navigateToVoiceReview()
+                },
+                onOpenSettings = { categories ->
+                    navController.navigateToSettings(if (categories) SettingsTab.CATEGORIES else SettingsTab.PROFILE)
+                },
+                floatingAction = { expanded ->
+                    AddButtonWithImport(
+                        expanded = expanded,
+                        onOpenReview = { navController.navigateToVoiceReview() },
+                        onImported = { review ->
+                            reviewOpener.open(review)
+                            navController.navigateToVoiceReview()
+                        },
+                    )
+                },
+                reportNotice = { ReportArrivalNotice() },
+            )
+            settingsScreen(
+                navController = navController,
+                onClose = { if (!navController.popBackStack()) navController.navigateToDashboard() },
+                onSignedOut = { navController.showAuth(RootTarget.Auth(AuthEntry.SignIn)) },
+                dictation = dictation,
+                reportHistory = { ReportHistory() },
+            )
+            voiceGraph(onClose = { navController.closeVoiceReview() })
+        }
     }
 }
 
 @Composable
 private fun AddButtonWithImport(
+    expanded: Boolean,
     onOpenReview: () -> Unit,
     onImported: (PendingReview) -> Unit,
 ) {
     var importOpen by rememberSaveable { mutableStateOf(false) }
-    VoiceCaptureButton(onOpenReview = onOpenReview, onImportStatement = { importOpen = true })
+    VoiceCaptureButton(onOpenReview = onOpenReview, onImportStatement = { importOpen = true }, expanded = expanded)
     if (importOpen) {
         StatementImportDialog(
             onClose = { importOpen = false },

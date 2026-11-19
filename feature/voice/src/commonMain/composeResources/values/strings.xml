@@ -63,7 +63,7 @@
   </plurals>
   <string name="review_title">Vérifiez les dépenses détectées</string>
   <string name="review_title_import">Vérifiez les dépenses lues dans le fichier</string>
-  <string name="review_label_fallback">Dépense</string>
+  <string name="review_label_fallback">Sans libellé</string>
   <string name="review_transcript">« %1$s »</string>
   <string name="review_amount">Montant</string>
   <string name="review_category">Catégorie</string>

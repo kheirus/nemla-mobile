@@ -12,6 +12,7 @@ import androidx.navigation.toRoute
 import app.nemla.feature.auth.forgot.ForgotPasswordRoute
 import app.nemla.feature.auth.signin.SignInRoute
 import app.nemla.feature.auth.signup.SignUpRoute
+import app.nemla.feature.auth.welcome.WelcomeScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -23,18 +24,27 @@ internal data class SignInDestination(
 )
 
 @Serializable
+internal data object WelcomeDestination
+
+@Serializable
 internal data object SignUpDestination
 
 @Serializable
 internal data object ForgotPasswordDestination
 
-enum class AuthEntry { SignIn, SignUp }
+enum class AuthEntry { Welcome, SignIn, SignUp }
 
 fun NavGraphBuilder.authGraph(
     navController: NavController,
     onAuthenticated: () -> Unit,
 ) {
-    navigation<AuthGraphDestination>(startDestination = SignUpDestination) {
+    navigation<AuthGraphDestination>(startDestination = WelcomeDestination) {
+        composable<WelcomeDestination> {
+            WelcomeScreen(
+                onStart = { navController.navigate(SignUpDestination) { launchSingleTop = true } },
+                onSignIn = { navController.navigate(SignInDestination()) { launchSingleTop = true } },
+            )
+        }
         composable<SignUpDestination> {
             SignUpRoute(
                 onSignedUp = onAuthenticated,
@@ -70,6 +80,7 @@ fun NavGraphBuilder.authGraph(
 fun NavController.navigateToAuth(entry: AuthEntry) {
     val destination: Any =
         when (entry) {
+            AuthEntry.Welcome -> WelcomeDestination
             AuthEntry.SignIn -> SignInDestination()
             AuthEntry.SignUp -> SignUpDestination
         }

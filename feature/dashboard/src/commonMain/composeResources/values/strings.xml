@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="dashboard_my_space">Mon espace</string>
-  <string name="dashboard_account_menu">Ouvrir le menu du compte</string>
-  <string name="dashboard_sign_out">Se déconnecter</string>
-  <string name="dashboard_signing_out">Un instant…</string>
+  <string name="dashboard_account_menu">Compte</string>
   <string name="dashboard_sign_out_failed">Déconnexion impossible. Réessayez.</string>
   <string name="dashboard_loading">Chargement du tableau de bord…</string>
   <string name="dashboard_error_offline">Pas de connexion. Vos données ne sont peut-être pas à jour.</string>
@@ -17,7 +14,7 @@
   <string name="pending_title">Dépenses à valider</string>
   <string name="pending_body">Ces dépenses (dictées ou lues dans un fichier) attendent votre confirmation — touchez-les pour vérifier et ajuster leur catégorie.</string>
   <string name="pending_import">Dépenses importées d'un fichier</string>
-  <string name="pending_voice">Dépense vocale…</string>
+  <string name="pending_voice">Dictée à vérifier</string>
   <string name="pending_check">Vérifier</string>
   <plurals name="pending_summary">
     <item quantity="one">%1$d dépense · %2$s</item>
@@ -29,9 +26,8 @@
   </plurals>
   <string name="alerts_over">+%1$s / %2$s prévus</string>
   <string name="alerts_planned">%1$s prévus</string>
-  <string name="search_by_date">Chercher un jour précis</string>
   <string name="search_pick_date">Rechercher par date</string>
-  <string name="search_date">Date</string>
+  <string name="search_placeholder">Rechercher une dépense</string>
   <string name="search_clear">Effacer la recherche</string>
   <string name="search_text_soon">La recherche par mot-clé arrivera bientôt.</string>
   <string name="search_empty">Aucune dépense trouvée.</string>
@@ -84,6 +80,7 @@
   <string name="spending_empty">Aucune dépense sur cette période.</string>
   <string name="spending_chart_description">Répartition des dépenses par catégorie</string>
   <string name="other_group">Autre</string>
+  <string name="spending_percent">%1$s %</string>
   <string name="budget_usage">%1$s / %2$s</string>
   <string name="budget_usage_over">%1$s / %2$s · +%3$s</string>
   <string name="today_title">Dépenses du jour</string>
@@ -97,7 +94,6 @@
   <string name="page_previous">Précédent</string>
   <string name="page_next">Suivant</string>
   <string name="page_indicator">Page %1$d / %2$d</string>
-  <string name="expense_fallback">Dépense</string>
   <string name="no_category">Sans catégorie</string>
   <string name="expense_row_meta">%1$s · %2$s</string>
   <string name="editor_title">Modifier la dépense</string>
@@ -121,6 +117,6 @@
   <string name="editor_delete_failed">Suppression impossible</string>
   <string name="editor_offline">Pas de connexion. Réessayez.</string>
   <string name="editor_timeout">Le serveur met trop de temps à répondre. Réessayez.</string>
-  <string name="dashboard_manage_account">Gérer mon compte</string>
   <string name="alerts_adjust">Ajuster mes budgets par catégorie</string>
+  <string name="editor_label_unavailable">Le libellé n'est pas encore disponible dans l'application mobile.</string>
 </resources>

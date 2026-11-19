@@ -25,6 +25,7 @@ import app.nemla.core.domain.port.PreferencesRepository
 import app.nemla.core.domain.port.ProfileRepository
 import app.nemla.core.domain.port.RecurringChargeMaterializer
 import app.nemla.core.domain.port.RecurringChargeRepository
+import app.nemla.feature.dashboard.logic.PeriodPages
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -142,14 +143,54 @@ class DashboardViewModelTest : MainDispatcherTest() {
     }
 
     @Test
-    fun navigationIsUnboundedIntoTheFuture() {
+    fun navigationStopsAtTodaysPeriod() {
+        seed()
+        val vm = harness.viewModel()
+        assertFalse(vm.state.value.canGoNext)
+        assertTrue(vm.state.value.canGoPrevious)
+        vm.onAction(DashboardAction.NextPeriodClicked)
+        assertEquals(YearMonth(2026, 11), vm.state.value.cursor.month)
+        vm.onAction(DashboardAction.PeriodKindSelected(PeriodKind.YEAR))
+        repeat(3) { vm.onAction(DashboardAction.NextPeriodClicked) }
+        assertEquals(2026, vm.state.value.cursor.year)
+        assertFalse(vm.state.value.canGoNext)
+        assertNull(vm.state.value.loadError)
+    }
+
+    @Test
+    fun swipingToAPageSelectsThatPeriod() {
+        seed()
+        val vm = harness.viewModel()
+        val current = PeriodPages.pageOf(vm.state.value.cursor)
+        vm.onAction(DashboardAction.PeriodPageSelected(current - 8))
+        assertEquals(YearMonth(2026, 3), vm.state.value.cursor.month)
+        assertEquals(30_000, vm.state.value.view.pilot.spentCents)
+        vm.onAction(DashboardAction.PeriodPageSelected(current + 5))
+        assertEquals(YearMonth(2026, 11), vm.state.value.cursor.month)
+    }
+
+    @Test
+    fun yearModeCannotCarryAFutureMonthIntoTheCurrentYear() {
         seed()
         val vm = harness.viewModel()
         vm.onAction(DashboardAction.PeriodKindSelected(PeriodKind.YEAR))
-        repeat(3) { vm.onAction(DashboardAction.NextPeriodClicked) }
-        assertEquals(2029, vm.state.value.cursor.year)
-        assertEquals(0, vm.state.value.view.pilot.spentCents)
-        assertNull(vm.state.value.loadError)
+        vm.onAction(DashboardAction.PreviousPeriodClicked)
+        vm.onAction(DashboardAction.ChartMonthTapped(12))
+        assertEquals(YearMonth(2025, 12), vm.state.value.cursor.month)
+        vm.onAction(DashboardAction.PeriodKindSelected(PeriodKind.YEAR))
+        vm.onAction(DashboardAction.NextPeriodClicked)
+        assertEquals(PeriodKind.YEAR, vm.state.value.cursor.kind)
+        assertEquals(YearMonth(2026, 11), vm.state.value.cursor.month)
+    }
+
+    @Test
+    fun tappingAFutureBarDoesNothing() {
+        seed()
+        val vm = harness.viewModel()
+        vm.onAction(DashboardAction.PeriodKindSelected(PeriodKind.YEAR))
+        vm.onAction(DashboardAction.ChartMonthTapped(12))
+        assertEquals(PeriodKind.YEAR, vm.state.value.cursor.kind)
+        assertEquals(YearMonth(2026, 11), vm.state.value.cursor.month)
     }
 
     @Test

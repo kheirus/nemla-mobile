@@ -1,12 +1,10 @@
 package app.nemla.feature.dashboard.ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,11 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,7 +44,6 @@ import app.nemla.feature.dashboard.logic.ExpenseRow
 import app.nemla.feature.dashboard.resources.Res
 import app.nemla.feature.dashboard.resources.dashboard_date_cancel
 import app.nemla.feature.dashboard.resources.dashboard_date_ok
-import app.nemla.feature.dashboard.resources.expense_fallback
 import app.nemla.feature.dashboard.resources.expense_row_meta
 import app.nemla.feature.dashboard.resources.no_category
 import kotlinx.datetime.LocalDate
@@ -111,8 +106,9 @@ internal fun ExpenseRowItem(
     onAction: (DashboardAction) -> Unit,
 ) {
     val colors = NemlaTheme.colors
-    val label = row.label?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.expense_fallback)
     val category = row.categoryName ?: stringResource(Res.string.no_category)
+    val label = row.label?.takeIf { it.isNotBlank() }
+    val title = label ?: category
     Row(
         modifier =
             Modifier
@@ -128,22 +124,21 @@ internal fun ExpenseRowItem(
             modifier = Modifier.size(16.dp),
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text(label, style = NemlaTheme.typography.bodyStrong, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs), verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (row.source == ExpenseSource.VOICE) NemlaIcons.Mic else NemlaIcons.Pencil,
-                    contentDescription = null,
-                    tint = colors.mutedForeground,
-                    modifier = Modifier.size(12.dp),
-                )
-                Text(
-                    text = stringResource(Res.string.expense_row_meta, format.short(row.date), category),
-                    style = NemlaTheme.typography.caption,
-                    color = colors.mutedForeground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(title, style = NemlaTheme.typography.bodyStrong, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                text =
+                    if (label !=
+                        null
+                    ) {
+                        stringResource(Res.string.expense_row_meta, format.short(row.date), category)
+                    } else {
+                        format.short(row.date)
+                    },
+                style = NemlaTheme.typography.caption,
+                color = colors.mutedForeground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
         Text(
             text = format.money(row.amountCents),
@@ -152,39 +147,6 @@ internal fun ExpenseRowItem(
                     .copy(fontWeight = FontWeight.SemiBold)
                     .tabular(),
         )
-    }
-}
-
-@Composable
-internal fun DateFieldButton(
-    label: String,
-    shown: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = NemlaTheme.colors
-    val shape = RoundedCornerShape(NemlaTheme.radius.md)
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.labelGap)) {
-        Text(label, style = NemlaTheme.typography.label, modifier = Modifier.clearAndSetSemantics { })
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = NemlaTheme.sizes.controlHeight)
-                    .clip(shape)
-                    .border(1.dp, colors.input, shape)
-                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-                    .semantics {
-                        contentDescription = label
-                        stateDescription = shown
-                    }.padding(horizontal = NemlaTheme.spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-        ) {
-            Text(shown, style = NemlaTheme.typography.input.tabular(), modifier = Modifier.weight(1f).clearAndSetSemantics { })
-            Icon(NemlaIcons.Calendar, contentDescription = null, modifier = Modifier.size(NemlaTheme.sizes.icon))
-        }
     }
 }
 
@@ -232,3 +194,13 @@ internal fun PastDatePickerDialog(
 private fun LocalDate.toUtcMillis(): Long = atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
 
 private fun Long.toUtcDate(): LocalDate = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
+
+@Composable
+internal fun rowSummary(
+    row: ExpenseRow,
+    format: DashboardFormat,
+): String =
+    row.label
+        ?.takeIf { it.isNotBlank() }
+        ?.let { stringResource(Res.string.expense_row_meta, format.short(row.date), it) }
+        ?: format.short(row.date)

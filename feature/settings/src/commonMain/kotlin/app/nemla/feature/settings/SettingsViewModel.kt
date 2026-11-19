@@ -35,25 +35,13 @@ internal class SettingsViewModel(
     fun onAction(action: SettingsAction) {
         when (action) {
             SettingsAction.Started -> refreshProfile()
-            is SettingsAction.TabSelected -> mutableState.update { it.copy(tab = action.tab, panel = null) }
-            is SettingsAction.PanelOpened -> mutableState.update { it.copy(tab = SettingsTab.PROFILE, panel = action.panel) }
-            SettingsAction.BackClicked -> back()
-            SettingsAction.ProfileChanged -> refreshProfile()
-            SettingsAction.CategoryBudgetsRequested -> mutableState.update { it.copy(tab = SettingsTab.CATEGORIES, panel = null) }
+            is SettingsAction.TabSelected -> mutableState.update { it.copy(tab = action.tab) }
+            SettingsAction.BackClicked -> viewModelScope.launch { effectChannel.send(SettingsEffect.Close) }
             SettingsAction.DeleteAccountClicked -> mutableState.update { it.copy(isConfirmingDelete = true, accountMessage = null) }
             SettingsAction.DeleteAccountCancelled -> mutableState.update { it.copy(isConfirmingDelete = false) }
             SettingsAction.DeleteAccountConfirmed -> delete()
             SettingsAction.AccountMessageDismissed -> mutableState.update { it.copy(accountMessage = null) }
             SettingsAction.SignOutClicked -> signOutOnce()
-        }
-    }
-
-    private fun back() {
-        if (mutableState.value.panel != null) {
-            mutableState.update { it.copy(panel = null) }
-            refreshProfile()
-        } else {
-            viewModelScope.launch { effectChannel.send(SettingsEffect.Close) }
         }
     }
 

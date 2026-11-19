@@ -6,6 +6,7 @@ import app.nemla.core.common.AppError
 import app.nemla.core.common.AppResult
 import app.nemla.core.domain.model.AmountInput
 import app.nemla.core.domain.model.AppLanguage
+import app.nemla.core.domain.model.AuthState
 import app.nemla.core.domain.model.BudgetPeriod
 import app.nemla.core.domain.model.Category
 import app.nemla.core.domain.model.CategoryId
@@ -26,12 +27,14 @@ import app.nemla.core.domain.usecase.ListCategories
 import app.nemla.core.domain.usecase.ListExpenses
 import app.nemla.core.domain.usecase.ListRecurringCharges
 import app.nemla.core.domain.usecase.MaterializeRecurringCharges
+import app.nemla.core.domain.usecase.ObserveAuthState
 import app.nemla.core.domain.usecase.SearchExpensesByDate
 import app.nemla.core.domain.usecase.SignOut
 import app.nemla.core.domain.usecase.UpdateExpense
 import app.nemla.feature.dashboard.logic.CategoryFilters
 import app.nemla.feature.dashboard.logic.DashboardCalculator
 import app.nemla.feature.dashboard.logic.DashboardInputs
+import app.nemla.feature.dashboard.logic.PeriodPages
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -73,6 +76,7 @@ internal class DashboardViewModel(
     private val updateExpense: UpdateExpense,
     private val deleteExpense: DeleteExpense,
     private val signOut: SignOut,
+    private val observeAuthState: ObserveAuthState,
     private val clock: DashboardClock,
     private val language: UiLanguage,
 ) : ViewModel() {
@@ -110,6 +114,12 @@ internal class DashboardViewModel(
 
     init {
         load(LoadMode.INITIAL)
+        viewModelScope.launch {
+            observeAuthState().collect { auth ->
+                val email = (auth as? AuthState.SignedIn)?.session?.email?.value
+                mutableState.update { it.copy(email = email) }
+            }
+        }
     }
 
     fun onAction(action: DashboardAction) {
@@ -120,7 +130,8 @@ internal class DashboardViewModel(
             is DashboardAction.PeriodKindSelected -> moveTo(mutableState.value.cursor.withKind(action.kind))
             DashboardAction.PreviousPeriodClicked -> moveTo(mutableState.value.cursor.previous())
             DashboardAction.NextPeriodClicked -> moveTo(mutableState.value.cursor.next())
-            is DashboardAction.ChartMonthTapped -> moveTo(mutableState.value.cursor.drillDown(action.monthNumber))
+            is DashboardAction.PeriodPageSelected -> moveTo(PeriodPages.cursorAt(action.page, mutableState.value.cursor, today))
+            is DashboardAction.ChartMonthTapped -> drillDown(action.monthNumber)
             is DashboardAction.FilterToggled -> changeFilter(CategoryFilters.toggle(filter, action.id, categoryIds()))
             DashboardAction.FilterAllToggled -> changeFilter(CategoryFilters.toggleAll(filter, categoryIds()))
             is DashboardAction.SpendingTabSelected -> mutableState.update { it.copy(spendingTab = action.tab) }
@@ -243,8 +254,15 @@ internal class DashboardViewModel(
     }
 
     private fun moveTo(cursor: PeriodCursor) {
-        mutableState.update { it.copy(cursor = cursor) }
+        val bounded = PeriodPages.clamp(cursor, today)
+        if (bounded == mutableState.value.cursor) return
+        mutableState.update { it.copy(cursor = bounded) }
         ensureYear()
+    }
+
+    private fun drillDown(monthNumber: Int) {
+        val target = mutableState.value.cursor.drillDown(monthNumber)
+        if (PeriodPages.isWithinBounds(target, today)) moveTo(target)
     }
 
     private fun ensureYear(afterLoad: Boolean = false) {

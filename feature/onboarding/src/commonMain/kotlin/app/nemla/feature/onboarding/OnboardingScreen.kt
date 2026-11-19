@@ -6,16 +6,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,20 +30,24 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import app.nemla.core.designsystem.component.NemlaAppHeader
+import app.nemla.core.designsystem.component.NemlaAccountButton
+import app.nemla.core.designsystem.component.NemlaAccountSheet
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaIconButton
 import app.nemla.core.designsystem.component.NemlaLinkTone
-import app.nemla.core.designsystem.component.NemlaMenuItem
+import app.nemla.core.designsystem.component.NemlaListItem
 import app.nemla.core.designsystem.component.NemlaOption
 import app.nemla.core.designsystem.component.NemlaScreen
 import app.nemla.core.designsystem.component.NemlaSelectField
+import app.nemla.core.designsystem.component.NemlaSnackbarEffect
 import app.nemla.core.designsystem.component.NemlaTextArea
 import app.nemla.core.designsystem.component.NemlaTextButton
 import app.nemla.core.designsystem.component.NemlaTextField
+import app.nemla.core.designsystem.component.NemlaTopBar
+import app.nemla.core.designsystem.component.NemlaTopBarBrand
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.NemlaTheme
 import app.nemla.core.domain.model.ChargeFrequency
@@ -125,20 +136,31 @@ private fun OnboardingHeader(
     state: OnboardingUiState,
     onAction: (OnboardingAction) -> Unit,
 ) {
-    NemlaAppHeader(
-        accountLabel = state.pseudo ?: stringResource(Res.string.onboarding_my_space),
-        avatar = householdIcon(state.household),
-        menuDescription = stringResource(Res.string.onboarding_account_menu),
-    ) { dismiss ->
-        NemlaMenuItem(
-            text = stringResource(Res.string.onboarding_sign_out),
-            icon = NemlaIcons.LogOut,
-            enabled = !state.isSigningOut,
-            onClick = {
-                dismiss()
-                onAction(OnboardingAction.SignOutClicked)
-            },
-        )
+    var accountOpen by rememberSaveable { mutableStateOf(false) }
+    NemlaTopBar(
+        title = { NemlaTopBarBrand() },
+        actions = {
+            NemlaAccountButton(
+                contentDescription = stringResource(Res.string.onboarding_account_menu),
+                onClick = { accountOpen = true },
+                icon = householdIcon(state.household),
+            )
+        },
+    )
+    if (accountOpen) {
+        NemlaAccountSheet(
+            title = state.pseudo ?: stringResource(Res.string.onboarding_my_space),
+            avatarName = state.pseudo,
+            fallbackIcon = householdIcon(state.household),
+            onDismissRequest = { accountOpen = false },
+        ) { sheet ->
+            NemlaListItem(
+                headline = stringResource(Res.string.onboarding_sign_out),
+                leadingIcon = NemlaIcons.LogOut,
+                enabled = !state.isSigningOut,
+                onClick = { sheet.dismiss { onAction(OnboardingAction.SignOutClicked) } },
+            )
+        }
     }
 }
 
@@ -147,15 +169,19 @@ private fun NoticeBanner(
     notice: OnboardingNotice,
     onAction: (OnboardingAction) -> Unit,
 ) {
-    LaunchedEffect(notice) {
-        delay(NOTICE_DURATION_MS)
-        onAction(OnboardingAction.NoticeDismissed)
-    }
     val (text, kind) =
         when (notice) {
             is OnboardingNotice.Dictation -> notice.text to NemlaBannerKind.Error
             is OnboardingNotice.Known -> stringResource(notice.message.resource()) to notice.message.kind()
         }
+    if (kind != NemlaBannerKind.Error) {
+        NemlaSnackbarEffect(message = text, onShown = { onAction(OnboardingAction.NoticeDismissed) })
+        return
+    }
+    LaunchedEffect(notice) {
+        delay(NOTICE_DURATION_MS)
+        onAction(OnboardingAction.NoticeDismissed)
+    }
     val dismiss = stringResource(Res.string.onboarding_dismiss)
     NemlaBanner(
         message = text,
@@ -217,6 +243,7 @@ private fun ReviewCard(
                 style = NemlaTheme.typography.cardTitle,
                 modifier = Modifier.semantics { heading() },
             )
+            val focusManager = LocalFocusManager.current
             state.rows.forEach { row ->
                 NemlaCard(modifier = Modifier.fillMaxWidth(), contentPadding = NemlaTheme.spacing.sm) {
                     Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
@@ -227,6 +254,8 @@ private fun ReviewCard(
                                 label = stringResource(Res.string.onboarding_name),
                                 labelVisible = false,
                                 placeholder = stringResource(Res.string.onboarding_name),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
                                 modifier = Modifier.weight(1f),
                             )
                             NemlaTextField(
@@ -234,8 +263,9 @@ private fun ReviewCard(
                                 onValueChange = { onAction(OnboardingAction.RowAmountChanged(row.key, it)) },
                                 label = stringResource(Res.string.onboarding_amount),
                                 labelVisible = false,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                modifier = Modifier.width(AMOUNT_WIDTH),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                                modifier = Modifier.weight(AMOUNT_WEIGHT),
                             )
                         }
                         Row(
@@ -258,7 +288,7 @@ private fun ReviewCard(
                                 selected = row.frequency,
                                 onSelect = { onAction(OnboardingAction.RowFrequencySelected(row.key, it)) },
                                 labelVisible = false,
-                                modifier = Modifier.width(FREQUENCY_WIDTH),
+                                modifier = Modifier.weight(FREQUENCY_WEIGHT),
                             )
                             NemlaIconButton(
                                 icon = NemlaIcons.Trash2,
@@ -278,6 +308,7 @@ private fun BudgetCard(
     state: OnboardingUiState,
     onAction: (OnboardingAction) -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     NemlaCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
             NemlaTextField(
@@ -285,7 +316,8 @@ private fun BudgetCard(
                 onValueChange = { onAction(OnboardingAction.BudgetChanged(it)) },
                 label = stringResource(Res.string.onboarding_budget_label, state.currency.symbol),
                 placeholder = stringResource(Res.string.onboarding_budget_placeholder),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             )
             NemlaButton(
                 text = stringResource(Res.string.onboarding_save),
@@ -305,8 +337,8 @@ private fun BudgetCard(
     }
 }
 
-private val AMOUNT_WIDTH = 104.dp
-private val FREQUENCY_WIDTH = 144.dp
+private const val AMOUNT_WEIGHT = 0.45f
+private const val FREQUENCY_WEIGHT = 0.7f
 
 internal fun householdIcon(household: Household?) =
     when (household) {

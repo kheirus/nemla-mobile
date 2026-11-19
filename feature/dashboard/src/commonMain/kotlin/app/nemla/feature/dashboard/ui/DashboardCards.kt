@@ -1,13 +1,16 @@
 package app.nemla.feature.dashboard.ui
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -15,16 +18,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -36,11 +43,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.nemla.core.designsystem.component.NemlaAnimatedColumn
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaCard
 import app.nemla.core.designsystem.component.NemlaCategoryDot
 import app.nemla.core.designsystem.component.NemlaLoadingIndicator
+import app.nemla.core.designsystem.component.NemlaSearchField
 import app.nemla.core.designsystem.component.NemlaTextButton
 import app.nemla.core.designsystem.icon.NemlaIcons
 import app.nemla.core.designsystem.theme.CategoryColors
@@ -66,12 +75,11 @@ import app.nemla.feature.dashboard.resources.pending_import
 import app.nemla.feature.dashboard.resources.pending_summary
 import app.nemla.feature.dashboard.resources.pending_title
 import app.nemla.feature.dashboard.resources.pending_voice
-import app.nemla.feature.dashboard.resources.search_by_date
 import app.nemla.feature.dashboard.resources.search_clear
-import app.nemla.feature.dashboard.resources.search_date
 import app.nemla.feature.dashboard.resources.search_empty
 import app.nemla.feature.dashboard.resources.search_failed
 import app.nemla.feature.dashboard.resources.search_pick_date
+import app.nemla.feature.dashboard.resources.search_placeholder
 import app.nemla.feature.dashboard.resources.search_results
 import app.nemla.feature.dashboard.resources.search_text_soon
 import app.nemla.feature.dashboard.resources.today_empty
@@ -101,15 +109,21 @@ internal fun PendingCard(
             color = colors.mutedForeground,
             modifier = Modifier.padding(top = NemlaTheme.spacing.xxs),
         )
-        Column(modifier = Modifier.padding(top = NemlaTheme.spacing.sm)) {
-            pending.forEachIndexed { index, group ->
-                if (index > 0) HorizontalDivider(color = colors.border)
+        NemlaAnimatedColumn(
+            items = pending,
+            key = { it.review },
+            modifier = Modifier.padding(top = NemlaTheme.spacing.sm),
+        ) { _, group, first ->
+            Column {
+                if (!first) HorizontalDivider(color = colors.border)
                 Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable(role = Role.Button) { onAction(DashboardAction.PendingGroupClicked(index)) }
-                            .padding(vertical = NemlaTheme.spacing.sm),
+                            .clickable(role = Role.Button) {
+                                val index = pending.indexOf(group)
+                                if (index >= 0) onAction(DashboardAction.PendingGroupClicked(index))
+                            }.padding(vertical = NemlaTheme.spacing.sm),
                     horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -239,45 +253,50 @@ internal fun SearchCard(
     val colors = NemlaTheme.colors
     val search = state.search
     var picking by remember { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
     NemlaCard(modifier = Modifier.fillMaxWidth(), contentPadding = NemlaTheme.spacing.sm) {
-        Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
-            Icon(NemlaIcons.Search, contentDescription = null, tint = colors.mutedForeground, modifier = Modifier.size(16.dp))
-            Text(
-                text = stringResource(Res.string.search_by_date),
-                style = NemlaTheme.typography.body,
-                color = colors.mutedForeground,
-                modifier = Modifier.weight(1f),
-            )
-            Surface(
-                shape = CircleShape,
-                color = if (search.date != null) colors.secondary else colors.background,
-                contentColor = if (search.date != null) colors.secondaryForeground else colors.foreground,
-                border = if (search.date != null) null else BorderStroke(1.dp, colors.input),
-                modifier = Modifier.clip(CircleShape).clickable(role = Role.Button) { picking = true },
-            ) {
-                Row(
-                    modifier = Modifier.heightIn(min = 44.dp).padding(horizontal = NemlaTheme.spacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+        NemlaSearchField(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = stringResource(Res.string.search_placeholder),
+            trailingActions = {
+                IconButton(onClick = { picking = true }) {
                     Icon(
                         NemlaIcons.CalendarDays,
                         contentDescription = stringResource(Res.string.search_pick_date),
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Text(
-                        text = search.date?.let(format::short) ?: stringResource(Res.string.search_date),
-                        style = NemlaTheme.typography.button.tabular(),
+                        tint = if (search.date != null) colors.primary else colors.foreground,
+                        modifier = Modifier.size(20.dp),
                     )
                 }
-            }
-            if (search.date != null) {
-                IconButton(onClick = { onAction(DashboardAction.SearchCleared) }) {
-                    Icon(NemlaIcons.X, contentDescription = stringResource(Res.string.search_clear), modifier = Modifier.size(16.dp))
-                }
-            }
+            },
+        )
+        AnimatedVisibility(visible = query.isNotBlank(), enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            MutedCaption(
+                stringResource(Res.string.search_text_soon),
+                modifier = Modifier.padding(top = NemlaTheme.spacing.xs, start = NemlaTheme.spacing.sm),
+            )
         }
-        MutedCaption(stringResource(Res.string.search_text_soon), modifier = Modifier.padding(top = NemlaTheme.spacing.xxs))
+        search.date?.let { date ->
+            InputChip(
+                selected = true,
+                onClick = { picking = true },
+                label = { Text(format.short(date), style = NemlaTheme.typography.button.tabular()) },
+                leadingIcon = { Icon(NemlaIcons.CalendarDays, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                trailingIcon = {
+                    IconButton(onClick = { onAction(DashboardAction.SearchCleared) }, modifier = Modifier.size(24.dp)) {
+                        Icon(NemlaIcons.X, contentDescription = stringResource(Res.string.search_clear), modifier = Modifier.size(16.dp))
+                    }
+                },
+                colors =
+                    InputChipDefaults.inputChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        selectedTrailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
+                modifier = Modifier.padding(top = NemlaTheme.spacing.xs),
+            )
+        }
         if (search.isActive) {
             Column(modifier = Modifier.padding(top = NemlaTheme.spacing.xs)) {
                 val results = search.results
@@ -353,9 +372,13 @@ internal fun TodayCard(
             if (today.rows.isEmpty()) {
                 MutedCaption(stringResource(Res.string.today_empty))
             } else {
-                today.pageRows.forEachIndexed { index, row ->
-                    if (index > 0) HorizontalDivider(color = colors.border)
-                    ExpenseRowItem(row, format, onAction)
+                key(today.currentPage) {
+                    NemlaAnimatedColumn(items = today.pageRows, key = { it.id }) { _, row, first ->
+                        Column {
+                            if (!first) HorizontalDivider(color = colors.border)
+                            ExpenseRowItem(row, format, onAction)
+                        }
+                    }
                 }
             }
         }

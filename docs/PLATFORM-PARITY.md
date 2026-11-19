@@ -25,7 +25,7 @@ Branchement (lot 1, 16/11/2026) : `NemlaAndroid.start` (appelé par `NemlaApplic
 l'application ; `MainActivity` ne pose plus `FLAG_SECURE` elle-même (vérifié actif dans un APK release sur émulateur).
 `startNemla` (appelé par `iOSApp.init`) installe le voile `IosScreenProtection`. Les deux affichent `App()`.
 
-Écarts entre le web et le mobile à trancher (voir `specs/03` et `specs/04`) : graisse 600 absente de DM Sans (rendue en 700 sur le web),
+Écarts entre le web et le mobile à trancher (voir `../docs/specs/03` et `../docs/specs/04`) : graisse 600 absente de DM Sans (rendue en 700 sur le web),
 ambre au survol sans équivalent tactile, toasts en haut sur le web, fenêtres modales pleine largeur à coins carrés sur mobile web,
 logo absent du dépôt web (hébergé sur le CDN Lovable).
 
@@ -45,13 +45,13 @@ logo absent du dépôt web (hébergé sur le CDN Lovable).
 
 Écarts web / mobile introduits ou constatés au lot 1 (à valider par le propriétaire) :
 
-1. **Thème** : le mobile suit le thème du système ; le web est clair par défaut sans mode « système » (`specs/03` §1).
+1. **Thème** : le mobile suit le thème du système ; le web est clair par défaut sans mode « système » (`../docs/specs/03` §1).
 2. **Polices** : Outfit et DM Sans non embarquées (aucun fichier téléchargé) ; familles définies dans un seul fichier,
    `core/designsystem/.../theme/NemlaFonts.kt`, avec le « semi-gras » du corps déjà mappé sur 700 comme le rendu web.
 3. **Logo** : `nemla-logo.png` absent ; monogramme « n » dessiné en Compose (`brand/NemlaLogo.kt`, fonction `PlaceholderLogoMark`).
 4. **Hauteur des contrôles** : boutons, champs et listes à 48 dp (cible tactile) au lieu de 36 px sur le web.
 5. **Toasts** → bannières dans la carte (erreur, information, succès), annoncées aux lecteurs d'écran.
-6. **Messages** : erreurs de validation sous les champs (textes nouveaux, `specs/04` §2.3) ; les messages bruts de Supabase ne sont
+6. **Messages** : erreurs de validation sous les champs (textes nouveaux, `../docs/specs/04` §2.3) ; les messages bruts de Supabase ne sont
    jamais affichés, remplacés par des messages traduits (identifiants incorrects, email non confirmé, email déjà inscrit,
    hors ligne, délai dépassé, trop de tentatives, configuration).
 7. **Modes de l'écran d'authentification** : trois destinations de navigation (connexion, inscription, mot de passe oublié) au lieu
@@ -65,7 +65,7 @@ logo absent du dépôt web (hébergé sur le CDN Lovable).
 11. **En-tête de l'accueil** : bouton « Se déconnecter » visible directement, sans menu « Mon espace ».
 12. **Traductions anglaises** : `en-marketing.ts` n'étant pas dans les spécifications, les textes anglais de l'authentification et
     de l'accueil ont été rédigés pour le mobile (« Pseudo » → « Username », « Femme » → « Woman », « Colocation » →
-    « Shared housing » suivent les valeurs effectives de `specs/04` §I.1) ; à relire.
+    « Shared housing » suivent les valeurs effectives de `../docs/specs/04` §I.1) ; à relire.
 
 
 ## Lot 2 — dictée (16/11/2026)
@@ -87,14 +87,14 @@ permission sont propres à chaque plateforme, dans `core:audio`) :
 
 1. **Stockage de l'audio** : le WAV n'est pas téléversé dans le bucket `voice-notes` et `audio_url` n'est jamais envoyé ; il part
    directement en multipart vers `voice/process` et ne vit qu'en mémoire (remis à zéro après l'envoi). Rien ne reste côté stockage
-   en cas d'échec (le web y laisse l'audio, `specs/01` §2.1 étape 11).
+   en cas d'échec (le web y laisse l'audio, `../docs/specs/01` §2.1 étape 11).
 2. **Consentement IA** : dialogue explicite avant la première dictée (niveau `PERSONAL`), absent du web. Refus : rien n'est enregistré
    ni envoyé, message neutre. Révocation prévue dans Mon espace (lot 4).
 3. **Langue de dictée** : langue du système (`en` si le système est en anglais, sinon `fr`) en attendant les préférences (lot 4).
 4. **Fiche de revue** : écran dédié (destination `voiceGraph`) ouvert après une dictée réussie, au lieu d'un bloc inséré dans le
    tableau de bord (lot 3). « Plus tard » et le retour système reviennent à l'accueil. Les dépenses en attente ne peuvent être
    rouvertes que pendant la session, par l'entrée « Dépenses à valider » ajoutée au menu « Ajouter » (en mémoire, oubliée au
-   redémarrage, à la déconnexion et au changement de compte) ; la carte « Dépenses à valider » (`specs/04` §5.3) attend
+   redémarrage, à la déconnexion et au changement de compte) ; la carte « Dépenses à valider » (`../docs/specs/04` §5.3) attend
    `GET /api/public/expenses`.
 5. **Libellé en lecture seule** dans la fiche (renommer exige `PUT /api/public/expenses/{id}`) ; la majuscule initiale n'est pas
    réappliquée (le serveur l'a déjà fait à l'extraction). `prettyLabel` n'est pas porté (sans effet notable sur un libellé dicté ;
@@ -217,7 +217,7 @@ une plateforme ajouté) :
    de l'en-tête réduit à « Se déconnecter » (pas de « Gérer mon compte », qui permettrait de contourner l'onboarding) ; « Aucune charge
    fixe détectée » affiché aussi ici ; pas de toast « Configuration enregistrée » (le tableau de bord s'ouvre directement) ; erreurs en
    bannière (5 s) au lieu de toasts. Aucune validation, comme le web (montant illisible = 0, budget vide = 0).
-3. **Dictée des charges fixes** : lit `transcript.text` (le web passe l'objet et échoue, `specs/01` §2.2). La transcription est ajoutée
+3. **Dictée des charges fixes** : lit `transcript.text` (le web passe l'objet et échoue, `../docs/specs/01` §2.2). La transcription est ajoutée
    au texte (« , ») puis seule analysée, dans l'onboarding comme dans Mon espace. Bouton « Transcription… » pendant l'envoi.
 4. **Toasts** : bannières en haut du panneau ouvert (4 s, touchables pour fermer), comme aux lots 2 et 3.
 5. **En-têtes** : avatar selon la situation familiale (aussi sur le tableau de bord) ; menu du tableau de bord : « Gérer mon compte »
@@ -263,7 +263,7 @@ une plateforme ajouté) :
 | Taille | `OpenableColumns.SIZE` puis lecture plafonnée à 8 Mo ; PDF : `statSize` | `NSURLFileSizeKey` puis `NSData` | Non |
 | Message PDF non lisible | mentionne Android | jamais affiché (PDFKit toujours présent) | Non |
 
-Écarts avec le web (§9 de `specs/04`), à valider :
+Écarts avec le web (§9 de `../docs/specs/04`), à valider :
 
 1. **Formats** : Excel (`.xls`, `.xlsx`, `.xlsm`, `.ods`) non lu (aucune bibliothèque au catalogue) ; le fichier reste sélectionnable et
    l'application demande d'exporter en CSV. Textes adaptés : « PDF ou CSV » (description, sous-texte du menu « Ajouter »).
@@ -284,12 +284,12 @@ une plateforme ajouté) :
 
 Écarts Android / iOS : aucun. Bandeau, dialogue et historique sont 100 % Compose ; aucun composant système (pas de notification).
 
-Écarts avec le web (§5.10, §10.1, §10.2 de `specs/04`), à valider :
+Écarts avec le web (§5.10, §10.1, §10.2 de `../docs/specs/04`), à valider :
 
 1. **Période envoyée** : toujours explicite (`?month=AAAA-MM` ou `?year=AAAA`) et calculée sur la date **locale** ; le web laisse parfois le
    serveur prendre le mois UTC. Une réponse pour une autre période est refusée (« Bilan indisponible pour le moment. »).
 2. **Montants** : total, écart et lignes « Où part l'argent » formatés sur l'appareil dans la devise du profil (formateur commun) ; les
-   points clés et pistes restent ceux du serveur, en français avec « € » arrondi (voir `BACKEND-GAPS.md`). En anglais, une ligne
+   points clés et pistes restent ceux du serveur, en français avec « € » arrondi (voir `../docs/BACKEND-GAPS.md`). En anglais, une ligne
    « These notes are written in French for now. » est ajoutée sous ces textes.
 3. **Erreur du dialogue** : « Bilan indisponible pour le moment. » plus un bouton « Réessayer » (absent du web). « J'ai compris » n'apparaît
    qu'une fois le bilan chargé ; la croix ferme dans tous les états.
@@ -302,3 +302,42 @@ une plateforme ajouté) :
 6. **Titres** : « Bilan de {période} » repris tel quel du web (« Bilan de Octobre 2026 », sans élision) ; anglais « Report for October 2026 »,
    « Report for the year 2025 ».
 7. **Hors périmètre** : notifications push, bannières `user_notifications` et rappel quotidien (lot 7, à concevoir).
+
+## Lot 6b — interface mobile, étapes 1 et 2 (17/11/2026)
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Bouton retour de la barre d'application (`NemlaBackButton`) | Icône flèche seule (`ArrowLeft`), libellé « Retour » / « Back » lu par TalkBack | Chevron `‹` suivi du libellé « Retour » / « Back », couleur `primary`, comme UIKit | Oui, volontaire |
+| Retour système | Retour prédictif : `android:enableOnBackInvokedCallback="true"` ; navigation-compose 2.10 joue `popExit` / `popEnter` pendant le geste | Balayage depuis le bord gauche : CMP 1.12 envoie toujours le geste de bord de départ comme évènement de retour (`navigationevent`), aucun réglage `ComposeUIViewController` nécessaire ; `NavHost` anime de même | Oui, geste natif de chaque OS |
+| Panneau du bas, barre d'application | `ModalBottomSheet`, `TopAppBar` Material 3 | Mêmes composants Material 3, pas d'équivalent UIKit | Non (identique) |
+
+Le libellé iOS n'est pas le titre de l'écran précédent (UIKit le fait) mais « Retour » : l'écran précédent n'est pas connu de
+`core:designsystem`. Le bord droit (`EndEdgePanGestureBehavior`) reste désactivé, valeur par défaut de CMP.
+
+
+## Lot 6b — étape 3, tableau de bord (17/11/2026)
+
+Écarts Android / iOS : aucun. Boutons segmentés, `HorizontalPager`, bouton flottant réductible, panneau « Ajouter », champ de
+recherche, `InputChip`, tirer pour rafraîchir et animations sont des composants Compose / Material 3 communs. Sur iOS, ils ne sont pas
+natifs UIKit (pas de `UISegmentedControl`, `UISearchBar` ni `UIRefreshControl`) ; le rebond de défilement iOS n'existe pas.
+Le menu « Ajouter » de la ligne « Menu « Ajouter », dialogues » du lot 2 est désormais un `ModalBottomSheet`.
+
+## Lot 6b — étapes 4 à 6, Mon espace, fenêtres, animations (17/11/2026)
+
+| Sujet | Android | iOS | Visible ? |
+|---|---|---|---|
+| Panneaux du bas (`NemlaSheet`, `NemlaFormSheet`) | `ModalBottomSheet` Material 3 : poignée, glisser vers le bas, retour système ferme | Même composant Material 3 (pas de `UISheetPresentationController` ni de détente moyenne) ; on ferme en glissant ou en touchant le voile ; le geste de bord (évènement de retour CMP) devrait aussi fermer, à vérifier sur simulateur | Oui, légèrement |
+| Retour haptique (suppression, validation) | `HapticFeedbackType.Confirm` → `HapticFeedbackConstants.CONFIRM` (léger) | `UINotificationFeedbackGenerator` succès (double impulsion, plus marquée) | Oui, au toucher |
+| Remplissage automatique (`ContentType`) | Service d'autoremplissage (Google, gestionnaire de mots de passe) | `textContentType` UIKit : trousseau iCloud | Oui, propre à chaque OS |
+| Onglets, pager, listes déroulantes, champs, `AlertDialog`, `DatePickerDialog`, snackbars | Material 3 | Mêmes composants Material 3, non natifs UIKit (`UISegmentedControl`, `UIAlertController`, `UIDatePicker` absents) | Non (identique) |
+
+Les panneaux de Mon espace sont des destinations du `NavHost` : la flèche Android et le chevron iOS de l'étape 1 s'y appliquent,
+ainsi que le retour prédictif et le geste de bord. Aucun autre écart.
+
+## Lot 6c — retours après essai Android (18/11/2026)
+- Rotation : même règle sur les deux plateformes (portrait partout, paysage permis sur le tableau de bord seulement). Limites propres à
+  chaque système : Android 16 ignore le verrouillage d'orientation sur les grands écrans (largeur ≥ 600 dp) ; sur iPad, iOS ignore le
+  masque d'orientation tant que l'app accepte le multitâche (pas de `UIRequiresFullScreen`). Sur iOS 15, le retour forcé en portrait
+  n'existe pas : l'écran revient en portrait au prochain mouvement de l'appareil (iOS 16+ : immédiat).
+- Barre d'état claire de l'écran d'accueil : Android par `WindowInsetsControllerCompat`, iOS par le style global de
+  `UIApplication` (`UIViewControllerBasedStatusBarAppearance` à `NO` dans `Info.plist`). Rendu identique.

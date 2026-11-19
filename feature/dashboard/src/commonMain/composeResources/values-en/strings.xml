@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="dashboard_my_space">My space</string>
-  <string name="dashboard_account_menu">Open the account menu</string>
-  <string name="dashboard_sign_out">Sign out</string>
-  <string name="dashboard_signing_out">One moment…</string>
+  <string name="dashboard_account_menu">Account</string>
   <string name="dashboard_sign_out_failed">Could not sign out. Try again.</string>
   <string name="dashboard_loading">Loading your dashboard…</string>
   <string name="dashboard_error_offline">No connection. Your data may be out of date.</string>
@@ -17,7 +14,7 @@
   <string name="pending_title">Expenses to review</string>
   <string name="pending_body">These expenses (dictated or read from a file) are waiting for your confirmation — tap them to check and adjust their category.</string>
   <string name="pending_import">Expenses imported from a file</string>
-  <string name="pending_voice">Voice expense…</string>
+  <string name="pending_voice">Voice entry to check</string>
   <string name="pending_check">Review</string>
   <plurals name="pending_summary">
     <item quantity="one">%1$d expense · %2$s</item>
@@ -29,9 +26,8 @@
   </plurals>
   <string name="alerts_over">+%1$s / %2$s planned</string>
   <string name="alerts_planned">%1$s planned</string>
-  <string name="search_by_date">Search a specific day</string>
   <string name="search_pick_date">Search by date</string>
-  <string name="search_date">Date</string>
+  <string name="search_placeholder">Search expenses</string>
   <string name="search_clear">Clear search</string>
   <string name="search_text_soon">Keyword search is coming soon.</string>
   <string name="search_empty">No expenses found.</string>
@@ -84,6 +80,7 @@
   <string name="spending_empty">No expenses for this period.</string>
   <string name="spending_chart_description">Spending by category</string>
   <string name="other_group">Other</string>
+  <string name="spending_percent">%1$s%</string>
   <string name="budget_usage">%1$s / %2$s</string>
   <string name="budget_usage_over">%1$s / %2$s · +%3$s</string>
   <string name="today_title">Today's expenses</string>
@@ -97,7 +94,6 @@
   <string name="page_previous">Previous</string>
   <string name="page_next">Next</string>
   <string name="page_indicator">Page %1$d / %2$d</string>
-  <string name="expense_fallback">Expense</string>
   <string name="no_category">No category</string>
   <string name="expense_row_meta">%1$s · %2$s</string>
   <string name="editor_title">Edit expense</string>
@@ -121,6 +117,6 @@
   <string name="editor_delete_failed">Could not delete</string>
   <string name="editor_offline">No connection. Try again.</string>
   <string name="editor_timeout">The server is taking too long to respond. Try again.</string>
-  <string name="dashboard_manage_account">Manage my account</string>
   <string name="alerts_adjust">Adjust my category budgets</string>
+  <string name="editor_label_unavailable">The label is not available in the mobile app yet.</string>
 </resources>

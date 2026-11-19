@@ -1,12 +1,10 @@
 package app.nemla.feature.settings.card
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,8 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +31,7 @@ import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
 import app.nemla.core.designsystem.component.NemlaChoiceCard
 import app.nemla.core.designsystem.component.NemlaOption
+import app.nemla.core.designsystem.component.NemlaPickerField
 import app.nemla.core.designsystem.component.NemlaSelectField
 import app.nemla.core.designsystem.component.NemlaTextField
 import app.nemla.core.designsystem.icon.NemlaIcons
@@ -209,27 +206,7 @@ private fun DateButton(
     shown: String,
     onClick: () -> Unit,
 ) {
-    val colors = NemlaTheme.colors
-    val shape = RoundedCornerShape(NemlaTheme.radius.md)
-    val label = stringResource(Res.string.card_date_label)
-    Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.labelGap)) {
-        Text(label, style = NemlaTheme.typography.label)
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = NemlaTheme.sizes.controlHeight)
-                    .clip(shape)
-                    .border(1.dp, colors.input, shape)
-                    .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
-                    .padding(horizontal = NemlaTheme.spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
-        ) {
-            Text(shown, style = NemlaTheme.typography.input, modifier = Modifier.weight(1f))
-            Icon(NemlaIcons.Calendar, contentDescription = null, modifier = Modifier.size(NemlaTheme.sizes.icon))
-        }
-    }
+    NemlaPickerField(label = stringResource(Res.string.card_date_label), value = shown, onClick = onClick)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

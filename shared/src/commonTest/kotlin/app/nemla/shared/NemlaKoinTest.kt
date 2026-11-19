@@ -248,9 +248,9 @@ class NemlaKoinTest {
     }
 
     @Test
-    fun rootTargetStartsWithSignUpAndReturnsToSignInAfterASession() {
+    fun rootTargetStartsWithWelcomeAndReturnsToSignInAfterASession() {
         assertNull(rootTargetFor(AuthState.Unknown, hadSession = false))
-        assertEquals(RootTarget.Auth(AuthEntry.SignUp), rootTargetFor(AuthState.SignedOut, hadSession = false))
+        assertEquals(RootTarget.Auth(AuthEntry.Welcome), rootTargetFor(AuthState.SignedOut, hadSession = false))
         assertEquals(RootTarget.Auth(AuthEntry.SignIn), rootTargetFor(AuthState.SignedOut, hadSession = true))
         val signedIn = AuthState.SignedIn(Session(UserId("u"), email = null, expiresAt = null))
         assertEquals(RootTarget.Home, rootTargetFor(signedIn, hadSession = false))

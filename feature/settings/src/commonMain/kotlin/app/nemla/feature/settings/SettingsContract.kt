@@ -20,7 +20,6 @@ internal enum class AccountMessage { DELETE_UNAVAILABLE, DELETE_FAILED, SIGN_OUT
 
 internal data class SettingsUiState(
     val tab: SettingsTab = SettingsTab.PROFILE,
-    val panel: SettingsPanel? = null,
     val pseudo: String? = null,
     val household: Household? = null,
     val currency: Currency = Currency.Default,
@@ -30,7 +29,7 @@ internal data class SettingsUiState(
     val isSigningOut: Boolean = false,
     val accountMessage: AccountMessage? = null,
 ) {
-    override fun toString(): String = "SettingsUiState(tab=$tab, panel=$panel, isDeleting=$isDeleting)"
+    override fun toString(): String = "SettingsUiState(tab=$tab, isDeleting=$isDeleting)"
 }
 
 internal sealed interface SettingsAction {
@@ -40,15 +39,7 @@ internal sealed interface SettingsAction {
         val tab: SettingsTab,
     ) : SettingsAction
 
-    data class PanelOpened(
-        val panel: SettingsPanel,
-    ) : SettingsAction
-
     data object BackClicked : SettingsAction
-
-    data object ProfileChanged : SettingsAction
-
-    data object CategoryBudgetsRequested : SettingsAction
 
     data object DeleteAccountClicked : SettingsAction
 

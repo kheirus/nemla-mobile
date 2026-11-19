@@ -44,4 +44,9 @@
   <string name="auth_field_password_too_long">Ce mot de passe est trop long (%1$d octets maximum).</string>
   <string name="auth_field_password_too_weak">Ce mot de passe est trop faible : choisissez-en un plus long ou plus varié.</string>
   <string name="auth_field_age_out_of_range">Indiquez un âge entre %1$d et %2$d ans.</string>
+  <string name="auth_welcome_brand">nemla</string>
+  <string name="auth_welcome_title">Dictez vos dépenses.</string>
+  <string name="auth_welcome_subtitle">nemla les classe et vous montre où part votre argent, en quelques secondes.</string>
+  <string name="auth_welcome_start">Commencer</string>
+  <string name="auth_welcome_have_account">J'ai déjà un compte</string>
 </resources>

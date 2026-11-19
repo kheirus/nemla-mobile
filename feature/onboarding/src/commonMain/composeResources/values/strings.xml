@@ -21,7 +21,7 @@
   <string name="onboarding_offline">Pas de connexion internet. Réessayez.</string>
   <string name="onboarding_nothing_detected">Aucune charge fixe détectée</string>
   <string name="onboarding_my_space">Mon espace</string>
-  <string name="onboarding_account_menu">Ouvrir le menu du compte</string>
+  <string name="onboarding_account_menu">Compte</string>
   <string name="onboarding_sign_out">Se déconnecter</string>
   <string name="onboarding_dismiss">Masquer le message</string>
   <string name="onboarding_skip">Passer pour l'instant</string>

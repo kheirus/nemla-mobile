@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,14 +15,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import app.nemla.core.designsystem.component.NemlaAlertDialog
 import app.nemla.core.designsystem.component.NemlaBanner
 import app.nemla.core.designsystem.component.NemlaBannerKind
 import app.nemla.core.designsystem.component.NemlaButton
 import app.nemla.core.designsystem.component.NemlaButtonVariant
-import app.nemla.core.designsystem.component.NemlaDialog
+import app.nemla.core.designsystem.component.NemlaFormSheet
 import app.nemla.core.designsystem.component.NemlaOption
+import app.nemla.core.designsystem.component.NemlaPickerField
 import app.nemla.core.designsystem.component.NemlaSelectField
 import app.nemla.core.designsystem.component.NemlaTextField
 import app.nemla.core.designsystem.icon.NemlaIcons
@@ -46,13 +49,13 @@ import app.nemla.feature.dashboard.resources.editor_delete_confirm
 import app.nemla.feature.dashboard.resources.editor_delete_failed
 import app.nemla.feature.dashboard.resources.editor_description
 import app.nemla.feature.dashboard.resources.editor_label_readonly
+import app.nemla.feature.dashboard.resources.editor_label_unavailable
 import app.nemla.feature.dashboard.resources.editor_offline
 import app.nemla.feature.dashboard.resources.editor_payment
 import app.nemla.feature.dashboard.resources.editor_save
 import app.nemla.feature.dashboard.resources.editor_save_failed
 import app.nemla.feature.dashboard.resources.editor_timeout
 import app.nemla.feature.dashboard.resources.editor_title
-import app.nemla.feature.dashboard.resources.expense_fallback
 import app.nemla.feature.dashboard.resources.no_category
 import app.nemla.feature.dashboard.resources.payment_card
 import app.nemla.feature.dashboard.resources.payment_cash
@@ -61,11 +64,10 @@ import app.nemla.feature.dashboard.resources.payment_transfer
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
-private val EditorMaxWidth = 512.dp
 private const val NO_CATEGORY_KEY = ""
 
 @Composable
-internal fun ExpenseEditorDialog(
+internal fun ExpenseEditorSheet(
     editor: ExpenseEditorState,
     state: DashboardUiState,
     format: DashboardFormat,
@@ -74,20 +76,22 @@ internal fun ExpenseEditorDialog(
     var picking by rememberSaveable { mutableStateOf(false) }
     val colors = NemlaTheme.colors
     val enabled = !editor.isBusy
-    NemlaDialog(
+    val haptics = LocalHapticFeedback.current
+    NemlaFormSheet(
         title = stringResource(Res.string.editor_title),
         onDismissRequest = { onAction(DashboardAction.EditorDismissed) },
         dismissible = enabled,
-        maxWidth = EditorMaxWidth,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.fieldGap)) {
             Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xxs)) {
                 Text(stringResource(Res.string.editor_description), style = NemlaTheme.typography.label)
-                Text(
-                    text = editor.label?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.expense_fallback),
-                    style = NemlaTheme.typography.input,
-                )
-                MutedCaption(stringResource(Res.string.editor_label_readonly))
+                val label = editor.label?.takeIf { it.isNotBlank() }
+                if (label == null) {
+                    MutedCaption(stringResource(Res.string.editor_label_unavailable))
+                } else {
+                    Text(text = label, style = NemlaTheme.typography.input)
+                    MutedCaption(stringResource(Res.string.editor_label_readonly))
+                }
             }
             NemlaTextField(
                 value = editor.amountText,
@@ -109,9 +113,9 @@ internal fun ExpenseEditorDialog(
                 },
                 enabled = enabled,
             )
-            DateFieldButton(
+            NemlaPickerField(
                 label = stringResource(Res.string.editor_date),
-                shown = format.long(editor.date),
+                value = format.long(editor.date),
                 enabled = enabled,
                 onClick = { picking = true },
             )
@@ -162,24 +166,17 @@ internal fun ExpenseEditorDialog(
         )
     }
     if (editor.confirmingDelete) {
-        AlertDialog(
+        NemlaAlertDialog(
+            title = stringResource(Res.string.editor_delete_confirm),
+            confirmLabel = stringResource(Res.string.editor_delete),
+            dismissLabel = stringResource(Res.string.editor_cancel),
+            onConfirm = {
+                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                onAction(DashboardAction.EditorDeleteConfirmed)
+            },
             onDismissRequest = { onAction(DashboardAction.EditorDeleteCancelled) },
-            title = { Text(stringResource(Res.string.editor_delete_confirm), style = NemlaTheme.typography.cardTitle) },
-            confirmButton = {
-                NemlaButton(
-                    text = stringResource(Res.string.editor_delete),
-                    onClick = { onAction(DashboardAction.EditorDeleteConfirmed) },
-                    variant = NemlaButtonVariant.Destructive,
-                )
-            },
-            dismissButton = {
-                NemlaButton(
-                    text = stringResource(Res.string.editor_cancel),
-                    onClick = { onAction(DashboardAction.EditorDeleteCancelled) },
-                    variant = NemlaButtonVariant.Ghost,
-                )
-            },
-            containerColor = colors.background,
+            icon = NemlaIcons.Trash2,
+            destructive = true,
         )
     }
 }

@@ -1,5 +1,8 @@
 package app.nemla.feature.dashboard.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -19,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,7 +70,9 @@ import app.nemla.feature.dashboard.resources.chart_title
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
-private val ChartHeight = 208.dp
+private const val CHART_ASPECT = 0.55f
+private val MinChartHeight = 180.dp
+private val MaxChartHeight = 420.dp
 private val AxisWidth = 46.dp
 private val MaxBarWidth = 28.dp
 private val BarRadius = 5.dp
@@ -76,25 +84,59 @@ private const val WIDE_LAYOUT_DP = 640
 private const val BAR_FILL = 0.7f
 private const val GRID_ALPHA = 0.6f
 private const val UNSELECTED_ALPHA = 0.38f
+private const val UNSELECTED_ALPHA_DARK = 0.72f
 private const val PLANNED_ALPHA = 0.18f
 private const val PLANNED_STROKE_ALPHA = 0.40f
 private const val CURSOR_ALPHA = 0.40f
 private const val LEGEND_SPENT_ALPHA = 0.35f
+private const val LEGEND_SPENT_ALPHA_DARK = 0.72f
+private const val LAST_BAR_INDEX = 11
 
 @Composable
 internal fun MonthlyChartSection(
     chart: ChartView,
+    animationKey: Any,
     format: DashboardFormat,
     onMonthTapped: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    fillHeight: Boolean = false,
+    showHint: Boolean = true,
+) {
+    BoxWithConstraints(modifier = modifier) {
+        val chartModifier =
+            if (fillHeight) {
+                Modifier.fillMaxHeight()
+            } else {
+                Modifier.height((maxWidth * CHART_ASPECT).coerceIn(MinChartHeight, MaxChartHeight))
+            }
+        ChartSectionContent(chart, animationKey, format, onMonthTapped, fillHeight, chartModifier, showHint)
+    }
+}
+
+@Composable
+private fun ChartSectionContent(
+    chart: ChartView,
+    animationKey: Any,
+    format: DashboardFormat,
+    onMonthTapped: (Int) -> Unit,
+    fillHeight: Boolean,
+    chartModifier: Modifier,
+    showHint: Boolean,
 ) {
     val colors = NemlaTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs)) {
+    Column(
+        modifier = if (fillHeight) Modifier.fillMaxHeight() else Modifier,
+        verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.xs),
+    ) {
         Text(
             text = stringResource(Res.string.chart_title, chart.year.toString()),
             style = NemlaTheme.typography.subTitle,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-            LegendDot(colors.primary.copy(alpha = LEGEND_SPENT_ALPHA), stringResource(Res.string.chart_legend_spent))
+            LegendDot(
+                colors.primary.copy(alpha = if (colors.isDark) LEGEND_SPENT_ALPHA_DARK else LEGEND_SPENT_ALPHA),
+                stringResource(Res.string.chart_legend_spent),
+            )
             if (chart.showsPlanned) {
                 LegendDot(colors.primary.copy(alpha = PLANNED_ALPHA), stringResource(Res.string.chart_legend_planned))
             }
@@ -105,14 +147,22 @@ internal fun MonthlyChartSection(
                 }
             }
         }
-        MonthlyChart(chart = chart, format = format, onMonthTapped = onMonthTapped)
-        Text(
-            text = stringResource(Res.string.chart_hint),
-            style = NemlaTheme.typography.caption.copy(fontSize = 11.sp),
-            color = colors.mutedForeground,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+        MonthlyChart(
+            chart = chart,
+            animationKey = animationKey,
+            format = format,
+            onMonthTapped = onMonthTapped,
+            modifier = if (fillHeight) Modifier.weight(1f) else chartModifier,
         )
+        if (showHint) {
+            Text(
+                text = stringResource(Res.string.chart_hint),
+                style = NemlaTheme.typography.caption.copy(fontSize = 11.sp),
+                color = colors.mutedForeground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 
@@ -135,8 +185,10 @@ private fun LegendText(text: String) {
 @Composable
 private fun MonthlyChart(
     chart: ChartView,
+    animationKey: Any,
     format: DashboardFormat,
     onMonthTapped: (Int) -> Unit,
+    modifier: Modifier,
 ) {
     val colors = NemlaTheme.colors
     val measurer = rememberTextMeasurer()
@@ -149,15 +201,20 @@ private fun MonthlyChart(
     val axisStyle = TextStyle(fontSize = 10.sp, color = colors.mutedForeground)
     val monthStyle = TextStyle(fontSize = 11.sp, color = colors.mutedForeground)
     val targetStyle = TextStyle(fontSize = 10.sp, color = colors.destructive)
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(ChartHeight)) {
+    val unselectedAlpha = if (colors.isDark) UNSELECTED_ALPHA_DARK else UNSELECTED_ALPHA
+    val riseMillis = (BAR_RISE_MILLIS + LAST_BAR_INDEX * BAR_STAGGER_MILLIS).toFloat()
+    val rise = remember(animationKey) { Animatable(0f) }
+    LaunchedEffect(rise) { rise.animateTo(riseMillis, tween(riseMillis.toInt(), easing = LinearEasing)) }
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val height = maxHeight
         val wide = maxWidth.value >= WIDE_LAYOUT_DP
         val widthPx = with(density) { maxWidth.toPx() }
-        val geometry = with(density) { ChartGeometry(widthPx, ChartHeight.toPx(), this) }
+        val geometry = with(density) { ChartGeometry(widthPx, height.toPx(), this) }
         Canvas(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(ChartHeight)
+                    .height(height)
                     .semantics { contentDescription = description }
                     .pointerInput(chart.year, widthPx) {
                         detectTapGestures(
@@ -196,7 +253,17 @@ private fun MonthlyChart(
                         ),
                 )
             }
-            chart.bars.forEachIndexed { index, bar -> drawBar(index, bar, chart.axisMaxCents, geometry, colors.primary) }
+            chart.bars.forEachIndexed { index, bar ->
+                drawBar(
+                    index = index,
+                    bar = bar,
+                    axisMax = chart.axisMaxCents,
+                    geometry = geometry,
+                    primary = colors.primary,
+                    unselectedAlpha = unselectedAlpha,
+                    growth = staggeredFraction(rise.value, index),
+                )
+            }
             val budget = chart.budgetLineCents
             if (budget != null && targetLabel != null) {
                 val y = geometry.yOf(budget, chart.axisMaxCents)
@@ -300,16 +367,20 @@ private fun DrawScope.drawBar(
     axisMax: Long,
     geometry: ChartGeometry,
     primary: Color,
+    unselectedAlpha: Float,
+    growth: Float,
 ) {
+    if (growth <= 0f) return
     val left = geometry.slotCenter(index) - geometry.barWidth / 2f
-    val totalTop = geometry.yOf(bar.totalCents.coerceAtLeast(0), axisMax)
+    val bottom = geometry.plotBottom
+    val totalTop = bottom - (bottom - geometry.yOf(bar.totalCents.coerceAtLeast(0), axisMax)) * growth
     if (bar.totalCents > 0) {
-        val path = topRoundedBar(left, totalTop, geometry.barWidth, geometry.plotBottom - totalTop, geometry.radius)
-        drawPath(path, color = if (bar.selected) primary else primary.copy(alpha = UNSELECTED_ALPHA))
+        val path = topRoundedBar(left, totalTop, geometry.barWidth, bottom - totalTop, geometry.radius)
+        drawPath(path, color = if (bar.selected) primary else primary.copy(alpha = unselectedAlpha))
         if (bar.selected) drawPath(path, color = primary, style = Stroke(width = 2.dp.toPx()))
     }
     if (bar.plannedCents > 0) {
-        val plannedTop = geometry.yOf(bar.stackedCents.coerceAtLeast(0), axisMax)
+        val plannedTop = bottom - (bottom - geometry.yOf(bar.stackedCents.coerceAtLeast(0), axisMax)) * growth
         val path = topRoundedBar(left, plannedTop, geometry.barWidth, totalTop - plannedTop, geometry.radius)
         drawPath(path, color = primary.copy(alpha = PLANNED_ALPHA))
         drawPath(

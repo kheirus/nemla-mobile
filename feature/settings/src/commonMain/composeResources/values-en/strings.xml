@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="settings_title">My space</string>
-  <string name="settings_back">Back</string>
-  <string name="settings_account_menu">Open the account menu</string>
   <string name="settings_sign_out">Sign out</string>
   <string name="settings_sign_out_failed">Sign-out failed. Try again.</string>
   <string name="settings_dismiss">Hide the message</string>

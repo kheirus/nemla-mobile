@@ -82,7 +82,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class SettingsViewModelsTest : MainDispatcherTest() {
@@ -100,25 +99,18 @@ class SettingsViewModelsTest : MainDispatcherTest() {
     private val languages = CurrentLanguages(preferences) { AppLanguage.FR }
 
     @Test
-    fun hostSwitchesTabsAndPanelsAndClosesFromTheList() =
+    fun hostSwitchesTabsRefreshesTheProfileAndCloses() =
         runTest {
             val vm = SettingsViewModel(SettingsTab.CATEGORIES, GetUserProfile(profiles), DeleteAccount(accounts), SignOut(auth))
             assertEquals(SettingsTab.CATEGORIES, vm.state.value.tab)
             assertEquals("Léa", vm.state.value.pseudo)
             assertEquals(Household.FAMILY, vm.state.value.household)
-            vm.onAction(SettingsAction.PanelOpened(SettingsPanel.BUDGET))
+            vm.onAction(SettingsAction.TabSelected(SettingsTab.PROFILE))
             assertEquals(SettingsTab.PROFILE, vm.state.value.tab)
-            assertEquals(SettingsPanel.BUDGET, vm.state.value.panel)
-            vm.onAction(SettingsAction.CategoryBudgetsRequested)
-            assertEquals(SettingsTab.CATEGORIES, vm.state.value.tab)
-            assertNull(vm.state.value.panel)
-            vm.onAction(SettingsAction.PanelOpened(SettingsPanel.PROFILE))
             profiles.profile = AppResult.Success(profile(pseudo = "Sam"))
+            vm.onAction(SettingsAction.Started)
+            assertEquals("Sam", vm.state.value.pseudo)
             vm.effects.test {
-                vm.onAction(SettingsAction.BackClicked)
-                assertNull(vm.state.value.panel)
-                assertEquals("Sam", vm.state.value.pseudo)
-                expectNoEvents()
                 vm.onAction(SettingsAction.BackClicked)
                 assertEquals(SettingsEffect.Close, awaitItem())
             }

@@ -59,7 +59,7 @@
   </plurals>
   <string name="review_title">Check the detected expenses</string>
   <string name="review_title_import">Check the expenses read from the file</string>
-  <string name="review_label_fallback">Expense</string>
+  <string name="review_label_fallback">No label</string>
   <string name="review_transcript">“%1$s”</string>
   <string name="review_amount">Amount</string>
   <string name="review_category">Category</string>

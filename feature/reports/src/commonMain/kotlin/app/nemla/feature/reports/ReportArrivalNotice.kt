@@ -1,5 +1,11 @@
 package app.nemla.feature.reports
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -68,10 +77,19 @@ internal fun ReportArrivalNoticeContent(
     state: ReportNoticeUiState,
     onAction: (ReportNoticeAction) -> Unit,
 ) {
-    if (state.periods.isEmpty()) return
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
-        state.periods.forEach { period ->
-            NoticeCard(period, state.language) { onAction(ReportNoticeAction.NoticeClicked(period)) }
+    val visibility = remember { MutableTransitionState(false) }
+    visibility.targetState = state.periods.isNotEmpty()
+    var shown by remember { mutableStateOf(state.periods) }
+    if (state.periods.isNotEmpty()) shown = state.periods
+    AnimatedVisibility(
+        visibleState = visibility,
+        enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+        exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(NemlaTheme.spacing.sm)) {
+            shown.forEach { period ->
+                NoticeCard(period, state.language) { onAction(ReportNoticeAction.NoticeClicked(period)) }
+            }
         }
     }
 }

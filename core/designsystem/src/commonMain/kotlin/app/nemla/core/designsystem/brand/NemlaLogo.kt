@@ -1,5 +1,6 @@
 package app.nemla.core.designsystem.brand
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,24 +8,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.nemla.core.designsystem.resources.Res
 import app.nemla.core.designsystem.resources.ds_brand_name
+import app.nemla.core.designsystem.resources.nemla_logo
 import app.nemla.core.designsystem.theme.NemlaTheme
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 enum class NemlaLogoSize { Auth, Header }
@@ -53,39 +50,24 @@ fun NemlaLogo(
 }
 
 @Composable
-fun NemlaLogoMark(size: Dp) {
-    PlaceholderLogoMark(size)
-}
-
-@Composable
-private fun PlaceholderLogoMark(size: Dp) {
+fun NemlaLogoMark(
+    size: Dp,
+    backgroundColor: Color? = null,
+) {
+    if (backgroundColor == null) {
+        Image(painter = painterResource(Res.drawable.nemla_logo), contentDescription = null, modifier = Modifier.size(size))
+        return
+    }
     Box(
-        modifier = Modifier.size(size).background(NemlaTheme.colors.primary, CircleShape),
+        modifier = Modifier.size(size).background(backgroundColor, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = PlaceholderMonogram,
+        Image(
+            painter = painterResource(Res.drawable.nemla_logo),
             contentDescription = null,
-            tint = NemlaTheme.colors.primaryForeground,
-            modifier = Modifier.size(size * 0.6f),
+            modifier = Modifier.size(size * LOGO_IN_CIRCLE),
         )
     }
 }
 
-private val PlaceholderMonogram: ImageVector by lazy {
-    ImageVector
-        .Builder(
-            name = "NemlaMonogram",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f,
-        ).addPath(
-            pathData = addPathNodes("M7 19V9M7 13a5 5 0 0 1 10 0v6"),
-            fill = null,
-            stroke = SolidColor(Color.Black),
-            strokeLineWidth = 3f,
-            strokeLineCap = StrokeCap.Round,
-            strokeLineJoin = StrokeJoin.Round,
-        ).build()
-}
+private const val LOGO_IN_CIRCLE = 0.66f

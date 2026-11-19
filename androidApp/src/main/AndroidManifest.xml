@@ -12,8 +12,11 @@
     android:name=".NemlaApplication"
     android:allowBackup="false"
     android:dataExtractionRules="@xml/data_extraction_rules"
+    android:enableOnBackInvokedCallback="true"
     android:fullBackupContent="@xml/full_backup_content"
+    android:icon="@mipmap/ic_launcher"
     android:label="@string/app_name"
+    android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true"
     android:theme="@style/Theme.Nemla"
     android:usesCleartextTraffic="false"
@@ -21,6 +24,7 @@
 
     <activity
       android:name=".MainActivity"
+      android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
       android:exported="true"
       android:windowSoftInputMode="adjustResize">
       <intent-filter>

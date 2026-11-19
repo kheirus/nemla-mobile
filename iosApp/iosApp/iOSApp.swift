@@ -1,8 +1,11 @@
 import Shared
 import SwiftUI
+import UIKit
 
 @main
 struct iOSApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     init() {
         let info = Bundle.main.infoDictionary ?? [:]
         #if DEBUG
@@ -23,5 +26,11 @@ struct iOSApp: App {
             ContentView()
                 .ignoresSafeArea()
         }
+    }
+}
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        MainViewControllerKt.landscapeAllowed() ? .allButUpsideDown : .portrait
     }
 }
