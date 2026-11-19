@@ -1,6 +1,6 @@
 # Backend nemla en Kotlin : plan de réécriture et sortie de Lovable
 
-Rédigé le 19/11/2026. Statut : **proposition, à valider par le propriétaire** (arbitrages au §9).
+Rédigé le 19/11/2026. Statut : **validé par le propriétaire le 19/11/2026**, architecture, plan et arbitrages A1 à A8 (§9) compris.
 Ce plan remplace, une fois validé, la colonne « À créer » de `BACKEND-GAPS.md` : on ne complète pas le backend Lovable, on le remplace.
 
 ## 1. Objectif et périmètre
@@ -82,7 +82,7 @@ Une bibliothèque sans version stable compatible Kotlin 2.4 est écartée au pro
 | Accès SQL | JDBC + HikariCP, requêtes SQL paramétrées écrites à la main dans les dépôts | Exposed si une 1.x stable est retenue en B1 | Aucune injection SQL possible, SQL lisible et revu, pas de génération de code |
 | Migrations | Flyway | — | Standard JVM, versionné dans le dépôt |
 | JWT | `ktor-server-auth-jwt` (java-jwt + jwks-rsa d'Auth0) | Nimbus JOSE+JWT | Bibliothèques éprouvées, JWKS avec cache et rotation |
-| Chiffrement | Google Tink (AES-256-GCM, chiffrement d'enveloppe) | — | API difficile à mal utiliser, intégration KMS native |
+| Chiffrement | Google Tink (AES-256-GCM, chiffrement d'enveloppe) | — | API difficile à mal utiliser ; clé maîtresse dans le KMS retenu en A4 |
 | Tests | kotlin-test, Ktor `testApplication`, Testcontainers (Postgres réel) | — | Les règles RLS et SQL sont testées contre un vrai Postgres |
 | Analyse | Spotless + ktlint (déjà là), OWASP Dependency-Check ou Dependabot, scan de l'image (Trivy) | — | Dépendances vulnérables bloquées en CI |
 | Image | Conteneur JRE 17 distroless, utilisateur non root, système de fichiers en lecture seule | — | Surface d'attaque minimale |
@@ -245,14 +245,14 @@ Coûts hors Claude, à prévoir par le propriétaire : Supabase (gratuit pour le
 avec sauvegardes), hébergement de l'API (≈ 5 à 20 €/mois au départ), KMS (quelques euros par mois), IA à l'usage, compte Apple Developer
 (99 $/an), compte Google Play (25 $ une fois).
 
-## 9. Arbitrages pour le propriétaire
+## 9. Arbitrages (validés le 19/11/2026)
 
-| # | Question | Recommandation |
+| # | Question | Décision |
 |---|---|---|
 | A1 | Fournisseur IA (transcription et extraction) | Mistral (société française, hébergement UE, transcription Voxtral et modèles d'extraction) comme moteur principal ; un second fournisseur peut être branché plus tard par `ai:api` sans toucher aux écrans |
 | A2 | Durée de conservation des transcriptions | 30 jours, puis effacement |
 | A3 | Montants et dates en clair dans Postgres | Oui (sommes et filtres côté base), protégés par RLS et chiffrement au repos ; tout chiffrer obligerait à calculer en mémoire, possible mais plus lent |
-| A4 | KMS | Scaleway Key Manager si l'API est chez Scaleway, sinon Google Cloud KMS `europe-west9` (Paris), tous deux pris en charge par Tink |
+| A4 | KMS | Scaleway Key Manager (région `fr-par`), l'API étant chez Scaleway. Tink n'a pas d'intégration Scaleway native : un adaptateur `Aead` appelle les opérations de chiffrement et de déchiffrement du Key Manager (lot B3, revue Fable). Disponibilité et conditions à vérifier en B0 ; repli : Google Cloud KMS `europe-west9` (Paris), pris en charge nativement par Tink |
 | A5 | Hébergement de l'API | Scaleway Serverless Containers (Paris) |
 | A6 | Administration (suspension, quotas, support) | Pas de console : scripts SQL versionnés et exécutés par le propriétaire ; une console pourra venir plus tard |
 | A7 | Notifications | Push serveur : FCM pour Android, APNs direct pour iOS (pas de SDK Firebase sur iOS), contenu sans montant ni libellé |
