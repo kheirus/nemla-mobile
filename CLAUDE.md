@@ -46,5 +46,6 @@ Kotlin Multiplatform, interface 100 % partagée en Compose Multiplatform.
   lecture des seules parties utiles des gros fichiers.
 
 ## État
-Avancement, restes et prochaine étape : `docs/ROADMAP.md` (lots mobiles 0 à 6 terminés) et `docs/BACKEND-PLAN.md` (backend Kotlin, lots B0 à B12).
+Avancement, restes et prochaine étape : `docs/ROADMAP.md` (lots mobiles 0 à 6 terminés) et `docs/LOVABLE-EXIT-PLAN.md` (reprise du backend Lovable et mise en production, lots R0 à R5 et M7 à M11).
+Le plan Kotlin `docs/BACKEND-PLAN.md` (lots B0 à B12) est suspendu.
 JDK 17 requis : `gradle/gradle-daemon-jvm.properties` l'impose au daemon.

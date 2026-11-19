@@ -1,6 +1,7 @@
 # Backend nemla en Kotlin : plan de réécriture et sortie de Lovable
 
-Rédigé le 19/11/2026. Statut : **validé par le propriétaire le 19/11/2026**, architecture, plan et arbitrages A1 à A8 (§9) compris.
+Rédigé le 19/11/2026. Statut : **suspendu le 19/11/2026** au profit de `LOVABLE-EXIT-PLAN.md` (reprise du code Lovable, production d'abord) ;
+validé auparavant par le propriétaire le 19/11/2026, architecture, plan et arbitrages A1 à A8 (§9) compris.
 Ce plan remplace, une fois validé, la colonne « À créer » de `BACKEND-GAPS.md` : on ne complète pas le backend Lovable, on le remplace.
 
 ## 1. Objectif et périmètre

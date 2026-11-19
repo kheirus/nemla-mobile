@@ -1,6 +1,6 @@
 # Feuille de route
 
-État : ☐ à faire · ◐ en cours · ☑ fait
+État : ☐ à faire · ◐ en cours · ☑ fait · ⏸ suspendu
 
 ## Lot 0 — Socle de build ☑
 - Wrapper Gradle 9.7.1, `settings.gradle.kts`, `build-logic/convention` (plugins : bibliothèque KMP, Compose, feature, application Android).
@@ -231,18 +231,19 @@ confidentialité. Les notifications sont sorties du lot (décision du propriéta
   - publication : bloquants listés dans `PUBLICATION.md` (suppression de compte, URL de politique de confidentialité, liens de
     réinitialisation, sécurité backend), signature et numéros de version à mettre en place.
 
-## Backend Kotlin (lots B0 à B12) ☐ (validé le 19/11/2026, prochain : B0)
-Réécriture du backend en Kotlin (Ktor, domaine partagé avec `core:domain`), Supabase réduit à Postgres et Auth, sortie complète de Lovable,
-site réduit à une vitrine. Plan, chiffrage et arbitrages : `docs/BACKEND-PLAN.md`. Le lot 7 devient le lot B8.
+## Reprise du backend Lovable et mise en production (lots R0 à R5, M7 à M11) ☐ (proposé le 19/11/2026, en attente de validation)
+On garde le code web de Lovable (TanStack Start, Supabase) sur les comptes du propriétaire, avec les correctifs indispensables et les
+endpoints qui manquent au mobile, pour aller en production avant toute migration. Plan, chiffrage et arbitrages : `docs/LOVABLE-EXIT-PLAN.md`.
+- Lots R0 à R5 : dépôt `nemla-web` (sortie de Lovable, Mistral, hébergement, sécurité, endpoints, pages légales).
+- Lot M7 — Notifications locales ☐ : rappel de 20 h, bilan arrivé, alerte de budget, bannières in-app ; indépendant des lots R.
+- Lot M8 — Dépenses complètes ☐ : libellés, recherche par mot-clé, création manuelle, renommage, charges fixes, astuces (après R4).
+- Lot M9 — Relevés en local ☐ : lecture CSV et PDF sur l'appareil, catégorisation locale, enregistrement (après R4).
+- Lot M10 — Compte et conformité ☐ : CGU, confidentialité, consentements, suppression et export, nouveau mot de passe (après R4 et R5).
+- Lot M11 — Publication ☐ : signature, icônes, fiches, test fermé, revue de sécurité mobile.
 
-## Lot 7 — Notifications ☐ (à concevoir)
-Choix à faire par le propriétaire : push serveur (FCM pour Android et iOS, ou APNs direct) ou Firebase, notifications locales planifiées.
-- Push « Votre bilan est arrivé » (fin de mois, fin d'année), qui ouvrirait le dialogue de bilan de `feature:reports`.
-- Rappel quotidien de 20 h (« Bilan de la journée… », `profiles.daily_reminder`) et son interrupteur dans Préférences.
-- Alertes de budget de catégorie (« Budget atteint »).
-- Bannières in-app de `user_notifications` (`specs/04` §5.11).
-- Côté backend : table de jetons d'appareil, émetteur planifié (`BACKEND-GAPS.md`, ligne Notifications).
-- Aucun code de notification, permission, FCM / APNs ni rappel local n'existe dans l'application à ce jour.
+## Backend Kotlin (lots B0 à B12) ⏸ (suspendu le 19/11/2026)
+Plan validé le 19/11/2026 puis suspendu au profit de `docs/LOVABLE-EXIT-PLAN.md` ; réévalué après les essais en production.
+Détail : `docs/BACKEND-PLAN.md`. L'ancien lot 7 (Notifications) devient le lot M7, en notifications locales.
 
 ## Plus tard
 Transcription locale (whisper.cpp), modèle local (LiteRT-LM), cache chiffré hors ligne, autre fournisseur d'IA.
